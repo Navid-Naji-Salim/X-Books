@@ -1067,8 +1067,15 @@ th {
 .customer-list-head { gap: 1rem; }
 .customer-search { width: min(21rem, 48%); }
 .customer-search input { padding-block: 0.68rem; }
-.customer-table-wrap { max-height: 27rem; }
+.customer-table-wrap {
+  max-height: 27rem;
+  border: 1px solid rgba(20, 33, 61, 0.1);
+  border-radius: 15px;
+}
 .customer-table-wrap thead { position: sticky; top: 0; z-index: 1; background: rgba(248, 250, 252, 0.98); }
+.customer-table-wrap th:first-child { border-top-left-radius: 14px; }
+.customer-table-wrap th:last-child { border-top-right-radius: 14px; }
+.customer-table-wrap tbody tr:last-child td { border-bottom: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
 .page-alert {

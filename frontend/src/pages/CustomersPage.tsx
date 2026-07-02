@@ -22,10 +22,30 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
   const filteredContacts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return contacts;
-    return contacts.filter((contact) =>
-      [contact.displayName, contact.companyName, contact.email, contact.phone]
-        .some((value) => value?.toLowerCase().includes(normalized)),
-    );
+    return contacts.filter((contact) => {
+      const searchableDetails = [
+        contact.displayName,
+        contact.customerType,
+        contact.companyName,
+        contact.firstName,
+        contact.lastName,
+        contact.email,
+        contact.phone,
+        contact.addressLine1,
+        contact.addressLine2,
+        contact.city,
+        contact.state,
+        contact.postalCode,
+        contact.country,
+        contact.taxRate,
+        contact.paymentTerms,
+        contact.notes,
+      ];
+
+      return searchableDetails.some((value) =>
+        value?.toLocaleLowerCase().includes(normalized),
+      );
+    });
   }, [contacts, query]);
 
   const deleteCustomer = async (customer: Contact) => {
@@ -111,7 +131,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
         <div className="panel item-list-panel customer-list-panel">
           <div className="item-form-head customer-list-head">
             <div><h2>Customer list</h2><p>{contacts.length} customer{contacts.length === 1 ? "" : "s"}</p></div>
-            <label className="customer-search"><span className="sr-only">Search customers</span><input type="search" value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="Search customers" /></label>
+            <label className="customer-search"><span className="sr-only">Search customers</span><input type="search" value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="Search by any customer detail..." /></label>
           </div>
           <div className="table-wrap customer-table-wrap">
             <table>
