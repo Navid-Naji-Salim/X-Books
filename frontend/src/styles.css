@@ -310,6 +310,11 @@ textarea:focus {
   background: var(--nav-soft);
 }
 
+.nav-group-button.has-active-child {
+  color: white;
+  background: var(--nav-active);
+}
+
 .nav-chevron {
   width: 17px;
   margin-left: auto;
@@ -322,7 +327,32 @@ textarea:focus {
 .nav-submenu {
   display: grid;
   gap: 0.25rem;
+  max-height: 0;
+  margin: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-0.35rem);
+  visibility: hidden;
+  transition:
+    max-height 320ms ease,
+    margin 320ms ease,
+    opacity 240ms ease,
+    transform 320ms ease,
+    visibility 0s linear 320ms;
+}
+
+.nav-submenu.is-visible {
+  max-height: 4rem;
   margin: 0.25rem 0 0.15rem;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition:
+    max-height 320ms ease,
+    margin 320ms ease,
+    opacity 240ms ease 60ms,
+    transform 320ms ease,
+    visibility 0s;
 }
 
 .nav-submenu a {

@@ -50,11 +50,20 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
           if (item.id === "sales") {
             return (
               <div className={`nav-group ${isSalesOpen ? "is-open" : ""}`} key="sales">
-                <button aria-expanded={isSalesOpen} className="nav-group-button" type="button" onClick={() => setIsSalesOpen((current) => !current)}>
+                <button
+                  aria-expanded={isSalesOpen}
+                  className={!isSalesOpen && location.pathname.startsWith("/sales") ? "nav-group-button has-active-child" : "nav-group-button"}
+                  type="button"
+                  onClick={() => setIsSalesOpen((current) => !current)}
+                >
                   {icons.sales({ className: "nav-icon" })}<span>Sales</span>
                   <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                 </button>
-                {isSalesOpen && !isCollapsed ? <div className="nav-submenu"><NavLink to="/sales/customers">Customers</NavLink></div> : null}
+                {!isCollapsed ? (
+                  <div aria-hidden={!isSalesOpen} className={`nav-submenu ${isSalesOpen ? "is-visible" : ""}`}>
+                    <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/customers">Customers</NavLink>
+                  </div>
+                ) : null}
               </div>
             );
           }
