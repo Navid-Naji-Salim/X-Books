@@ -29,7 +29,6 @@ customersRouter.post("/", async (req, res, next) => {
         email: optionalString(body, "email"),
         phone: optionalString(body, "phone"),
         mobile: optionalString(body, "mobile"),
-        language: optionalString(body, "language") ?? "English",
         addressLine1: optionalString(body, "addressLine1"),
         addressLine2: optionalString(body, "addressLine2"),
         city: optionalString(body, "city"),

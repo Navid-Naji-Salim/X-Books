@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
+import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { currency } from "../lib/format";
 import type { Contact, Item } from "../types";
 
@@ -21,7 +22,6 @@ const salesAccounts = [
   "other charges",
 ];
 const purchaseAccounts = ["Cost of Goods Sold", "Supplies Expense", "Inventory Asset", "Other Expense"];
-const taxOptions = ["Exempt", "Standard Tax", "Reduced Tax", "Out of Scope"];
 const unitOptions = ["box", "cm", "dz", "ft", "g", "in", "kg", "km", "lb", "mg", "ml", "m", "pcs"];
 
 export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: ItemsPageProps) => {
@@ -129,7 +129,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
             >
               <MoneyField disabled={!salesEnabled} label="Selling price" name="salesPrice" required={salesEnabled} />
               <DropdownField disabled={!salesEnabled} label="Account" name="salesAccount" openDropdown={openDropdown} options={salesAccounts} defaultValue="general income" required={salesEnabled} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
-              <DropdownField disabled={!salesEnabled} label="Tax" name="salesTax" openDropdown={openDropdown} placeholder="Select a tax" options={taxOptions} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
+              <DropdownField disabled={!salesEnabled} label="Tax" name="salesTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
               <div className="field item-description-field">
                 <label htmlFor="salesDescription">Description</label>
                 <textarea disabled={!salesEnabled} id="salesDescription" name="salesDescription" placeholder="Customer-facing description" />
@@ -145,7 +145,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
             >
               <MoneyField disabled={!purchaseEnabled} label="Cost price" name="unitCost" required={purchaseEnabled} />
               <DropdownField disabled={!purchaseEnabled} label="Account" name="purchaseAccount" openDropdown={openDropdown} options={purchaseAccounts} defaultValue="Cost of Goods Sold" required={purchaseEnabled} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
-              <DropdownField disabled={!purchaseEnabled} label="Tax" name="purchaseTax" openDropdown={openDropdown} placeholder="Select a tax" options={taxOptions} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
+              <DropdownField disabled={!purchaseEnabled} label="Tax" name="purchaseTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
               <DropdownField
                 disabled={!purchaseEnabled}
                 label="Preferred vendor"
@@ -229,115 +229,6 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
         </div>
       </section>
     </>
-  );
-};
-
-type Option = string | { label: string; value: string };
-
-type SelectFieldProps = {
-  label?: string;
-  name: string;
-  options: Option[];
-  defaultValue?: string;
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  resetVersion?: number;
-  openDropdown: string | null;
-  setOpenDropdown: (name: string | null) => void;
-};
-
-const DropdownField = ({
-  label = "Unit",
-  name,
-  options,
-  defaultValue = "",
-  placeholder = "Select an option",
-  required,
-  disabled,
-  resetVersion,
-  openDropdown,
-  setOpenDropdown,
-  value: controlledValue,
-  onChange,
-}: SelectFieldProps & { value?: string; onChange?: (value: string) => void }) => {
-  const detailsRef = useRef<HTMLDetailsElement>(null);
-  const [internalValue, setInternalValue] = useState(defaultValue);
-  const selectedValue = controlledValue ?? internalValue;
-
-  useEffect(() => {
-    if (controlledValue === undefined) {
-      setInternalValue(defaultValue);
-    }
-  }, [controlledValue, defaultValue, resetVersion]);
-
-  const selectedOption = options.find((option) => {
-    const optionValue = typeof option === "string" ? option : option.value;
-    return optionValue === selectedValue;
-  });
-  const selectedLabel =
-    typeof selectedOption === "string" ? selectedOption : selectedOption?.label;
-  const isOpen = openDropdown === name;
-
-  useEffect(() => {
-    const closeOnOutsideClick = (event: MouseEvent) => {
-      if (!isOpen || detailsRef.current?.contains(event.target as Node)) {
-        return;
-      }
-
-      setOpenDropdown(null);
-    };
-
-    document.addEventListener("mousedown", closeOnOutsideClick);
-    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
-  }, [isOpen, setOpenDropdown]);
-
-  return (
-    <div className="field dropdown-field">
-      <label htmlFor={`${name}-value`}>{label}</label>
-      <input id={`${name}-value`} name={name} type="hidden" value={selectedValue} required={required} />
-      <details ref={detailsRef} className="select-menu" open={isOpen}>
-        <summary
-          aria-disabled={disabled}
-          onClick={(event) => {
-            event.preventDefault();
-            if (disabled) {
-              return;
-            }
-
-            setOpenDropdown(isOpen ? null : name);
-          }}
-        >
-          {selectedLabel || placeholder}
-        </summary>
-        <div className="select-options">
-          {options.map((option) => (
-            (() => {
-              const optionValue = typeof option === "string" ? option : option.value;
-              const optionLabel = typeof option === "string" ? option : option.label;
-
-              return (
-                <button
-                  className={optionValue === selectedValue ? "is-selected" : ""}
-                  disabled={disabled}
-                  key={optionValue}
-                  type="button"
-                  onClick={() => {
-                    if (controlledValue === undefined) {
-                      setInternalValue(optionValue);
-                    }
-                    onChange?.(optionValue);
-                    setOpenDropdown(null);
-                  }}
-                >
-                  {optionLabel}
-                </button>
-              );
-            })()
-          ))}
-        </div>
-      </details>
-    </div>
   );
 };
 

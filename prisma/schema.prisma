@@ -44,7 +44,6 @@ model Customer {
   email       String?
   phone       String?
   mobile      String?
-  language    String   @default("English")
   addressLine1 String?
   addressLine2 String?
   city        String?

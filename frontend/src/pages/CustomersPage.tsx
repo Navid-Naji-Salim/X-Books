@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
+import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import type { Contact } from "../types";
 
 type Props = {
@@ -10,13 +11,15 @@ type Props = {
   onRefresh: () => Promise<void>;
 };
 
-const taxOptions = ["Exempt", "Standard Tax", "Reduced Tax", "Out of Scope"];
 const paymentTerms = ["Due on Receipt", "Net 7", "Net 15", "Net 30", "Net 45", "Net 60"];
+const salutations = ["Mr.", "Mrs.", "Ms.", "Dr."];
 
 export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) => {
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [resetVersion, setResetVersion] = useState(0);
   const filteredContacts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return contacts;
@@ -53,6 +56,8 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
             try {
               await api.createContact(token, "customers", Object.fromEntries(new FormData(form)));
               form.reset();
+              setOpenDropdown(null);
+              setResetVersion((current) => current + 1);
               await onRefresh();
             } catch (error) {
               setMessage(error instanceof ApiError ? error.message : "Unable to save customer.");
@@ -64,39 +69,39 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
             <button className="button" type="submit">Save customer</button>
           </div>
 
-          <div className="customer-form-grid">
-            <section className="customer-form-section">
-              <h3>Customer details</h3>
+          <div className="item-compact-grid customer-compact-grid">
+            <section className="item-basics customer-basics">
+              <h3 className="customer-section-title">Customer details</h3>
               <div className="radio-field">
                 <span>Type</span>
                 <label className="radio-option"><input type="radio" name="customerType" value="business" defaultChecked /><span className="option-text">Business</span></label>
                 <label className="radio-option"><input type="radio" name="customerType" value="individual" /><span className="option-text">Individual</span></label>
               </div>
-              <div className="customer-name-grid">
-                <div className="field"><label htmlFor="salutation">Salutation</label><select id="salutation" name="salutation" defaultValue=""><option value="">Select</option><option>Mr.</option><option>Mrs.</option><option>Ms.</option><option>Dr.</option></select></div>
-                <Field label="First name" name="firstName" />
-                <Field label="Last name" name="lastName" />
-              </div>
+              <DropdownField label="Salutation" name="salutation" options={salutations} placeholder="Select a salutation" openDropdown={openDropdown} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
+              <div className="split"><Field label="First name" name="firstName" /><Field label="Last name" name="lastName" /></div>
               <Field label="Display name" name="displayName" placeholder="Acme Trading" required />
               <Field label="Company name" name="companyName" />
               <Field label="Email address" name="email" type="email" />
               <div className="split"><Field label="Work phone" name="phone" /><Field label="Mobile" name="mobile" /></div>
-              <div className="field"><label htmlFor="language">Customer language</label><select id="language" name="language" defaultValue="English"><option>English</option><option>Kurdish</option><option>Arabic</option></select></div>
             </section>
 
-            <section className="customer-form-section">
-              <h3>Billing address</h3>
-              <Field label="Address line 1" name="addressLine1" placeholder="Street and building" />
-              <Field label="Address line 2" name="addressLine2" placeholder="Suite, floor, or landmark" />
-              <div className="split"><Field label="City" name="city" /><Field label="State / province" name="state" /></div>
-              <div className="split"><Field label="Postal code" name="postalCode" /><Field label="Country" name="country" /></div>
+            <section className="item-info-section customer-info-section">
+              <h3 className="check-title customer-section-title">Billing address</h3>
+              <div className="item-info-fields">
+                <Field label="Address line 1" name="addressLine1" placeholder="Street and building" />
+                <Field label="Address line 2" name="addressLine2" placeholder="Suite, floor, or landmark" />
+                <Field label="City" name="city" /><Field label="State / province" name="state" />
+                <Field label="Postal code" name="postalCode" /><Field label="Country" name="country" />
+              </div>
             </section>
 
-            <section className="customer-form-section">
-              <h3>Sales settings</h3>
-              <div className="field"><label htmlFor="taxRate">Tax rate</label><select id="taxRate" name="taxRate" defaultValue=""><option value="">Select a tax</option>{taxOptions.map((tax) => <option key={tax}>{tax}</option>)}</select></div>
-              <div className="field"><label htmlFor="paymentTerms">Payment terms</label><select id="paymentTerms" name="paymentTerms" defaultValue="Due on Receipt">{paymentTerms.map((term) => <option key={term}>{term}</option>)}</select></div>
-              <div className="field customer-notes"><label htmlFor="customer-notes">Notes</label><textarea id="customer-notes" name="notes" placeholder="Internal context about this customer" /></div>
+            <section className="item-info-section customer-info-section">
+              <h3 className="check-title customer-section-title">Sales settings</h3>
+              <div className="item-info-fields">
+                <DropdownField label="Tax" name="taxRate" options={TAX_OPTIONS} placeholder="Select a tax" openDropdown={openDropdown} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
+                <DropdownField label="Payment terms" name="paymentTerms" options={paymentTerms} defaultValue="Due on Receipt" openDropdown={openDropdown} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
+                <div className="field item-description-field customer-notes"><label htmlFor="customer-notes">Notes</label><textarea id="customer-notes" name="notes" placeholder="Internal context about this customer" /></div>
+              </div>
             </section>
           </div>
           <div className="message">{message}</div>

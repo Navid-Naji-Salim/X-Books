@@ -52,7 +52,6 @@ export type Contact = {
   email: string | null;
   phone: string | null;
   mobile?: string | null;
-  language?: string;
   addressLine1?: string | null;
   addressLine2?: string | null;
   city?: string | null;
