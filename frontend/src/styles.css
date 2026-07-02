@@ -305,30 +305,35 @@ textarea:focus {
 }
 
 .nav-group-button:hover,
-.nav-group-button.active {
+.nav-group-button:hover {
   color: white;
   background: var(--nav-soft);
+}
+
+.nav-group-button.active {
+  color: white;
+  background: var(--nav-active);
 }
 
 .nav-chevron {
   width: 17px;
   margin-left: auto;
+  transform: rotate(180deg);
   transition: transform 180ms ease;
 }
 
-.nav-group.is-open .nav-chevron { transform: rotate(180deg); }
+.nav-group.is-open .nav-chevron { transform: rotate(0deg); }
 
 .nav-submenu {
   display: grid;
   gap: 0.25rem;
-  margin: 0.25rem 0 0.15rem 2.8rem;
-  padding-left: 0.65rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  margin: 0.25rem 0 0.15rem;
 }
 
 .nav-submenu a {
-  padding: 0.62rem 0.72rem;
-  border-radius: 12px;
+  width: 100%;
+  padding: 0.72rem 0.9rem 0.72rem 3.7rem;
+  border-radius: 16px;
   font-size: 0.82rem;
 }
 
