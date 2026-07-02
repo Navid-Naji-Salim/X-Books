@@ -2,7 +2,8 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { presentContact } from "../presenters/contact-presenter.js";
 import { parseBody } from "../utils/request.js";
-import { optionalString, requiredString } from "../utils/validation.js";
+import { optionalString } from "../utils/validation.js";
+import { ApiError } from "../utils/api-error.js";
 
 export const customersRouter = Router();
 
@@ -18,17 +19,30 @@ customersRouter.get("/", async (_req, res, next) => {
 customersRouter.post("/", async (req, res, next) => {
   try {
     const body = parseBody(req);
+    const customerType = optionalString(body, "customerType") ?? "business";
+    if (!['business', 'individual'].includes(customerType)) {
+      throw new ApiError(400, "Customer type must be Business or Individual.");
+    }
+    const companyName = optionalString(body, "companyName");
+    const firstName = optionalString(body, "firstName");
+    const lastName = optionalString(body, "lastName");
+    const displayName = customerType === "business"
+      ? companyName
+      : [firstName, lastName].filter(Boolean).join(" ");
+
+    if (!displayName || (customerType === "individual" && (!firstName || !lastName))) {
+      throw new ApiError(400, customerType === "business" ? "Company name is required." : "First and last name are required.");
+    }
+
     const customer = await prisma.customer.create({
       data: {
-        customerType: optionalString(body, "customerType") ?? "business",
-        salutation: optionalString(body, "salutation"),
-        firstName: optionalString(body, "firstName"),
-        lastName: optionalString(body, "lastName"),
-        displayName: requiredString(body, "displayName"),
-        companyName: optionalString(body, "companyName"),
+        customerType,
+        firstName,
+        lastName,
+        displayName,
+        companyName,
         email: optionalString(body, "email"),
         phone: optionalString(body, "phone"),
-        mobile: optionalString(body, "mobile"),
         addressLine1: optionalString(body, "addressLine1"),
         addressLine2: optionalString(body, "addressLine2"),
         city: optionalString(body, "city"),

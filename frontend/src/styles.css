@@ -1041,7 +1041,17 @@ th {
   grid-template-rows: none;
 }
 
+.customer-compact-grid > section {
+  align-content: start;
+}
+
+.customer-compact-grid .item-info-fields {
+  gap: 0.78rem;
+}
+
 .customer-section-title {
+  min-height: 2rem;
+  margin: 0;
   padding-bottom: 0.7rem;
   border-bottom: 1px solid var(--line);
   font-size: 1rem;

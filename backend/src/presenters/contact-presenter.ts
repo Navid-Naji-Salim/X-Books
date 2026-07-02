@@ -2,13 +2,11 @@ type ContactRecord = {
   id: string;
   displayName: string;
   customerType?: string;
-  salutation?: string | null;
   firstName?: string | null;
   lastName?: string | null;
   companyName: string | null;
   email: string | null;
   phone: string | null;
-  mobile?: string | null;
   addressLine1?: string | null;
   addressLine2?: string | null;
   city?: string | null;

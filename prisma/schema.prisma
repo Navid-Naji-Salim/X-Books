@@ -36,14 +36,12 @@ model Item {
 model Customer {
   id          String   @id @default(cuid())
   customerType String  @default("business")
-  salutation  String?
   firstName   String?
   lastName    String?
   displayName String
   companyName String?
   email       String?
   phone       String?
-  mobile      String?
   addressLine1 String?
   addressLine2 String?
   city        String?

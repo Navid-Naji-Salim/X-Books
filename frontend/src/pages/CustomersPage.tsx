@@ -12,14 +12,13 @@ type Props = {
 };
 
 const paymentTerms = ["Due on Receipt", "Net 7", "Net 15", "Net 30", "Net 45", "Net 60"];
-const salutations = ["Mr.", "Mrs.", "Ms.", "Dr."];
-
 export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) => {
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [resetVersion, setResetVersion] = useState(0);
+  const [customerType, setCustomerType] = useState<"business" | "individual">("business");
   const filteredContacts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return contacts;
@@ -56,6 +55,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
             try {
               await api.createContact(token, "customers", Object.fromEntries(new FormData(form)));
               form.reset();
+              setCustomerType("business");
               setOpenDropdown(null);
               setResetVersion((current) => current + 1);
               await onRefresh();
@@ -74,15 +74,16 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
               <h3 className="customer-section-title">Customer details</h3>
               <div className="radio-field">
                 <span>Type</span>
-                <label className="radio-option"><input type="radio" name="customerType" value="business" defaultChecked /><span className="option-text">Business</span></label>
-                <label className="radio-option"><input type="radio" name="customerType" value="individual" /><span className="option-text">Individual</span></label>
+                <label className="radio-option"><input checked={customerType === "business"} type="radio" name="customerType" value="business" onChange={() => setCustomerType("business")} /><span className="option-text">Business</span></label>
+                <label className="radio-option"><input checked={customerType === "individual"} type="radio" name="customerType" value="individual" onChange={() => setCustomerType("individual")} /><span className="option-text">Individual</span></label>
               </div>
-              <DropdownField label="Salutation" name="salutation" options={salutations} placeholder="Select a salutation" openDropdown={openDropdown} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
-              <div className="split"><Field label="First name" name="firstName" /><Field label="Last name" name="lastName" /></div>
-              <Field label="Display name" name="displayName" placeholder="Acme Trading" required />
-              <Field label="Company name" name="companyName" />
+              {customerType === "business" ? (
+                <Field label="Company name" name="companyName" placeholder="Acme Trading" required />
+              ) : (
+                <div className="split"><Field label="First name" name="firstName" required /><Field label="Last name" name="lastName" required /></div>
+              )}
               <Field label="Email address" name="email" type="email" />
-              <div className="split"><Field label="Work phone" name="phone" /><Field label="Mobile" name="mobile" /></div>
+              <Field label="Phone" name="phone" />
             </section>
 
             <section className="item-info-section customer-info-section">
@@ -119,7 +120,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
                 {filteredContacts.length === 0 ? <tr><td colSpan={6} className="muted">{query ? "No customers match your search." : "No customers yet."}</td></tr> : filteredContacts.map((contact) => (
                   <tr key={contact.id}>
                     <td><strong>{contact.displayName}</strong><br /><span className="muted">{contact.companyName || contact.customerType || "Customer"}</span></td>
-                    <td>{contact.email || "-"}<br /><span className="muted">{contact.phone || contact.mobile || "No phone"}</span></td>
+                    <td>{contact.email || "-"}<br /><span className="muted">{contact.phone || "No phone"}</span></td>
                     <td>{[contact.city, contact.country].filter(Boolean).join(", ") || "-"}</td>
                     <td>{contact.taxRate || "-"}</td><td>{contact.paymentTerms || "Due on Receipt"}</td>
                     <td><button className="ghost-button danger-button" disabled={deletingId === contact.id} type="button" onClick={() => void deleteCustomer(contact)}>{deletingId === contact.id ? "Deleting" : "Delete"}</button></td>
