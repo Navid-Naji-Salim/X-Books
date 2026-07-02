@@ -57,6 +57,8 @@ export const api = {
     request<null>(`/api/items/${id}`, token, {
       method: "DELETE",
     }),
+  deleteCustomer: (token: string, id: string) =>
+    request<null>(`/api/customers/${id}`, token, { method: "DELETE" }),
   createContact: (
     token: string,
     kind: "customers" | "vendors",

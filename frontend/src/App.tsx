@@ -3,6 +3,7 @@ import { Navigate, Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { Sidebar } from "./layout/Sidebar";
 import { ContactsPage } from "./pages/ContactsPage";
+import { CustomersPage } from "./pages/CustomersPage";
 import { HomePage } from "./pages/HomePage";
 import { ItemsPage } from "./pages/ItemsPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -136,10 +137,9 @@ export const App = () => {
         <Route
           path="sales/customers"
           element={
-            <ContactsPage
+            <CustomersPage
               contacts={data.customers}
-              kind="customers"
-              summary={data.summary}
+              dataError={dataError}
               token={token ?? ""}
               onRefresh={() => (token ? loadData(token) : Promise.resolve())}
             />

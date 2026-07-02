@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { icons } from "../icons";
 import type { Admin, PageId } from "../types";
 
@@ -20,6 +20,8 @@ type SidebarProps = {
 
 export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: SidebarProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const location = useLocation();
+  const [isSalesOpen, setIsSalesOpen] = useState(location.pathname.startsWith("/sales"));
 
   return (
     <aside className={`sidebar ${isCollapsed ? "is-collapsed" : ""}`}>
@@ -45,6 +47,17 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
           <span>{isCollapsed ? "Expand" : "Collapse"}</span>
         </button>
         {navItems.map((item) => {
+          if (item.id === "sales") {
+            return (
+              <div className={`nav-group ${isSalesOpen ? "is-open" : ""}`} key="sales">
+                <button aria-expanded={isSalesOpen} className={location.pathname.startsWith("/sales") ? "nav-group-button active" : "nav-group-button"} type="button" onClick={() => setIsSalesOpen((current) => !current)}>
+                  {icons.sales({ className: "nav-icon" })}<span>Sales</span>
+                  <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                </button>
+                {isSalesOpen && !isCollapsed ? <div className="nav-submenu"><NavLink to="/sales/customers">Customers</NavLink></div> : null}
+              </div>
+            );
+          }
           const Icon = icons[item.id];
           return (
             <NavLink
