@@ -310,11 +310,6 @@ textarea:focus {
   background: var(--nav-soft);
 }
 
-.nav-group-button.active {
-  color: white;
-  background: var(--nav-soft);
-}
-
 .nav-chevron {
   width: 17px;
   margin-left: auto;
