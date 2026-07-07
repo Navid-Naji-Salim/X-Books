@@ -40,6 +40,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const [nextLineId, setNextLineId] = useState(2);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const sellableItems = items.filter((item) => item.salesEnabled);
 
   const totals = useMemo(() => {
@@ -53,6 +54,26 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const updateLine = (id: number, values: Partial<LineDraft>) =>
     setLines((current) => current.map((line) => line.id === id ? { ...line, ...values } : line));
 
+  const resetForm = (nextNumber = `INV-${String(invoices.length + 1).padStart(6, "0")}`) => {
+    setEditingId(null);
+    setCustomerId(""); setInvoiceNumber(nextNumber); setInvoiceDate(today);
+    setTerms("Due on Receipt"); setDueDate(today); setDiscountPercent(0);
+    setCustomerNotes("Thanks for your business."); setOpenDropdown(null);
+    setLines([{ id: nextLineId, itemId: "", quantity: 1, rate: 0, tax: "" }]);
+    setNextLineId((value) => value + 1);
+  };
+
+  const loadInvoice = (invoice: Invoice) => {
+    setEditingId(invoice.id);
+    setCustomerId(invoice.customerId); setInvoiceNumber(invoice.invoiceNumber);
+    setInvoiceDate(invoice.invoiceDate.slice(0, 10)); setTerms(invoice.terms);
+    setDueDate(invoice.dueDate.slice(0, 10)); setDiscountPercent(invoice.discountPercent);
+    setCustomerNotes(invoice.customerNotes ?? ""); setOpenDropdown(null);
+    setLines(invoice.lines.map((line, index) => ({ id: nextLineId + index, itemId: line.itemId ?? "", quantity: line.quantity, rate: line.rate, tax: line.tax ?? "" })));
+    setNextLineId((value) => value + invoice.lines.length + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <>
       {dataError ? <div className="panel page-alert">{dataError}</div> : null}
@@ -60,24 +81,25 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         event.preventDefault();
         setMessage("");
         try {
-          await api.createInvoice(token, {
+          const payload = {
             customerId, invoiceNumber, invoiceDate, terms, dueDate, discountPercent, customerNotes,
             lines: lines.filter((line) => line.itemId).map((line) => ({ ...line, taxRate: taxRates[line.tax] ?? 0 })),
-          });
+          };
+          if (editingId) await api.updateInvoice(token, editingId, payload);
+          else await api.createInvoice(token, payload);
           await onRefresh();
-          setInvoiceNumber(`INV-${String(invoices.length + 2).padStart(6, "0")}`);
-          setCustomerId(""); setInvoiceDate(today); setTerms("Due on Receipt"); setDueDate(today);
-          setDiscountPercent(0); setCustomerNotes("Thanks for your business.");
-          setLines([{ id: nextLineId, itemId: "", quantity: 1, rate: 0, tax: "" }]);
-          setNextLineId((value) => value + 1);
+          resetForm(`INV-${String(invoices.length + (editingId ? 1 : 2)).padStart(6, "0")}`);
         } catch (error) {
           setMessage(error instanceof ApiError ? error.message : "Unable to save invoice.");
         }
       }}>
         <section className="panel item-form compact-item-form invoice-form-panel">
           <div className="item-form-head">
-            <div><h2>New invoice</h2><p>Customer and billing details</p></div>
-            <button className="button" type="submit">Save invoice</button>
+            <div><h2>{editingId ? "Edit invoice" : "New invoice"}</h2><p>Customer and billing details</p></div>
+            <div className="invoice-form-actions">
+              {editingId ? <button className="ghost-button" type="button" onClick={() => resetForm()}>Cancel</button> : null}
+              <button className="button" type="submit">{editingId ? "Update invoice" : "Save invoice"}</button>
+            </div>
           </div>
           <div className="invoice-details-grid">
             <section className="invoice-detail-card">
@@ -136,6 +158,26 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         </section>
         <div className="message">{message}</div>
       </form>
+      <section className="panel saved-invoices-panel">
+        <div className="item-form-head"><div><h2>Saved invoices</h2><p>{invoices.length} invoice{invoices.length === 1 ? "" : "s"}</p></div></div>
+        <div className="table-wrap saved-invoices-table-wrap">
+          <table className="saved-invoices-table">
+            <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th></tr></thead>
+            <tbody>
+              {invoices.length === 0 ? <tr><td className="muted" colSpan={6}>No saved invoices yet.</td></tr> : invoices.map((invoice) => (
+                <tr className={editingId === invoice.id ? "is-selected" : ""} key={invoice.id} onClick={() => loadInvoice(invoice)}>
+                  <td><button className="invoice-open-button" type="button" onClick={(event) => { event.stopPropagation(); loadInvoice(invoice); }}>{invoice.invoiceNumber}</button></td>
+                  <td>{invoice.customer.displayName}</td>
+                  <td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
+                  <td>{new Date(invoice.dueDate).toLocaleDateString()}</td>
+                  <td><span className="invoice-status">{invoice.status}</span></td>
+                  <td><strong>{currency.format(invoice.total)}</strong></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </>
   );
 };

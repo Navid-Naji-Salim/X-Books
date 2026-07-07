@@ -80,6 +80,7 @@ export type Invoice = {
   invoiceDate: string;
   terms: string;
   dueDate: string;
+  status: string;
   customerNotes: string | null;
   subtotal: number;
   discountPercent: number;

@@ -7,6 +7,7 @@ type InvoiceRecord = {
   invoiceDate: Date;
   terms: string;
   dueDate: Date;
+  status: string;
   customerNotes: string | null;
   subtotal: Prisma.Decimal;
   discountPercent: Prisma.Decimal;

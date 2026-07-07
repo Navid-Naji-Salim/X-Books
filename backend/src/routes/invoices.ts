@@ -74,3 +74,55 @@ invoicesRouter.post("/", async (req, res, next) => {
     res.status(201).json(presentInvoice({ ...invoice, lines: savedLines }));
   } catch (error) { next(error); }
 });
+
+invoicesRouter.patch("/:id", async (req, res, next) => {
+  try {
+    const body = parseBody(req);
+    const customerId = requiredString(body, "customerId");
+    const customer = await prisma.customer.findUnique({ where: { id: customerId }, select: { id: true } });
+    if (!customer) throw new ApiError(400, "Customer was not found.");
+    if (!Array.isArray(body.lines) || body.lines.length === 0) throw new ApiError(400, "Add at least one invoice item.");
+
+    const rawLines = body.lines as Array<Record<string, unknown>>;
+    const itemIds = rawLines.map((line) => String(line.itemId ?? "")).filter(Boolean);
+    const items = await prisma.item.findMany({ where: { id: { in: itemIds }, salesEnabled: true }, select: { id: true, name: true } });
+    const itemMap = new Map(items.map((item) => [item.id, item]));
+    const lines = rawLines.map((line) => {
+      const itemId = String(line.itemId ?? "");
+      const item = itemMap.get(itemId);
+      const quantity = Number(line.quantity);
+      const rate = Number(line.rate);
+      const taxRate = Number(line.taxRate ?? 0);
+      if (!item) throw new ApiError(400, "An invoice item was not found or cannot be sold.");
+      if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(rate) || rate < 0) throw new ApiError(400, "Invoice quantity and rate must be valid.");
+      return { itemId, itemName: item.name, quantity, rate, tax: typeof line.tax === "string" ? line.tax : null, taxRate, amount: quantity * rate };
+    });
+
+    const subtotal = lines.reduce((sum, line) => sum + line.amount, 0);
+    const discountPercent = Math.min(100, Math.max(0, Number(body.discountPercent ?? 0)));
+    if (!Number.isFinite(discountPercent)) throw new ApiError(400, "Discount is invalid.");
+    const discountAmount = subtotal * discountPercent / 100;
+    const taxableFactor = subtotal === 0 ? 1 : (subtotal - discountAmount) / subtotal;
+    const taxTotal = lines.reduce((sum, line) => sum + line.amount * taxableFactor * line.taxRate / 100, 0);
+    const total = subtotal - discountAmount + taxTotal;
+
+    const invoice = await prisma.invoice.update({
+      where: { id: req.params.id },
+      data: {
+        invoiceNumber: requiredString(body, "invoiceNumber"), customerId,
+        invoiceDate: dateValue(body, "invoiceDate"), dueDate: dateValue(body, "dueDate"),
+        terms: requiredString(body, "terms"), customerNotes: optionalString(body, "customerNotes"),
+        subtotal: decimal(subtotal), discountPercent: decimal(discountPercent),
+        discountAmount: decimal(discountAmount), taxTotal: decimal(taxTotal), total: decimal(total),
+        status: "Saved",
+        lines: {
+          deleteMany: {},
+          create: lines.map((line) => ({ ...line, quantity: decimal(line.quantity), rate: decimal(line.rate), taxRate: decimal(line.taxRate), amount: decimal(line.amount) })),
+        },
+      },
+      include: customerInclude,
+    });
+    const savedLines = await prisma.invoiceLine.findMany({ where: { invoiceId: invoice.id } });
+    res.json(presentInvoice({ ...invoice, lines: savedLines }));
+  } catch (error) { next(error); }
+});
