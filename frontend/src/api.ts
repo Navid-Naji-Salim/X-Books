@@ -16,7 +16,7 @@ export const request = async <T>(
   token: string | null,
   options: RequestInit = {},
 ) => {
-  const response = await fetch(path, {
+  const send = () => fetch(path, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -24,6 +24,19 @@ export const request = async <T>(
       ...options.headers,
     },
   });
+  let response: Response;
+  try {
+    response = await send();
+  } catch (error) {
+    if ((options.method ?? "GET") !== "GET") throw error;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    response = await send();
+  }
+
+  if (response.status >= 500 && (options.method ?? "GET") === "GET") {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    response = await send();
+  }
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as { error?: string };

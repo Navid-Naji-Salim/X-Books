@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { randomUUID } from "node:crypto";
+import type { Customer } from "../../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 import { presentContact } from "../presenters/contact-presenter.js";
 import { parseBody } from "../utils/request.js";
@@ -34,26 +36,31 @@ customersRouter.post("/", async (req, res, next) => {
       throw new ApiError(400, customerType === "business" ? "Company name is required." : "First and last name are required.");
     }
 
-    const customer = await prisma.customer.create({
-      data: {
-        customerType,
-        firstName,
-        lastName,
-        displayName,
-        companyName,
-        email: optionalString(body, "email"),
-        phone: optionalString(body, "phone"),
-        addressLine1: optionalString(body, "addressLine1"),
-        addressLine2: optionalString(body, "addressLine2"),
-        city: optionalString(body, "city"),
-        state: optionalString(body, "state"),
-        postalCode: optionalString(body, "postalCode"),
-        country: optionalString(body, "country"),
-        taxRate: optionalString(body, "taxRate"),
-        paymentTerms: optionalString(body, "paymentTerms") ?? "Due on Receipt",
-        notes: optionalString(body, "notes"),
-      },
-    });
+    const id = randomUUID();
+    const email = optionalString(body, "email");
+    const phone = optionalString(body, "phone");
+    const addressLine1 = optionalString(body, "addressLine1");
+    const addressLine2 = optionalString(body, "addressLine2");
+    const city = optionalString(body, "city");
+    const state = optionalString(body, "state");
+    const postalCode = optionalString(body, "postalCode");
+    const country = optionalString(body, "country");
+    const taxRate = optionalString(body, "taxRate");
+    const paymentTerms = optionalString(body, "paymentTerms") ?? "Due on Receipt";
+    const notes = optionalString(body, "notes");
+    const [customer] = await prisma.$queryRaw<Customer[]>`
+      INSERT INTO "Customer" (
+        "id", "customerType", "firstName", "lastName", "displayName", "companyName",
+        "email", "phone", "addressLine1", "addressLine2", "city", "state",
+        "postalCode", "country", "taxRate", "paymentTerms", "notes", "createdAt", "updatedAt"
+      ) VALUES (
+        ${id}, ${customerType}, ${firstName}, ${lastName}, ${displayName}, ${companyName},
+        ${email}, ${phone}, ${addressLine1}, ${addressLine2}, ${city}, ${state},
+        ${postalCode}, ${country}, ${taxRate}, ${paymentTerms}, ${notes}, NOW(), NOW()
+      ) RETURNING *
+    `;
+
+    if (!customer) throw new ApiError(500, "Customer could not be saved.");
 
     res.status(201).json(presentContact(customer));
   } catch (error) {
@@ -63,7 +70,7 @@ customersRouter.post("/", async (req, res, next) => {
 
 customersRouter.delete("/:id", async (req, res, next) => {
   try {
-    await prisma.customer.delete({ where: { id: req.params.id } });
+    await prisma.$executeRaw`DELETE FROM "Customer" WHERE "id" = ${req.params.id}`;
     res.status(204).send();
   } catch (error) {
     next(error);
