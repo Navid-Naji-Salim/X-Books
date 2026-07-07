@@ -72,6 +72,11 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
+  recordInvoicePayment: (token: string, id: string, payload: { paymentDate: string; amount: number }) =>
+    request<null>(`/api/invoices/${id}/payment`, token, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   createItem: (token: string, payload: Record<string, FormDataEntryValue>) =>
     request<Item>("/api/items", token, {
       method: "POST",

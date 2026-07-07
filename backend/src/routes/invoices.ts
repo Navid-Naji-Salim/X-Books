@@ -20,6 +20,7 @@ const dateValue = (body: Record<string, unknown>, field: string) => {
 
 invoicesRouter.get("/", async (_req, res, next) => {
   try {
+    await prisma.invoice.updateMany({ where: { status: "Saved" }, data: { status: "Unpaid" } });
     const invoices = await prisma.invoice.findMany({ include: customerInclude, orderBy: { createdAt: "desc" } });
     const lines = await prisma.invoiceLine.findMany({ where: { invoiceId: { in: invoices.map((invoice) => invoice.id) } } });
     res.json(invoices.map((invoice) => presentInvoice({ ...invoice, lines: lines.filter((line) => line.invoiceId === invoice.id) })));
@@ -64,6 +65,7 @@ invoicesRouter.post("/", async (req, res, next) => {
         invoiceNumber: requiredString(body, "invoiceNumber"), customerId,
         invoiceDate: dateValue(body, "invoiceDate"), dueDate: dateValue(body, "dueDate"),
         terms: requiredString(body, "terms"), customerNotes: optionalString(body, "customerNotes"),
+        status: "Unpaid",
         subtotal: decimal(subtotal), discountPercent: decimal(discountPercent),
         discountAmount: decimal(discountAmount), taxTotal: decimal(taxTotal), total: decimal(total),
         lines: { create: lines.map((line) => ({ ...line, quantity: decimal(line.quantity), rate: decimal(line.rate), taxRate: decimal(line.taxRate), amount: decimal(line.amount) })) },
@@ -114,7 +116,6 @@ invoicesRouter.patch("/:id", async (req, res, next) => {
         terms: requiredString(body, "terms"), customerNotes: optionalString(body, "customerNotes"),
         subtotal: decimal(subtotal), discountPercent: decimal(discountPercent),
         discountAmount: decimal(discountAmount), taxTotal: decimal(taxTotal), total: decimal(total),
-        status: "Saved",
         lines: {
           deleteMany: {},
           create: lines.map((line) => ({ ...line, quantity: decimal(line.quantity), rate: decimal(line.rate), taxRate: decimal(line.taxRate), amount: decimal(line.amount) })),
@@ -124,5 +125,23 @@ invoicesRouter.patch("/:id", async (req, res, next) => {
     });
     const savedLines = await prisma.invoiceLine.findMany({ where: { invoiceId: invoice.id } });
     res.json(presentInvoice({ ...invoice, lines: savedLines }));
+  } catch (error) { next(error); }
+});
+
+invoicesRouter.post("/:id/payment", async (req, res, next) => {
+  try {
+    const body = parseBody(req);
+    const amount = Number(body.amount);
+    if (!Number.isFinite(amount) || amount <= 0) throw new ApiError(400, "Payment amount must be greater than zero.");
+
+    const invoice = await prisma.invoice.findUnique({ where: { id: req.params.id }, select: { id: true, status: true } });
+    if (!invoice) throw new ApiError(404, "Invoice was not found.");
+    if (invoice.status === "Paid") throw new ApiError(400, "This invoice is already paid.");
+
+    await prisma.$transaction([
+      prisma.payment.create({ data: { invoiceId: invoice.id, paymentDate: dateValue(body, "paymentDate"), amount: decimal(amount) } }),
+      prisma.invoice.update({ where: { id: invoice.id }, data: { status: "Paid" } }),
+    ]);
+    res.status(204).send();
   } catch (error) { next(error); }
 });

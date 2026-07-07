@@ -1233,7 +1233,13 @@ th {
 .saved-invoices-table tbody tr:hover,
 .saved-invoices-table tbody tr.is-selected { background: rgba(224, 242, 254, 0.55); }
 .invoice-open-button { border: 0; padding: 0; color: #0369a1; background: transparent; font-weight: 900; }
-.invoice-status { display: inline-flex; border-radius: 999px; padding: 0.32rem 0.62rem; color: #075985; background: #e0f2fe; font-size: 0.75rem; font-weight: 900; }
+.invoice-status { display: inline-flex; border-radius: 999px; padding: 0.32rem 0.62rem; font-size: 0.75rem; font-weight: 900; }
+.invoice-status.is-unpaid { color: #991b1b; background: #fee2e2; }
+.invoice-status.is-paid { color: #166534; background: #dcfce7; }
+.record-payment-button { padding: 0.58rem 0.72rem; white-space: nowrap; }
+.modal-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.42); backdrop-filter: blur(4px); }
+.payment-modal { display: grid; gap: 1rem; width: min(430px, 100%); box-shadow: 0 30px 80px rgba(20, 33, 61, 0.24); }
+.payment-modal-actions { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 0.25rem; }
 
 .page-alert {
   margin-bottom: 1rem;

@@ -41,6 +41,10 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
+  const [paymentDate, setPaymentDate] = useState(today);
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [isRecordingPayment, setIsRecordingPayment] = useState(false);
   const sellableItems = items.filter((item) => item.salesEnabled);
 
   const totals = useMemo(() => {
@@ -162,22 +166,47 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         <div className="item-form-head"><div><h2>Saved invoices</h2><p>{invoices.length} invoice{invoices.length === 1 ? "" : "s"}</p></div></div>
         <div className="table-wrap saved-invoices-table-wrap">
           <table className="saved-invoices-table">
-            <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th></tr></thead>
+            <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th aria-label="Actions" /></tr></thead>
             <tbody>
-              {invoices.length === 0 ? <tr><td className="muted" colSpan={6}>No saved invoices yet.</td></tr> : invoices.map((invoice) => (
+              {invoices.length === 0 ? <tr><td className="muted" colSpan={7}>No saved invoices yet.</td></tr> : invoices.map((invoice) => (
                 <tr className={editingId === invoice.id ? "is-selected" : ""} key={invoice.id} onClick={() => loadInvoice(invoice)}>
                   <td><button className="invoice-open-button" type="button" onClick={(event) => { event.stopPropagation(); loadInvoice(invoice); }}>{invoice.invoiceNumber}</button></td>
                   <td>{invoice.customer.displayName}</td>
                   <td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
                   <td>{new Date(invoice.dueDate).toLocaleDateString()}</td>
-                  <td><span className="invoice-status">{invoice.status}</span></td>
+                  <td><span className={`invoice-status ${invoice.status === "Paid" ? "is-paid" : "is-unpaid"}`}>{invoice.status}</span></td>
                   <td><strong>{currency.format(invoice.total)}</strong></td>
+                  <td>{invoice.status !== "Paid" ? <button className="ghost-button record-payment-button" type="button" onClick={(event) => { event.stopPropagation(); setMessage(""); setPaymentInvoice(invoice); setPaymentDate(today); setPaymentAmount(invoice.total); }}>Record payment</button> : null}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </section>
+      {paymentInvoice ? (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => !isRecordingPayment && setPaymentInvoice(null)}>
+          <form className="panel payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title" onMouseDown={(event) => event.stopPropagation()} onSubmit={async (event) => {
+            event.preventDefault();
+            setMessage("");
+            setIsRecordingPayment(true);
+            try {
+              await api.recordInvoicePayment(token, paymentInvoice.id, { paymentDate, amount: paymentAmount });
+              await onRefresh();
+              setPaymentInvoice(null);
+            } catch (error) {
+              setMessage(error instanceof ApiError ? error.message : "Unable to record the payment.");
+            } finally {
+              setIsRecordingPayment(false);
+            }
+          }}>
+            <div className="item-form-head"><div><h2 id="payment-modal-title">Record payment</h2><p>{paymentInvoice.invoiceNumber} · {paymentInvoice.customer.displayName}</p></div></div>
+            <div className="field"><label htmlFor="paymentDate">Payment date</label><input id="paymentDate" type="date" required value={paymentDate} onChange={(event) => setPaymentDate(event.currentTarget.value)} /></div>
+            <div className="field"><label htmlFor="paymentAmount">Amount</label><input id="paymentAmount" type="number" min="0.01" step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} /></div>
+            <div className="message" role="status">{message}</div>
+            <div className="payment-modal-actions"><button className="ghost-button" disabled={isRecordingPayment} type="button" onClick={() => setPaymentInvoice(null)}>Cancel</button><button className="button" disabled={isRecordingPayment} type="submit">{isRecordingPayment ? "Saving..." : "Save payment"}</button></div>
+          </form>
+        </div>
+      ) : null}
     </>
   );
 };
