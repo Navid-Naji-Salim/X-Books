@@ -6,15 +6,17 @@ import { ContactsPage } from "./pages/ContactsPage";
 import { CustomersPage } from "./pages/CustomersPage";
 import { HomePage } from "./pages/HomePage";
 import { ItemsPage } from "./pages/ItemsPage";
+import { InvoicesPage } from "./pages/InvoicesPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ReportsPage } from "./pages/ReportsPage";
-import type { Admin, Contact, Item, Summary } from "./types";
+import type { Admin, Contact, Invoice, Item, Summary } from "./types";
 
 type AppData = {
   summary: Summary;
   items: Item[];
   customers: Contact[];
   vendors: Contact[];
+  invoices: Invoice[];
 };
 
 const emptySummary: Summary = {
@@ -30,6 +32,7 @@ const emptyData: AppData = {
   items: [],
   customers: [],
   vendors: [],
+  invoices: [],
 };
 
 export const App = () => {
@@ -49,14 +52,15 @@ export const App = () => {
 
   const loadData = async (activeToken: string) => {
     setDataError("");
-    const [summary, items, customers, vendors] = await Promise.all([
+    const [summary, items, customers, vendors, invoices] = await Promise.all([
       api.summary(activeToken),
       api.items(activeToken),
       api.customers(activeToken),
       api.vendors(activeToken),
+      api.invoices(activeToken),
     ]);
 
-    setData({ summary, items, customers, vendors });
+    setData({ summary, items, customers, vendors, invoices });
   };
 
   useEffect(() => {
@@ -130,6 +134,19 @@ export const App = () => {
               items={data.items}
               token={token ?? ""}
               vendors={data.vendors}
+              onRefresh={() => (token ? loadData(token) : Promise.resolve())}
+            />
+          }
+        />
+        <Route
+          path="sales/invoices"
+          element={
+            <InvoicesPage
+              customers={data.customers}
+              dataError={dataError}
+              invoices={data.invoices}
+              items={data.items}
+              token={token ?? ""}
               onRefresh={() => (token ? loadData(token) : Promise.resolve())}
             />
           }

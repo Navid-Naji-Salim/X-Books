@@ -8,6 +8,7 @@ import { authRouter } from "./routes/auth.js";
 import { customersRouter } from "./routes/customers.js";
 import { healthRouter } from "./routes/health.js";
 import { itemsRouter } from "./routes/items.js";
+import { invoicesRouter } from "./routes/invoices.js";
 import { summaryRouter } from "./routes/summary.js";
 import { vendorsRouter } from "./routes/vendors.js";
 
@@ -24,6 +25,7 @@ export const createApp = () => {
   app.use("/api", requireAdmin);
   app.use("/api/summary", summaryRouter);
   app.use("/api/items", itemsRouter);
+  app.use("/api/invoices", invoicesRouter);
   app.use("/api/customers", customersRouter);
   app.use("/api/vendors", vendorsRouter);
 

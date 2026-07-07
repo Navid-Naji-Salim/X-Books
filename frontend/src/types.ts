@@ -60,3 +60,31 @@ export type Contact = {
   paymentTerms?: string;
   notes: string | null;
 };
+
+export type InvoiceLine = {
+  id: string;
+  itemId: string | null;
+  itemName: string;
+  quantity: number;
+  rate: number;
+  tax: string | null;
+  taxRate: number;
+  amount: number;
+};
+
+export type Invoice = {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  customer: { id: string; displayName: string };
+  invoiceDate: string;
+  terms: string;
+  dueDate: string;
+  customerNotes: string | null;
+  subtotal: number;
+  discountPercent: number;
+  discountAmount: number;
+  taxTotal: number;
+  total: number;
+  lines: InvoiceLine[];
+};

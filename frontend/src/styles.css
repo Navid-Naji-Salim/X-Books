@@ -342,7 +342,7 @@ textarea:focus {
 }
 
 .nav-submenu.is-visible {
-  max-height: 4rem;
+  max-height: 8rem;
   margin: 0.25rem 0 0.15rem;
   opacity: 1;
   transform: translateY(0);
@@ -1108,6 +1108,109 @@ th {
 .customer-table-wrap tbody tr:last-child td { border-bottom: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
+.invoice-workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.invoice-form-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.invoice-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.invoice-detail-card {
+  display: grid;
+  align-content: start;
+  gap: 0.78rem;
+  min-width: 0;
+  border: 1px solid rgba(20, 33, 61, 0.18);
+  border-top: 4px solid rgba(33, 150, 243, 0.64);
+  border-radius: 18px;
+  padding: 0.95rem;
+  background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(248,250,252,.7));
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.invoice-detail-card h3 {
+  min-height: 2rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 1rem;
+}
+
+.invoice-items-panel {
+  display: grid;
+  gap: 0.9rem;
+  overflow: visible;
+}
+
+.invoice-table-wrap {
+  border: 1px solid rgba(20, 33, 61, 0.1);
+  border-radius: 15px;
+  overflow: visible;
+}
+
+.invoice-table { min-width: 800px; }
+.invoice-table thead { background: rgba(248, 250, 252, 0.98); }
+.invoice-table th:first-child { border-top-left-radius: 14px; }
+.invoice-table th:last-child { border-top-right-radius: 14px; }
+.invoice-table tbody tr:last-child td { border-bottom: 0; }
+.invoice-table th:nth-child(1) { width: 34%; }
+.invoice-table th:nth-child(2) { width: 12%; }
+.invoice-table th:nth-child(3) { width: 15%; }
+.invoice-table th:nth-child(4) { width: 21%; }
+.invoice-table th:nth-child(5) { width: 14%; }
+
+.invoice-table td { vertical-align: middle; }
+.invoice-table input { min-height: 2.72rem; border-radius: 13px; padding: 0.64rem 0.78rem; }
+.invoice-item-cell .field > label,
+.invoice-tax-cell .field > label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.invoice-amount { font-weight: 900; white-space: nowrap; }
+.invoice-remove-line { width: 2rem; height: 2rem; border: 0; border-radius: 10px; color: var(--red); background: transparent; font-size: 1.4rem; }
+.invoice-remove-line:hover:not(:disabled) { background: rgba(254, 226, 226, 0.72); }
+.invoice-add-row { justify-self: start; color: #075985; }
+
+.invoice-footer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.72fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.invoice-notes-card { display: grid; align-content: start; }
+.invoice-notes-card textarea { min-height: 8.5rem; }
+.invoice-notes-card > span { margin-top: 0.45rem; color: var(--muted); font-size: 0.8rem; font-weight: 700; }
+
+.invoice-totals-card {
+  display: grid;
+  gap: 0;
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.invoice-totals-card > div {
+  display: grid;
+  grid-template-columns: 1fr minmax(7rem, 0.65fr) minmax(6rem, auto);
+  gap: 0.85rem;
+  align-items: center;
+  min-height: 3.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.invoice-totals-card > div > strong { text-align: right; }
+.invoice-totals-card > div:not(:nth-child(2)) > strong { grid-column: 3; }
+.invoice-discount-input { display: grid; grid-template-columns: 1fr 2.5rem; }
+.invoice-discount-input input { min-height: 2.6rem; border-radius: 12px 0 0 12px; padding: 0.55rem 0.65rem; text-align: right; }
+.invoice-discount-input b { display: grid; place-items: center; border: 1px solid var(--line); border-left: 0; border-radius: 0 12px 12px 0; background: white; }
+.invoice-totals-card .invoice-total-row { min-height: 4.25rem; border-bottom: 0; font-size: 1.15rem; }
+.invoice-total-row span, .invoice-total-row strong { font-weight: 900; }
+
 .page-alert {
   margin-bottom: 1rem;
   border-color: rgba(217, 119, 6, 0.28);
@@ -1122,6 +1225,8 @@ th {
   .item-identity-grid,
   .item-compact-grid,
   .item-info-fields,
+  .invoice-details-grid,
+  .invoice-footer-grid,
   .stats-grid {
     grid-template-columns: 1fr;
   }
@@ -1150,4 +1255,6 @@ th {
 
   .customer-list-head { align-items: stretch; }
   .customer-search { width: 100%; }
+  .invoice-table-wrap { overflow-x: auto; }
+  .invoice-totals-card > div { grid-template-columns: 1fr minmax(6rem, 0.7fr) minmax(5rem, auto); }
 }

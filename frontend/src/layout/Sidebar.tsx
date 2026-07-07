@@ -61,6 +61,7 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
                 </button>
                 {!isCollapsed ? (
                   <div aria-hidden={!isSalesOpen} className={`nav-submenu ${isSalesOpen ? "is-visible" : ""}`}>
+                    <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/invoices">Invoices</NavLink>
                     <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/customers">Customers</NavLink>
                   </div>
                 ) : null}

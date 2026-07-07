@@ -1,4 +1,4 @@
-import type { Admin, Contact, Item, Summary } from "./types";
+import type { Admin, Contact, Invoice, Item, Summary } from "./types";
 
 type LoginResponse = {
   token: string;
@@ -48,6 +48,12 @@ export const api = {
   items: (token: string) => request<Item[]>("/api/items", token),
   customers: (token: string) => request<Contact[]>("/api/customers", token),
   vendors: (token: string) => request<Contact[]>("/api/vendors", token),
+  invoices: (token: string) => request<Invoice[]>("/api/invoices", token),
+  createInvoice: (token: string, payload: Record<string, unknown>) =>
+    request<Invoice>("/api/invoices", token, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   createItem: (token: string, payload: Record<string, FormDataEntryValue>) =>
     request<Item>("/api/items", token, {
       method: "POST",

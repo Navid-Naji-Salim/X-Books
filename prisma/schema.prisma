@@ -27,6 +27,7 @@ model Item {
   purchaseDescription String?
   preferredVendorId String?
   preferredVendor   Vendor?  @relation(fields: [preferredVendorId], references: [id], onDelete: SetNull)
+  invoiceLines      InvoiceLine[]
   quantity          Int      @default(0)
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
@@ -51,8 +52,42 @@ model Customer {
   taxRate     String?
   paymentTerms String   @default("Due on Receipt")
   notes       String?
+  invoices    Invoice[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  invoiceNumber   String        @unique
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  invoiceDate     DateTime
+  terms           String
+  dueDate         DateTime
+  customerNotes   String?
+  subtotal        Decimal       @db.Decimal(12, 2)
+  discountPercent Decimal       @default(0) @db.Decimal(5, 2)
+  discountAmount  Decimal       @default(0) @db.Decimal(12, 2)
+  taxTotal        Decimal       @default(0) @db.Decimal(12, 2)
+  total           Decimal       @db.Decimal(12, 2)
+  lines           InvoiceLine[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model InvoiceLine {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  itemId    String?
+  item      Item?    @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  itemName  String
+  quantity  Decimal  @db.Decimal(12, 2)
+  rate      Decimal  @db.Decimal(12, 2)
+  tax       String?
+  taxRate   Decimal  @default(0) @db.Decimal(5, 2)
+  amount    Decimal  @db.Decimal(12, 2)
 }
 
 model Vendor {
