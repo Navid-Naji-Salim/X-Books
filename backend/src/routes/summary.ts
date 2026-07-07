@@ -5,11 +5,12 @@ export const summaryRouter = Router();
 
 summaryRouter.get("/", async (_req, res, next) => {
   try {
-    const [items, customerCount, vendorCount] = await Promise.all([
-      prisma.item.findMany(),
-      prisma.customer.count(),
-      prisma.vendor.count(),
-    ]);
+    // Prisma Dev can close a pooled local connection when several aggregate
+    // queries start on the same request at once. Keep this tiny dashboard read
+    // sequential so login-time workspace loading remains reliable.
+    const items = await prisma.item.findMany();
+    const customerCount = await prisma.customer.count();
+    const vendorCount = await prisma.vendor.count();
 
     const inventoryValue = items.reduce(
       (total, item) => total + Number(item.unitCost) * item.quantity,

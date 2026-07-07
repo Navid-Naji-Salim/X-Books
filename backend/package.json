@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/src/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx src/server.ts",
     "build": "npm run clean && npm run prisma:generate && tsc -p tsconfig.json",
     "clean": "powershell -NoProfile -Command \"if (Test-Path dist) { Remove-Item dist -Recurse -Force }\"",
     "start": "node dist/src/server.js",
