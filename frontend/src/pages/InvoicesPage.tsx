@@ -45,6 +45,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const [paymentDate, setPaymentDate] = useState(today);
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const sellableItems = items.filter((item) => item.salesEnabled);
 
   const totals = useMemo(() => {
@@ -68,6 +69,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   };
 
   const loadInvoice = (invoice: Invoice) => {
+    if (invoice.status === "Paid") return;
     setEditingId(invoice.id);
     setCustomerId(invoice.customerId); setInvoiceNumber(invoice.invoiceNumber);
     setInvoiceDate(invoice.invoiceDate.slice(0, 10)); setTerms(invoice.terms);
@@ -76,6 +78,21 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     setLines(invoice.lines.map((line, index) => ({ id: nextLineId + index, itemId: line.itemId ?? "", quantity: line.quantity, rate: line.rate, tax: line.tax ?? "" })));
     setNextLineId((value) => value + invoice.lines.length + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteInvoice = async (invoice: Invoice) => {
+    if (!window.confirm(`Delete invoice ${invoice.invoiceNumber}?`)) return;
+    setMessage("");
+    setDeletingId(invoice.id);
+    try {
+      await api.deleteInvoice(token, invoice.id);
+      if (editingId === invoice.id) resetForm();
+      await onRefresh();
+    } catch (error) {
+      setMessage(error instanceof ApiError ? error.message : "Unable to delete the invoice.");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -169,14 +186,14 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th aria-label="Actions" /></tr></thead>
             <tbody>
               {invoices.length === 0 ? <tr><td className="muted" colSpan={7}>No saved invoices yet.</td></tr> : invoices.map((invoice) => (
-                <tr className={editingId === invoice.id ? "is-selected" : ""} key={invoice.id} onClick={() => loadInvoice(invoice)}>
-                  <td><button className="invoice-open-button" type="button" onClick={(event) => { event.stopPropagation(); loadInvoice(invoice); }}>{invoice.invoiceNumber}</button></td>
+                <tr className={`${editingId === invoice.id ? "is-selected" : ""} ${invoice.status === "Paid" ? "is-readonly" : ""}`} key={invoice.id} onClick={() => loadInvoice(invoice)}>
+                  <td>{invoice.status === "Paid" ? <strong>{invoice.invoiceNumber}</strong> : <button className="invoice-open-button" type="button" onClick={(event) => { event.stopPropagation(); loadInvoice(invoice); }}>{invoice.invoiceNumber}</button>}</td>
                   <td>{invoice.customer.displayName}</td>
                   <td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
                   <td>{new Date(invoice.dueDate).toLocaleDateString()}</td>
                   <td><span className={`invoice-status ${invoice.status === "Paid" ? "is-paid" : "is-unpaid"}`}>{invoice.status}</span></td>
                   <td><strong>{currency.format(invoice.total)}</strong></td>
-                  <td>{invoice.status !== "Paid" ? <button className="ghost-button record-payment-button" type="button" onClick={(event) => { event.stopPropagation(); setMessage(""); setPaymentInvoice(invoice); setPaymentDate(today); setPaymentAmount(invoice.total); }}>Record payment</button> : null}</td>
+                  <td><div className="invoice-row-actions">{invoice.status !== "Paid" ? <button className="ghost-button record-payment-button" disabled={deletingId !== null} type="button" onClick={(event) => { event.stopPropagation(); setMessage(""); setPaymentInvoice(invoice); setPaymentDate(today); setPaymentAmount(invoice.total); }}>Record payment</button> : null}<button className="ghost-button danger-button invoice-delete-button" disabled={deletingId !== null} type="button" onClick={(event) => { event.stopPropagation(); void deleteInvoice(invoice); }}>{deletingId === invoice.id ? "Deleting" : "Delete"}</button></div></td>
                 </tr>
               ))}
             </tbody>
@@ -192,6 +209,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             try {
               await api.recordInvoicePayment(token, paymentInvoice.id, { paymentDate, amount: paymentAmount });
               await onRefresh();
+              if (editingId === paymentInvoice.id) resetForm();
               setPaymentInvoice(null);
             } catch (error) {
               setMessage(error instanceof ApiError ? error.message : "Unable to record the payment.");

@@ -79,6 +79,10 @@ invoicesRouter.post("/", async (req, res, next) => {
 
 invoicesRouter.patch("/:id", async (req, res, next) => {
   try {
+    const existingInvoice = await prisma.invoice.findUnique({ where: { id: req.params.id }, select: { status: true } });
+    if (!existingInvoice) throw new ApiError(404, "Invoice was not found.");
+    if (existingInvoice.status === "Paid") throw new ApiError(400, "Paid invoices cannot be edited.");
+
     const body = parseBody(req);
     const customerId = requiredString(body, "customerId");
     const customer = await prisma.customer.findUnique({ where: { id: customerId }, select: { id: true } });
@@ -141,6 +145,19 @@ invoicesRouter.post("/:id/payment", async (req, res, next) => {
     await prisma.$transaction([
       prisma.payment.create({ data: { invoiceId: invoice.id, paymentDate: dateValue(body, "paymentDate"), amount: decimal(amount) } }),
       prisma.invoice.update({ where: { id: invoice.id }, data: { status: "Paid" } }),
+    ]);
+    res.status(204).send();
+  } catch (error) { next(error); }
+});
+
+invoicesRouter.delete("/:id", async (req, res, next) => {
+  try {
+    const invoice = await prisma.invoice.findUnique({ where: { id: req.params.id }, select: { id: true } });
+    if (!invoice) throw new ApiError(404, "Invoice was not found.");
+
+    await prisma.$transaction([
+      prisma.payment.deleteMany({ where: { invoiceId: invoice.id } }),
+      prisma.invoice.delete({ where: { id: invoice.id } }),
     ]);
     res.status(204).send();
   } catch (error) { next(error); }

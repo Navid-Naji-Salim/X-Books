@@ -77,6 +77,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  deleteInvoice: (token: string, id: string) =>
+    request<null>(`/api/invoices/${id}`, token, { method: "DELETE" }),
   createItem: (token: string, payload: Record<string, FormDataEntryValue>) =>
     request<Item>("/api/items", token, {
       method: "POST",
