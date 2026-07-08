@@ -55,31 +55,39 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
   let pdfSummary: Array<[string, string]> = [];
   let pdfHeaders: string[] = [];
   let pdfRows: string[][] = [];
-  let detailTitle = "Report detail";
+  let detailTitle = "Report Details";
   if (id === "profit-loss") {
-    detailTitle = "Profit & loss detail";
+    detailTitle = "Profit & Loss Details";
     pdfSummary = [["Sales", currency.format(sales)], ["Purchases", currency.format(purchases)], ["Net profit", currency.format(sales - purchases)]];
     pdfHeaders = ["Category", "Amount"]; pdfRows = [["Sales income", currency.format(sales)], ["Purchases", `-${currency.format(purchases)}`], ["Net profit", currency.format(sales - purchases)]];
     content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Profit & loss detail</h2><div className="table-wrap"><table><thead><tr><th>Category</th><th>Amount</th></tr></thead><tbody>{pdfRows.map((row) => <tr key={row[0]}><td>{row[0]}</td><td><strong>{row[1]}</strong></td></tr>)}</tbody></table></div></section></>;
   } else if (id === "sales") {
-    detailTitle = "Invoice detail";
+    detailTitle = "Invoice Details";
     pdfSummary = [["Total sales", currency.format(sales)], ["Paid", currency.format(paidSales)], ["Outstanding", currency.format(sales - paidSales)]];
     pdfHeaders = ["Invoice", "Customer", "Date", "Status", "Total"]; pdfRows = invoices.map((invoice) => [invoice.invoiceNumber, invoice.customer.displayName, new Date(invoice.invoiceDate).toLocaleDateString(), invoice.status, currency.format(invoice.total)]);
     content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Invoice detail</h2><div className="table-wrap"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>{invoices.length ? invoices.map((invoice) => <tr key={invoice.id}><td><strong>{invoice.invoiceNumber}</strong></td><td>{invoice.customer.displayName}</td><td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td><td>{status(invoice.status)}</td><td><strong>{currency.format(invoice.total)}</strong></td></tr>) : <tr><td className="muted" colSpan={5}>No sales activity yet.</td></tr>}</tbody></table></div></section></>;
   } else if (id === "purchases") {
-    detailTitle = "Bill detail";
+    detailTitle = "Bill Details";
     pdfSummary = [["Total purchases", currency.format(purchases)], ["Paid", currency.format(paidPurchases)], ["Outstanding", currency.format(purchases - paidPurchases)]];
     pdfHeaders = ["Bill", "Vendor", "Date", "Status", "Total"]; pdfRows = bills.map((bill) => [bill.billNumber, bill.vendor.displayName, new Date(bill.billDate).toLocaleDateString(), bill.status, currency.format(bill.total)]);
     content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Bill detail</h2><div className="table-wrap"><table><thead><tr><th>Bill</th><th>Vendor</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>{bills.length ? bills.map((bill) => <tr key={bill.id}><td><strong>{bill.billNumber}</strong></td><td>{bill.vendor.displayName}</td><td>{new Date(bill.billDate).toLocaleDateString()}</td><td>{status(bill.status)}</td><td><strong>{currency.format(bill.total)}</strong></td></tr>) : <tr><td className="muted" colSpan={5}>No purchase activity yet.</td></tr>}</tbody></table></div></section></>;
   } else {
     const isCustomers = id === "customers";
-    detailTitle = `${isCustomers ? "Customer" : "Vendor"} detail`;
+    detailTitle = `${isCustomers ? "Customer" : "Vendor"} Details`;
     const rows = aggregate(isCustomers ? customers : vendors, isCustomers ? invoices.map((entry) => ({ contactId: entry.customerId, total: entry.total, status: entry.status })) : bills.map((entry) => ({ contactId: entry.vendorId, total: entry.total, status: entry.status })));
     const total = rows.reduce((sum, row) => sum + row.total, 0); const outstanding = rows.reduce((sum, row) => sum + row.outstanding, 0);
     pdfSummary = [[isCustomers ? "Customers" : "Vendors", String(rows.length)], ["Transaction total", currency.format(total)], ["Outstanding", currency.format(outstanding)]];
     pdfHeaders = ["Name", "Transactions", "Total", "Outstanding"]; pdfRows = rows.map((row) => [row.contact.displayName, String(row.count), currency.format(row.total), currency.format(row.outstanding)]);
     content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>{isCustomers ? "Customer" : "Vendor"} detail</h2><div className="table-wrap"><table><thead><tr><th>Name</th><th>Transactions</th><th>Total</th><th>Outstanding</th></tr></thead><tbody>{rows.length ? rows.map((row) => <tr key={row.contact.id}><td><strong>{row.contact.displayName}</strong><br /><span className="muted">{row.contact.email || "No email"}</span></td><td>{row.count}</td><td><strong>{currency.format(row.total)}</strong></td><td>{currency.format(row.outstanding)}</td></tr>) : <tr><td className="muted" colSpan={4}>No {isCustomers ? "customers" : "vendors"} yet.</td></tr>}</tbody></table></div></section></>;
   }
+  const firstPageCapacity = 16;
+  const continuedPageCapacity = 24;
+  const paginatedRows = (() => {
+    if (pdfRows.length === 0) return [([] as string[][])];
+    const pages: string[][][] = [pdfRows.slice(0, firstPageCapacity)];
+    for (let index = firstPageCapacity; index < pdfRows.length; index += continuedPageCapacity) pages.push(pdfRows.slice(index, index + continuedPageCapacity));
+    return pages;
+  })();
   const generate = async () => {
     if (!fromDate || !toDate || fromDate > toDate) { setError("Choose a valid date range."); return; }
     setError(""); setIsGenerating(true);
@@ -94,32 +102,30 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
     if (!generated) return;
     const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
-    const margin = 42; const pageWidth = pdf.internal.pageSize.getWidth(); const pageHeight = pdf.internal.pageSize.getHeight(); const usable = pageWidth - margin * 2;
-    let y = margin;
-    pdf.setTextColor(3, 105, 161); pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("XBooks", margin, y);
-    y += 25; pdf.setTextColor(20, 33, 61); pdf.setFontSize(22); pdf.text(title, margin, y);
-    y += 20; pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(71, 85, 105);
-    pdf.text(`Report period: ${reportDate(generated.fromDate)} – ${reportDate(generated.toDate)}`, margin, y);
-    pdf.text(`Generated: ${generatedTime(generated.generatedAt)}`, pageWidth - margin, y, { align: "right" });
-    y += 14; pdf.setDrawColor(148, 163, 184); pdf.line(margin, y, pageWidth - margin, y); y += 20;
-    pdfSummary.forEach(([label, value]) => { pdf.setFont("helvetica", "normal"); pdf.setTextColor(71, 85, 105); pdf.text(label, margin, y); pdf.setFont("helvetica", "bold"); pdf.setTextColor(20, 33, 61); pdf.text(value, pageWidth - margin, y, { align: "right" }); y += 18; });
-    y += 8; pdf.setFont("helvetica", "bold"); pdf.setFontSize(11); pdf.setTextColor(30, 41, 59); pdf.text(detailTitle, margin, y); y += 8; pdf.setDrawColor(148, 163, 184); pdf.line(margin, y, pageWidth - margin, y); y += 10;
-    const columnWidth = usable / Math.max(1, pdfHeaders.length);
-    const drawHeader = () => { pdf.setFillColor(241, 245, 249); pdf.rect(margin, y, usable, 22, "F"); pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(30, 41, 59); pdfHeaders.forEach((header, index) => pdf.text(header, margin + index * columnWidth + 5, y + 14)); y += 22; };
-    if (pdfHeaders.length) drawHeader();
-    pdf.setFontSize(8); pdf.setFont("helvetica", "normal");
-    for (const row of pdfRows) {
-      const cells = row.map((cell) => pdf.splitTextToSize(cell, columnWidth - 10) as string[]);
-      const rowHeight = Math.max(22, ...cells.map((cell) => cell.length * 10 + 8));
-      if (y + rowHeight > pageHeight - margin) { pdf.addPage(); y = margin; drawHeader(); pdf.setFont("helvetica", "normal"); }
-      pdf.setDrawColor(226, 232, 240); pdf.line(margin, y + rowHeight, pageWidth - margin, y + rowHeight);
-      pdf.setTextColor(30, 41, 59); cells.forEach((cell, index) => pdf.text(cell, margin + index * columnWidth + 5, y + 13));
-      y += rowHeight;
-    }
+    const margin = 42; const pageWidth = pdf.internal.pageSize.getWidth(); const usable = pageWidth - margin * 2; const columnWidth = usable / Math.max(1, pdfHeaders.length);
+    const fit = (value: string, width: number) => { let result = value; while (result.length > 1 && pdf.getTextWidth(result) > width) result = `${result.slice(0, -2)}…`; return result; };
+    const drawDocumentHeader = (pageIndex: number) => {
+      let y = margin;
+      pdf.setTextColor(3, 105, 161); pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("XBooks", margin, y);
+      y += 25; pdf.setTextColor(20, 33, 61); pdf.setFontSize(22); pdf.text(title, margin, y);
+      y += 20; pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(71, 85, 105);
+      pdf.text(`Report period: ${reportDate(generated.fromDate)} – ${reportDate(generated.toDate)}`, margin, y);
+      pdf.text(`Generated: ${generatedTime(generated.generatedAt)}`, pageWidth - margin, y, { align: "right" });
+      y += 14; pdf.setDrawColor(148, 163, 184); pdf.line(margin, y, pageWidth - margin, y); y += 20;
+      if (pageIndex === 0) pdfSummary.forEach(([label, value]) => { pdf.setFont("helvetica", "normal"); pdf.setTextColor(71, 85, 105); pdf.text(label, margin, y); pdf.setFont("helvetica", "bold"); pdf.setTextColor(20, 33, 61); pdf.text(value, pageWidth - margin, y, { align: "right" }); y += 18; });
+      y += 8; pdf.setFont("helvetica", "bold"); pdf.setFontSize(11); pdf.setTextColor(30, 41, 59); pdf.text(detailTitle, margin, y); y += 8; pdf.setDrawColor(148, 163, 184); pdf.line(margin, y, pageWidth - margin, y); y += 10;
+      pdf.setFillColor(241, 245, 249); pdf.rect(margin, y, usable, 22, "F"); pdf.setFontSize(8); pdfHeaders.forEach((header, index) => pdf.text(fit(header, columnWidth - 10), margin + index * columnWidth + 5, y + 14));
+      return y + 22;
+    };
+    paginatedRows.forEach((rows, pageIndex) => {
+      if (pageIndex > 0) pdf.addPage();
+      let y = drawDocumentHeader(pageIndex); pdf.setFont("helvetica", "normal"); pdf.setFontSize(8);
+      rows.forEach((row) => { pdf.setDrawColor(226, 232, 240); pdf.line(margin, y + 22, pageWidth - margin, y + 22); pdf.setTextColor(30, 41, 59); row.forEach((cell, index) => pdf.text(fit(cell, columnWidth - 10), margin + index * columnWidth + 5, y + 14)); y += 22; });
+    });
     pdf.save(`${id}-${generated.fromDate}-${generated.toDate}.pdf`);
   };
   return <div className="report-page"><header className="report-page-head report-screen-only"><Link className="report-back" to="/reports">← Reports</Link><h1>{title}</h1><p>{description}</p></header>
     <section className="report-toolbar report-screen-only"><div className="field"><label htmlFor="reportFrom">From</label><input id="reportFrom" type="date" value={fromDate} onChange={(event) => setFromDate(event.currentTarget.value)} /></div><div className="field"><label htmlFor="reportTo">To</label><input id="reportTo" type="date" value={toDate} onChange={(event) => setToDate(event.currentTarget.value)} /></div><button className="button" disabled={isGenerating} type="button" onClick={() => void generate()}>{isGenerating ? "Generating..." : "Generate report"}</button><div className="message">{error}</div></section>
-    <section className="report-viewer">{generated ? <div className="report-document-shell"><div className="report-document-actions report-screen-only"><span>Generated report</span><div><button className="ghost-button" type="button" onClick={() => window.print()}>Print</button><button className="button" type="button" onClick={() => void exportPdf()}>Export PDF</button></div></div><div className="report-document"><header className="report-document-head"><span>XBooks</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(generated.fromDate)} – {reportDate(generated.toDate)}</span><span>Generated: {generatedTime(generated.generatedAt)}</span></div></header><div className="report-detail">{content}</div></div></div> : <div className="report-document report-document-empty"><span className="report-empty-icon" aria-hidden="true">▤</span><strong>No report generated</strong><p>Choose a date range and generate this report.</p></div>}</section>
+    <section className="report-viewer">{generated ? <div className="report-document-shell"><div className="report-document-actions report-screen-only"><span>{paginatedRows.length} page{paginatedRows.length === 1 ? "" : "s"}</span><div><button className="ghost-button" type="button" onClick={() => window.print()}>Print</button><button className="button" type="button" onClick={() => void exportPdf()}>Export PDF</button></div></div><div className="report-pages">{paginatedRows.map((rows, pageIndex) => <article className="report-document" key={pageIndex}><header className="report-document-head"><span>XBooks</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(generated.fromDate)} – {reportDate(generated.toDate)}</span><span>Generated: {generatedTime(generated.generatedAt)}</span></div></header><div className="report-detail">{pageIndex === 0 ? <Summary entries={pdfSummary} /> : null}<section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cellIndex === row.length - 1 ? <strong>{cell}</strong> : cell}</td>)}</tr>) : <tr><td className="muted" colSpan={Math.max(1, pdfHeaders.length)}>No activity in this period.</td></tr>}</tbody></table></div></section></div></article>)}</div></div> : <div className="report-document report-document-empty"><span className="report-empty-icon" aria-hidden="true">▤</span><strong>No report generated</strong><p>Choose a date range and generate this report.</p></div>}</section>
   </div>;
 };
