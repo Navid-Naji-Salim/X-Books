@@ -1294,10 +1294,10 @@ th {
 .report-document-template { border-radius: 4px; }
 .report-template-summary { display: grid; gap: 0; }
 .report-template-summary > div { display: grid; grid-template-columns: 1fr 7rem; gap: 2rem; align-items: center; min-height: 27px; }
+.report-template-summary span { color: #334155; font-size: 15px; }
 .report-template-summary i,
 .report-template-row i { display: block; height: 7px; border-radius: 999px; background: #e8edf3; }
-.report-template-summary i:first-child { width: min(9rem, 45%); }
-.report-template-summary i:last-child { width: 5rem; justify-self: end; }
+.report-template-summary i { width: 5rem; justify-self: end; }
 .report-template-row td i { width: 62%; }
 .report-template-row td:last-child i { width: 48%; margin-left: auto; }
 .report-template-message { margin: 1.2rem 0 0; color: #94a3b8; font-size: 0.82rem; text-align: center; }
