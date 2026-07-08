@@ -29,6 +29,8 @@ vendorsRouter.post("/", async (req, res, next) => {
         state: optionalString(body, "state"),
         postalCode: optionalString(body, "postalCode"),
         country: optionalString(body, "country"),
+        taxRate: optionalString(body, "taxRate"),
+        paymentTerms: optionalString(body, "paymentTerms") ?? "Due on Receipt",
         notes: optionalString(body, "notes"),
       },
     });
@@ -54,6 +56,8 @@ vendorsRouter.patch("/:id", async (req, res, next) => {
         state: optionalString(body, "state"),
         postalCode: optionalString(body, "postalCode"),
         country: optionalString(body, "country"),
+        taxRate: optionalString(body, "taxRate"),
+        paymentTerms: optionalString(body, "paymentTerms") ?? "Due on Receipt",
         notes: optionalString(body, "notes"),
       },
     });

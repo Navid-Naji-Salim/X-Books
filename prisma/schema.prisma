@@ -114,6 +114,8 @@ model Vendor {
   state       String?
   postalCode  String?
   country     String?
+  taxRate     String?
+  paymentTerms String @default("Due on Receipt")
   legacyAddress String? @map("address")
   notes       String?
   items       Item[]
