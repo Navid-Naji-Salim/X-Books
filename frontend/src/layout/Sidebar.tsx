@@ -22,6 +22,7 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const location = useLocation();
   const [isSalesOpen, setIsSalesOpen] = useState(location.pathname.startsWith("/sales"));
+  const [isPurchasesOpen, setIsPurchasesOpen] = useState(location.pathname.startsWith("/purchases"));
 
   return (
     <aside className={`sidebar ${isCollapsed ? "is-collapsed" : ""}`}>
@@ -54,7 +55,7 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
                   aria-expanded={isSalesOpen}
                   className={!isSalesOpen && location.pathname.startsWith("/sales") ? "nav-group-button has-active-child" : "nav-group-button"}
                   type="button"
-                  onClick={() => setIsSalesOpen((current) => !current)}
+                  onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsSalesOpen(true); } else setIsSalesOpen((current) => !current); }}
                 >
                   {icons.sales({ className: "nav-icon" })}<span>Sales</span>
                   <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
@@ -65,6 +66,17 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
                     <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/customers">Customers</NavLink>
                   </div>
                 ) : null}
+              </div>
+            );
+          }
+          if (item.id === "purchases") {
+            return (
+              <div className={`nav-group ${isPurchasesOpen ? "is-open" : ""}`} key="purchases">
+                <button aria-expanded={isPurchasesOpen} className={!isPurchasesOpen && location.pathname.startsWith("/purchases") ? "nav-group-button has-active-child" : "nav-group-button"} type="button" onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsPurchasesOpen(true); } else setIsPurchasesOpen((current) => !current); }}>
+                  {icons.purchases({ className: "nav-icon" })}<span>Purchases</span>
+                  <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                </button>
+                {!isCollapsed ? <div aria-hidden={!isPurchasesOpen} className={`nav-submenu ${isPurchasesOpen ? "is-visible" : ""}`}><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/vendors">Vendors</NavLink><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/bills">Bills</NavLink></div> : null}
               </div>
             );
           }

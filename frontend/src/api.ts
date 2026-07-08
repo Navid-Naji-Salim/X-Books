@@ -1,4 +1,4 @@
-import type { Admin, Contact, Invoice, Item, Summary } from "./types";
+import type { Admin, Bill, Contact, Invoice, Item, Summary } from "./types";
 
 type LoginResponse = {
   token: string;
@@ -62,6 +62,12 @@ export const api = {
   customers: (token: string) => request<Contact[]>("/api/customers", token),
   vendors: (token: string) => request<Contact[]>("/api/vendors", token),
   invoices: (token: string) => request<Invoice[]>("/api/invoices", token),
+  bills: (token: string) => request<Bill[]>("/api/bills", token),
+  nextBillNumber: (token: string) => request<{ billNumber: string }>("/api/bills/next-number", token),
+  createBill: (token: string, payload: Record<string, unknown>) => request<Bill>("/api/bills", token, { method: "POST", body: JSON.stringify(payload) }),
+  updateBill: (token: string, id: string, payload: Record<string, unknown>) => request<Bill>(`/api/bills/${id}`, token, { method: "PATCH", body: JSON.stringify(payload) }),
+  recordBillPayment: (token: string, id: string, payload: { paymentDate: string; amount: number }) => request<null>(`/api/bills/${id}/payment`, token, { method: "POST", body: JSON.stringify(payload) }),
+  deleteBill: (token: string, id: string) => request<null>(`/api/bills/${id}`, token, { method: "DELETE" }),
   createInvoice: (token: string, payload: Record<string, unknown>) =>
     request<Invoice>("/api/invoices", token, {
       method: "POST",
@@ -90,6 +96,10 @@ export const api = {
     }),
   deleteCustomer: (token: string, id: string) =>
     request<null>(`/api/customers/${id}`, token, { method: "DELETE" }),
+  updateVendor: (token: string, id: string, payload: Record<string, FormDataEntryValue>) =>
+    request<Contact>(`/api/vendors/${id}`, token, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteVendor: (token: string, id: string) =>
+    request<null>(`/api/vendors/${id}`, token, { method: "DELETE" }),
   createContact: (
     token: string,
     kind: "customers" | "vendors",

@@ -21,9 +21,9 @@ vendorsRouter.post("/", async (req, res, next) => {
     const vendor = await prisma.vendor.create({
       data: {
         displayName: requiredString(body, "displayName"),
-        companyName: optionalString(body, "companyName"),
         email: optionalString(body, "email"),
         phone: optionalString(body, "phone"),
+        address: optionalString(body, "address"),
         notes: optionalString(body, "notes"),
       },
     });
@@ -32,4 +32,28 @@ vendorsRouter.post("/", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+vendorsRouter.patch("/:id", async (req, res, next) => {
+  try {
+    const body = parseBody(req);
+    const vendor = await prisma.vendor.update({
+      where: { id: req.params.id },
+      data: {
+        displayName: requiredString(body, "displayName"),
+        email: optionalString(body, "email"),
+        phone: optionalString(body, "phone"),
+        address: optionalString(body, "address"),
+        notes: optionalString(body, "notes"),
+      },
+    });
+    res.json(presentContact(vendor));
+  } catch (error) { next(error); }
+});
+
+vendorsRouter.delete("/:id", async (req, res, next) => {
+  try {
+    await prisma.vendor.delete({ where: { id: req.params.id } });
+    res.status(204).send();
+  } catch (error) { next(error); }
 });

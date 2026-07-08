@@ -5,6 +5,7 @@ import { env } from "./config/env.js";
 import { requireAdmin } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { authRouter } from "./routes/auth.js";
+import { billsRouter } from "./routes/bills.js";
 import { customersRouter } from "./routes/customers.js";
 import { healthRouter } from "./routes/health.js";
 import { itemsRouter } from "./routes/items.js";
@@ -25,6 +26,7 @@ export const createApp = () => {
   app.use("/api", requireAdmin);
   app.use("/api/summary", summaryRouter);
   app.use("/api/items", itemsRouter);
+  app.use("/api/bills", billsRouter);
   app.use("/api/invoices", invoicesRouter);
   app.use("/api/customers", customersRouter);
   app.use("/api/vendors", vendorsRouter);

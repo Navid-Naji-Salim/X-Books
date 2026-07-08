@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { Sidebar } from "./layout/Sidebar";
-import { ContactsPage } from "./pages/ContactsPage";
+import { BillsPage } from "./pages/BillsPage";
 import { CustomersPage } from "./pages/CustomersPage";
 import { HomePage } from "./pages/HomePage";
 import { ItemsPage } from "./pages/ItemsPage";
 import { InvoicesPage } from "./pages/InvoicesPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ReportsPage } from "./pages/ReportsPage";
-import type { Admin, Contact, Invoice, Item, Summary } from "./types";
+import { VendorsPage } from "./pages/VendorsPage";
+import type { Admin, Bill, Contact, Invoice, Item, Summary } from "./types";
 
 type AppData = {
   summary: Summary;
@@ -17,6 +18,8 @@ type AppData = {
   customers: Contact[];
   vendors: Contact[];
   invoices: Invoice[];
+  bills: Bill[];
+  nextBillNumber: string;
 };
 
 const emptySummary: Summary = {
@@ -33,6 +36,8 @@ const emptyData: AppData = {
   customers: [],
   vendors: [],
   invoices: [],
+  bills: [],
+  nextBillNumber: "BILL-0001",
 };
 
 export const App = () => {
@@ -52,15 +57,17 @@ export const App = () => {
 
   const loadData = async (activeToken: string) => {
     setDataError("");
-    const [summary, items, customers, vendors, invoices] = await Promise.all([
+    const [summary, items, customers, vendors, invoices, bills, nextBill] = await Promise.all([
       api.summary(activeToken),
       api.items(activeToken),
       api.customers(activeToken),
       api.vendors(activeToken),
       api.invoices(activeToken),
+      api.bills(activeToken),
+      api.nextBillNumber(activeToken),
     ]);
 
-    setData({ summary, items, customers, vendors, invoices });
+    setData({ summary, items, customers, vendors, invoices, bills, nextBillNumber: nextBill.billNumber });
   };
 
   useEffect(() => {
@@ -163,12 +170,15 @@ export const App = () => {
           }
         />
         <Route
+          path="purchases/bills"
+          element={<BillsPage bills={data.bills} dataError={dataError} items={data.items} nextBillNumber={data.nextBillNumber} vendors={data.vendors} token={token ?? ""} onRefresh={() => (token ? loadData(token) : Promise.resolve())} />}
+        />
+        <Route
           path="purchases/vendors"
           element={
-            <ContactsPage
+            <VendorsPage
               contacts={data.vendors}
-              kind="vendors"
-              summary={data.summary}
+              dataError={dataError}
               token={token ?? ""}
               onRefresh={() => (token ? loadData(token) : Promise.resolve())}
             />

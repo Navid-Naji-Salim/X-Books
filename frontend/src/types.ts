@@ -50,6 +50,7 @@ export type Contact = {
   companyName: string | null;
   email: string | null;
   phone: string | null;
+  address?: string | null;
   addressLine1?: string | null;
   addressLine2?: string | null;
   city?: string | null;
@@ -88,4 +89,11 @@ export type Invoice = {
   taxTotal: number;
   total: number;
   lines: InvoiceLine[];
+};
+
+export type Bill = {
+  id: string; sequence: number; billNumber: string; vendorId: string;
+  vendor: { id: string; displayName: string }; billDate: string; terms: string; dueDate: string;
+  status: string; notes: string | null; subtotal: number; discountPercent: number;
+  discountAmount: number; taxTotal: number; total: number; lines: InvoiceLine[];
 };
