@@ -31,6 +31,8 @@ const ReportLibrary = () => <>
 </>;
 
 const inputDate = (date: Date) => { const adjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60_000); return adjusted.toISOString().slice(0, 10); };
+const reportDate = (value: string | Date) => new Date(typeof value === "string" ? `${value}T00:00:00` : value).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const generatedTime = (value: Date) => `${reportDate(value)}, ${value.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
 const ReportDetail = ({ id, title, description, token }: Props & { id: string; title: string; description: string }) => {
   const today = new Date();
@@ -53,20 +55,25 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
   let pdfSummary: Array<[string, string]> = [];
   let pdfHeaders: string[] = [];
   let pdfRows: string[][] = [];
+  let detailTitle = "Report detail";
   if (id === "profit-loss") {
+    detailTitle = "Profit & loss detail";
     pdfSummary = [["Sales", currency.format(sales)], ["Purchases", currency.format(purchases)], ["Net profit", currency.format(sales - purchases)]];
     pdfHeaders = ["Category", "Amount"]; pdfRows = [["Sales income", currency.format(sales)], ["Purchases", `-${currency.format(purchases)}`], ["Net profit", currency.format(sales - purchases)]];
     content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Profit & loss detail</h2><div className="table-wrap"><table><thead><tr><th>Category</th><th>Amount</th></tr></thead><tbody>{pdfRows.map((row) => <tr key={row[0]}><td>{row[0]}</td><td><strong>{row[1]}</strong></td></tr>)}</tbody></table></div></section></>;
   } else if (id === "sales") {
+    detailTitle = "Invoice detail";
     pdfSummary = [["Total sales", currency.format(sales)], ["Paid", currency.format(paidSales)], ["Outstanding", currency.format(sales - paidSales)]];
     pdfHeaders = ["Invoice", "Customer", "Date", "Status", "Total"]; pdfRows = invoices.map((invoice) => [invoice.invoiceNumber, invoice.customer.displayName, new Date(invoice.invoiceDate).toLocaleDateString(), invoice.status, currency.format(invoice.total)]);
     content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Invoice detail</h2><div className="table-wrap"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>{invoices.length ? invoices.map((invoice) => <tr key={invoice.id}><td><strong>{invoice.invoiceNumber}</strong></td><td>{invoice.customer.displayName}</td><td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td><td>{status(invoice.status)}</td><td><strong>{currency.format(invoice.total)}</strong></td></tr>) : <tr><td className="muted" colSpan={5}>No sales activity yet.</td></tr>}</tbody></table></div></section></>;
   } else if (id === "purchases") {
+    detailTitle = "Bill detail";
     pdfSummary = [["Total purchases", currency.format(purchases)], ["Paid", currency.format(paidPurchases)], ["Outstanding", currency.format(purchases - paidPurchases)]];
     pdfHeaders = ["Bill", "Vendor", "Date", "Status", "Total"]; pdfRows = bills.map((bill) => [bill.billNumber, bill.vendor.displayName, new Date(bill.billDate).toLocaleDateString(), bill.status, currency.format(bill.total)]);
     content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Bill detail</h2><div className="table-wrap"><table><thead><tr><th>Bill</th><th>Vendor</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>{bills.length ? bills.map((bill) => <tr key={bill.id}><td><strong>{bill.billNumber}</strong></td><td>{bill.vendor.displayName}</td><td>{new Date(bill.billDate).toLocaleDateString()}</td><td>{status(bill.status)}</td><td><strong>{currency.format(bill.total)}</strong></td></tr>) : <tr><td className="muted" colSpan={5}>No purchase activity yet.</td></tr>}</tbody></table></div></section></>;
   } else {
     const isCustomers = id === "customers";
+    detailTitle = `${isCustomers ? "Customer" : "Vendor"} detail`;
     const rows = aggregate(isCustomers ? customers : vendors, isCustomers ? invoices.map((entry) => ({ contactId: entry.customerId, total: entry.total, status: entry.status })) : bills.map((entry) => ({ contactId: entry.vendorId, total: entry.total, status: entry.status })));
     const total = rows.reduce((sum, row) => sum + row.total, 0); const outstanding = rows.reduce((sum, row) => sum + row.outstanding, 0);
     pdfSummary = [[isCustomers ? "Customers" : "Vendors", String(rows.length)], ["Transaction total", currency.format(total)], ["Outstanding", currency.format(outstanding)]];
@@ -92,11 +99,11 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
     pdf.setTextColor(3, 105, 161); pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("XBooks", margin, y);
     y += 25; pdf.setTextColor(20, 33, 61); pdf.setFontSize(22); pdf.text(title, margin, y);
     y += 20; pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(71, 85, 105);
-    pdf.text(`Report period: ${new Date(`${generated.fromDate}T00:00:00`).toLocaleDateString()} - ${new Date(`${generated.toDate}T00:00:00`).toLocaleDateString()}`, margin, y);
-    pdf.text(`Generated: ${generated.generatedAt.toLocaleString()}`, pageWidth - margin, y, { align: "right" });
+    pdf.text(`Report period: ${reportDate(generated.fromDate)} – ${reportDate(generated.toDate)}`, margin, y);
+    pdf.text(`Generated: ${generatedTime(generated.generatedAt)}`, pageWidth - margin, y, { align: "right" });
     y += 14; pdf.setDrawColor(148, 163, 184); pdf.line(margin, y, pageWidth - margin, y); y += 20;
     pdfSummary.forEach(([label, value]) => { pdf.setFont("helvetica", "normal"); pdf.setTextColor(71, 85, 105); pdf.text(label, margin, y); pdf.setFont("helvetica", "bold"); pdf.setTextColor(20, 33, 61); pdf.text(value, pageWidth - margin, y, { align: "right" }); y += 18; });
-    y += 8;
+    y += 8; pdf.setFont("helvetica", "bold"); pdf.setFontSize(11); pdf.setTextColor(30, 41, 59); pdf.text(detailTitle, margin, y); y += 8; pdf.setDrawColor(148, 163, 184); pdf.line(margin, y, pageWidth - margin, y); y += 10;
     const columnWidth = usable / Math.max(1, pdfHeaders.length);
     const drawHeader = () => { pdf.setFillColor(241, 245, 249); pdf.rect(margin, y, usable, 22, "F"); pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(30, 41, 59); pdfHeaders.forEach((header, index) => pdf.text(header, margin + index * columnWidth + 5, y + 14)); y += 22; };
     if (pdfHeaders.length) drawHeader();
@@ -113,6 +120,6 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
   };
   return <><Link className="report-back report-screen-only" to="/reports">← All reports</Link><PageTitle eyebrow="Reports" title={`${title}.`} description={description} />
     <section className="panel report-generator report-screen-only"><div className="report-range"><div className="field"><label htmlFor="reportFrom">From</label><input id="reportFrom" type="date" value={fromDate} onChange={(event) => setFromDate(event.currentTarget.value)} /></div><div className="field"><label htmlFor="reportTo">To</label><input id="reportTo" type="date" value={toDate} onChange={(event) => setToDate(event.currentTarget.value)} /></div></div><button className="button" disabled={isGenerating} type="button" onClick={() => void generate()}>{isGenerating ? "Generating..." : "Generate report"}</button><div className="message">{error}</div></section>
-    {generated ? <><div className="report-actions report-screen-only"><button className="ghost-button" type="button" onClick={() => window.print()}>Print</button><button className="button" type="button" onClick={() => void exportPdf()}>Export as PDF</button></div><div className="report-document"><header className="report-document-head"><div><span>XBooks</span><h1>{title}</h1></div><dl><div><dt>Report period</dt><dd>{new Date(`${generated.fromDate}T00:00:00`).toLocaleDateString()} – {new Date(`${generated.toDate}T00:00:00`).toLocaleDateString()}</dd></div><div><dt>Generated</dt><dd>{generated.generatedAt.toLocaleString()}</dd></div></dl></header><div className="report-detail">{content}</div></div></> : <div className="empty-state report-screen-only">Choose a date range and generate this report.</div>}
+    {generated ? <><div className="report-actions report-screen-only"><button className="ghost-button" type="button" onClick={() => window.print()}>Print</button><button className="button" type="button" onClick={() => void exportPdf()}>Export as PDF</button></div><div className="report-document"><header className="report-document-head"><span>XBooks</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(generated.fromDate)} – {reportDate(generated.toDate)}</span><span>Generated: {generatedTime(generated.generatedAt)}</span></div></header><div className="report-detail">{content}</div></div></> : <div className="empty-state report-screen-only">Choose a date range and generate this report.</div>}
   </>;
 };
