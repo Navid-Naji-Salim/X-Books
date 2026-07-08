@@ -12,6 +12,45 @@ export type Summary = {
   vendorCount: number;
   inventoryValue: number;
   activeItemCount: number;
+  dashboard?: DashboardSummary;
+};
+
+export type DashboardSummary = {
+  periodLabel: string;
+  periodStart: string;
+  periodEnd: string;
+  receivables: MoneyStatusSummary;
+  payables: MoneyStatusSummary;
+  cashFlow: {
+    beginningBalance: number;
+    incoming: number;
+    outgoing: number;
+    endingBalance: number;
+    monthly: Array<{
+      month: string;
+      year: number;
+      incoming: number;
+      outgoing: number;
+      cash: number;
+    }>;
+  };
+  incomeVsPurchases: Array<{
+    month: string;
+    year: number;
+    income: number;
+    purchases: number;
+  }>;
+  topExpenses: Array<{
+    label: string;
+    amount: number;
+  }>;
+};
+
+export type MoneyStatusSummary = {
+  unpaidCount: number;
+  outstanding: number;
+  current: number;
+  overdue: number;
 };
 
 export type Item = {
