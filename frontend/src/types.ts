@@ -50,7 +50,6 @@ export type Contact = {
   companyName: string | null;
   email: string | null;
   phone: string | null;
-  address?: string | null;
   addressLine1?: string | null;
   addressLine2?: string | null;
   city?: string | null;

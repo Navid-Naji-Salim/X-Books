@@ -108,7 +108,12 @@ model Vendor {
   companyName String?
   email       String?
   phone       String?
-  address     String?
+  addressLine1 String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String?
+  legacyAddress String? @map("address")
   notes       String?
   items       Item[]
   bills       Bill[]
