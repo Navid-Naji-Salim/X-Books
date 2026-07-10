@@ -3,12 +3,12 @@ import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { PageTitle } from "../components/PageTitle";
 import { Stats } from "../components/Stats";
-import type { Contact, Summary } from "../types";
+import type { Contact } from "../types";
 
 type ContactsPageProps = {
   contacts: Contact[];
   kind: "customers" | "vendors";
-  summary: Summary;
+  summary: { itemCount: number; customerCount: number; vendorCount: number; inventoryValue: number };
   token: string;
   onRefresh: () => Promise<void>;
 };

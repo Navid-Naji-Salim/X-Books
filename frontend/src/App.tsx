@@ -23,11 +23,11 @@ type AppData = {
 };
 
 const emptySummary: Summary = {
-  activeItemCount: 0,
-  customerCount: 0,
-  inventoryValue: 0,
-  itemCount: 0,
-  vendorCount: 0,
+  year: new Date().getFullYear(),
+  receivables: { outstanding: 0, current: 0, overdue: 0, entries: [] },
+  payables: { outstanding: 0, current: 0, overdue: 0, entries: [] },
+  months: Array.from({ length: 12 }, (_, monthIndex) => ({ month: new Date(2000, monthIndex, 1).toLocaleString("en-US", { month: "short" }), monthIndex, cashReceived: 0, cashPaid: 0, income: 0, expenses: 0 })),
+  activity: { totalIncome: 0, totalExpenses: 0, netActivity: 0 },
 };
 
 const emptyData: AppData = {
@@ -39,6 +39,14 @@ const emptyData: AppData = {
   bills: [],
   nextBillNumber: "BILL-0001",
 };
+
+const normalizedSummary = (summary: Summary): Summary => ({
+  year: summary.year ?? emptySummary.year,
+  receivables: summary.receivables ?? emptySummary.receivables,
+  payables: summary.payables ?? emptySummary.payables,
+  months: Array.isArray(summary.months) && summary.months.length === 12 ? summary.months : emptySummary.months,
+  activity: summary.activity ?? emptySummary.activity,
+});
 
 export const App = () => {
   const [token, setToken] = useState(() => localStorage.getItem("adminToken"));
@@ -67,7 +75,7 @@ export const App = () => {
       api.nextBillNumber(activeToken),
     ]);
 
-    setData({ summary, items, customers, vendors, invoices, bills, nextBillNumber: nextBill.billNumber });
+    setData({ summary: normalizedSummary(summary), items, customers, vendors, invoices, bills, nextBillNumber: nextBill.billNumber });
   };
 
   useEffect(() => {
@@ -132,7 +140,7 @@ export const App = () => {
           />
         }
       >
-        <Route index element={<HomePage />} />
+        <Route index element={<HomePage admin={admin!} dataError={dataError} summary={data.summary} />} />
         <Route
           path="items"
           element={

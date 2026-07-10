@@ -1,7 +1,7 @@
 import { currency } from "../lib/format";
-import type { Summary } from "../types";
+type StatsSummary = { itemCount: number; customerCount: number; vendorCount: number; inventoryValue: number };
 
-export const Stats = ({ summary }: { summary: Summary }) => (
+export const Stats = ({ summary }: { summary: StatsSummary }) => (
   <section className="stats-grid">
     <div className="stat-card">
       <span>Items</span>

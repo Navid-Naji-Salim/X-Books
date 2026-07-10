@@ -7,11 +7,27 @@ export type Admin = {
 };
 
 export type Summary = {
-  itemCount: number;
-  customerCount: number;
-  vendorCount: number;
-  inventoryValue: number;
-  activeItemCount: number;
+  year: number;
+  receivables: AccountAging;
+  payables: AccountAging;
+  months: MonthlyFinancials[];
+  activity: { totalIncome: number; totalExpenses: number; netActivity: number };
+};
+
+export type AccountAging = {
+  outstanding: number;
+  current: number;
+  overdue: number;
+  entries: Array<{ id: string; number: string; name: string; dueDate: string; amount: number; overdue: boolean }>;
+};
+
+export type MonthlyFinancials = {
+  month: string;
+  monthIndex: number;
+  cashReceived: number;
+  cashPaid: number;
+  income: number;
+  expenses: number;
 };
 
 export type Item = {
