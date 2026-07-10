@@ -21,8 +21,30 @@ const withStartupTimeout = async <T>(task: Promise<T>, timeoutMs: number) => {
   });
 };
 
+const wait = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const initializeDatabase = async () => {
+  const attempts = 12;
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await withStartupTimeout(ensureAdminUser(), 7000);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        console.warn(`Database connection unavailable; retrying (${attempt}/${attempts})...`);
+        await wait(1000);
+      }
+    }
+  }
+
+  throw lastError;
+};
+
 const startServer = async () => {
-  await withStartupTimeout(ensureAdminUser(), 7000);
+  await initializeDatabase();
 
   const app = createApp();
   app.listen(env.port, () => {
@@ -34,13 +56,14 @@ startServer().catch((error: unknown) => {
   if (
     error instanceof Error &&
     (error.message.includes("Database is not reachable") ||
-      error.message.includes("ECONNREFUSED"))
+      error.message.includes("ECONNREFUSED") ||
+      error.message.includes("Connection terminated"))
   ) {
     console.error(
       [
         "Failed to initialize the server: the database is not reachable.",
         "Start the development database first:",
-        '  cd "C:\\Users\\Navid\\Desktop\\Accounting and Invoicing System"',
+        '  cd "C:\\Users\\Navid\\Desktop\\XBooks"',
         "  npm run dev:db",
       ].join("\n"),
     );
