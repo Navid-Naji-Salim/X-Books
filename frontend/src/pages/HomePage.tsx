@@ -51,12 +51,13 @@ const compactMoney = (value: number) => {
 const isPaid = (status: string) => status.toLowerCase() === "paid";
 const isCurrentYear = (value: string) => new Date(value).getFullYear() === fiscalYear;
 
-const buildMonthly = (invoices: Invoice[], bills: Bill[], cashFlow?: DashboardSummary["cashFlow"]): MonthValue[] => {
+const buildMonthly = (invoices: Invoice[], bills: Bill[], dashboard?: DashboardSummary): MonthValue[] => {
+  const cashFlow = dashboard?.cashFlow;
   const months = monthLabels.map((label, index) => ({
     key: `${fiscalYear}-${String(index + 1).padStart(2, "0")}`,
     label,
-    income: 0,
-    purchases: 0,
+    income: dashboard?.incomeVsPurchases[index]?.income ?? 0,
+    purchases: dashboard?.incomeVsPurchases[index]?.purchases ?? 0,
     incoming: cashFlow?.monthly[index]?.incoming ?? 0,
     outgoing: cashFlow?.monthly[index]?.outgoing ?? 0,
     cash: cashFlow?.monthly[index]?.cash ?? 0,
@@ -66,7 +67,7 @@ const buildMonthly = (invoices: Invoice[], bills: Bill[], cashFlow?: DashboardSu
     if (!isCurrentYear(invoice.invoiceDate)) return;
     const bucket = months[new Date(invoice.invoiceDate).getMonth()];
     if (!bucket) return;
-    bucket.income += invoice.total;
+    if (!dashboard?.incomeVsPurchases) bucket.income += invoice.total;
     if (!cashFlow && isPaid(invoice.status)) bucket.incoming += invoice.total;
   });
 
@@ -74,7 +75,7 @@ const buildMonthly = (invoices: Invoice[], bills: Bill[], cashFlow?: DashboardSu
     if (!isCurrentYear(bill.billDate)) return;
     const bucket = months[new Date(bill.billDate).getMonth()];
     if (!bucket) return;
-    bucket.purchases += bill.total;
+    if (!dashboard?.incomeVsPurchases) bucket.purchases += bill.total;
     if (!cashFlow && isPaid(bill.status)) bucket.outgoing += bill.total;
   });
 
@@ -95,8 +96,6 @@ const TimelineChart = ({ months }: { months: MonthValue[] }) => {
   const plot = { left: 62, right: 12, top: 12, bottom: 38 };
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
-  const hasIncoming = months.some((month) => month.incoming > 0);
-  const hasOutgoing = months.some((month) => month.outgoing > 0);
   const values = months.flatMap((month) => [month.incoming, -month.outgoing, month.cash]);
   const minimum = Math.min(0, ...values);
   const maximum = Math.max(1, ...values);
@@ -108,10 +107,9 @@ const TimelineChart = ({ months }: { months: MonthValue[] }) => {
   const balancePath = coordinates.reduce((path, point, index) => (
     index === 0 ? `M ${point.x} ${point.y}` : `${path} H ${point.x} V ${point.y}`
   ), "");
-  const series = [hasIncoming ? "incoming money" : "", hasOutgoing ? "outgoing money" : "", "running cash balance"].filter(Boolean).join(", ");
 
   return (
-    <svg className="dashboard-financial-chart dashboard-cash-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${series} by month for fiscal year ${fiscalYear}`}>
+    <svg className="dashboard-financial-chart dashboard-cash-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Incoming money, outgoing money, and running cash balance by month for fiscal year ${fiscalYear}`}>
       {ticks.map((tick, index) => {
         const tickY = y(tick);
         return (
@@ -128,8 +126,8 @@ const TimelineChart = ({ months }: { months: MonthValue[] }) => {
         const outgoingY = y(-month.outgoing);
         return (
           <g key={month.key}>
-            {month.incoming > 0 && <g><title>{month.label} incoming: {currency.format(month.incoming)}</title><rect className="is-incoming" x={monthX - (hasOutgoing ? 10 : 9)} y={incomingY} width="7" height={baseline - incomingY} /></g>}
-            {month.outgoing > 0 && <g><title>{month.label} outgoing: {currency.format(month.outgoing)}</title><rect className="is-outgoing" x={monthX + (hasIncoming ? 3 : 2)} y={baseline} width="7" height={outgoingY - baseline} /></g>}
+            {month.incoming > 0 && <g><title>{month.label} incoming: {currency.format(month.incoming)}</title><rect className="is-incoming" x={monthX - 10} y={incomingY} width="7" height={baseline - incomingY} /></g>}
+            {month.outgoing > 0 && <g><title>{month.label} outgoing: {currency.format(month.outgoing)}</title><rect className="is-outgoing" x={monthX + 3} y={baseline} width="7" height={outgoingY - baseline} /></g>}
             <text className="dashboard-chart-month" x={monthX} y={height - 13}>{month.label} '{fiscalYearShort}</text>
           </g>
         );
@@ -146,16 +144,13 @@ const ComparisonChart = ({ months }: { months: MonthValue[] }) => {
   const plot = { left: 56, right: 10, top: 12, bottom: 36 };
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
-  const hasIncome = months.some((month) => month.income > 0);
-  const hasPurchases = months.some((month) => month.purchases > 0);
   const maximum = Math.max(1, ...months.flatMap((month) => [month.income, month.purchases]));
   const x = (index: number) => plot.left + index / (months.length - 1) * plotWidth;
   const y = (value: number) => plot.top + (maximum - value) / maximum * plotHeight;
   const ticks = Array.from({ length: 4 }, (_, index) => maximum - maximum * index / 3);
-  const series = [hasIncome ? "income" : "", hasPurchases ? "purchases" : ""].filter(Boolean).join(" and ");
 
   return (
-    <svg className="dashboard-financial-chart dashboard-comparison-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Monthly ${series} for fiscal year ${fiscalYear}`}>
+    <svg className="dashboard-financial-chart dashboard-comparison-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Monthly income and purchases for fiscal year ${fiscalYear}`}>
       {ticks.map((tick, index) => {
         const tickY = y(tick);
         return (
@@ -169,8 +164,8 @@ const ComparisonChart = ({ months }: { months: MonthValue[] }) => {
         const monthX = x(index);
         return (
           <g key={month.key}>
-            {month.income > 0 && <g><title>{month.label} income: {currency.format(month.income)}</title><rect className="is-income" x={monthX - (hasPurchases ? 8 : 4)} y={y(month.income)} width="7" height={plot.top + plotHeight - y(month.income)} /></g>}
-            {month.purchases > 0 && <g><title>{month.label} purchases: {currency.format(month.purchases)}</title><rect className="is-purchases" x={monthX + (hasIncome ? 1 : -4)} y={y(month.purchases)} width="7" height={plot.top + plotHeight - y(month.purchases)} /></g>}
+            {month.income > 0 && <g><title>{month.label} income: {currency.format(month.income)}</title><rect className="is-income" x={monthX - 8} y={y(month.income)} width="7" height={plot.top + plotHeight - y(month.income)} /></g>}
+            {month.purchases > 0 && <g><title>{month.label} purchases: {currency.format(month.purchases)}</title><rect className="is-purchases" x={monthX + 1} y={y(month.purchases)} width="7" height={plot.top + plotHeight - y(month.purchases)} /></g>}
             <text className="dashboard-chart-month" x={monthX} y={height - 12}>{month.label} '{fiscalYearShort}</text>
           </g>
         );
@@ -186,7 +181,7 @@ const QuietEmpty = ({ children }: { children: ReactNode }) => (
 export const HomePage = ({ admin, bills, invoices, items, onRefresh, summary }: HomePageProps) => {
   const today = todayKey();
   const dashboard = summary.dashboard;
-  const monthly = useMemo(() => buildMonthly(invoices, bills, dashboard?.cashFlow), [bills, dashboard?.cashFlow, invoices]);
+  const monthly = useMemo(() => buildMonthly(invoices, bills, dashboard), [bills, dashboard, invoices]);
   const unpaidInvoices = useMemo(() => invoices.filter((invoice) => !isPaid(invoice.status)), [invoices]);
   const unpaidBills = useMemo(() => bills.filter((bill) => !isPaid(bill.status)), [bills]);
   const receivables = useMemo(() => {
@@ -201,8 +196,10 @@ export const HomePage = ({ admin, bills, invoices, items, onRefresh, summary }: 
     const attention = [...unpaidBills].sort((left, right) => dateKey(left.dueDate).localeCompare(dateKey(right.dueDate))).slice(0, 4);
     return { current, overdue, outstanding: current + overdue, attention };
   }, [today, unpaidBills]);
-  const income = invoices.filter((invoice) => isCurrentYear(invoice.invoiceDate)).reduce((total, invoice) => total + invoice.total, 0);
-  const purchases = bills.filter((bill) => isCurrentYear(bill.billDate)).reduce((total, bill) => total + bill.total, 0);
+  const income = dashboard?.incomeVsPurchases.reduce((total, month) => total + month.income, 0)
+    ?? invoices.filter((invoice) => isCurrentYear(invoice.invoiceDate)).reduce((total, invoice) => total + invoice.total, 0);
+  const purchases = dashboard?.incomeVsPurchases.reduce((total, month) => total + month.purchases, 0)
+    ?? bills.filter((bill) => isCurrentYear(bill.billDate)).reduce((total, bill) => total + bill.total, 0);
   const incoming = dashboard?.cashFlow.incoming ?? invoices.filter((invoice) => isPaid(invoice.status) && isCurrentYear(invoice.invoiceDate)).reduce((total, invoice) => total + invoice.total, 0);
   const outgoing = dashboard?.cashFlow.outgoing ?? bills.filter((bill) => isPaid(bill.status) && isCurrentYear(bill.billDate)).reduce((total, bill) => total + bill.total, 0);
   const beginningBalance = dashboard?.cashFlow.beginningBalance ?? 0;
@@ -312,15 +309,15 @@ export const HomePage = ({ admin, bills, invoices, items, onRefresh, summary }: 
         </header>
         <div className={`dashboard-cash-metrics ${hasCashActivity ? "" : "is-empty"}`}>
           {hasCashActivity && <div><span>Beginning balance</span><strong>{currency.format(beginningBalance)}</strong></div>}
-          {hasIncoming && <div><span>Incoming</span><strong className="is-positive">{currency.format(incoming)}</strong></div>}
-          {hasOutgoing && <div><span>Outgoing</span><strong className="is-negative">{currency.format(outgoing)}</strong></div>}
+          {hasCashActivity && <div><span>Incoming</span><strong className={hasIncoming ? "is-positive" : ""}>{currency.format(incoming)}</strong></div>}
+          {hasCashActivity && <div><span>Outgoing</span><strong className={hasOutgoing ? "is-negative" : ""}>{currency.format(outgoing)}</strong></div>}
           <div className="is-ending"><span>Ending balance</span><strong>{currency.format(endingBalance)}</strong></div>
         </div>
         {hasCashActivity ? (
           <div className="dashboard-chart-region">
             <div className="dashboard-chart-legend" aria-label="Cash flow chart legend">
-              {hasIncoming && <span><i className="is-incoming" />Incoming</span>}
-              {hasOutgoing && <span><i className="is-outgoing" />Outgoing</span>}
+              <span><i className="is-incoming" />Incoming</span>
+              <span><i className="is-outgoing" />Outgoing</span>
               <span><i className="is-balance" />Running balance</span>
             </div>
             <TimelineChart months={monthly} />
@@ -340,8 +337,8 @@ export const HomePage = ({ admin, bills, invoices, items, onRefresh, summary }: 
               <div><span>Net activity</span><strong>{currency.format(income - purchases)}</strong></div>
             </div>
             <div className="dashboard-chart-legend dashboard-comparison-legend" aria-label="Income and purchases chart legend">
-              {hasIncome && <span><i className="is-incoming" />Income</span>}
-              {hasPurchases && <span><i className="is-outgoing" />Purchases</span>}
+              <span><i className="is-incoming" />Income</span>
+              <span><i className="is-outgoing" />Purchases</span>
             </div>
             <ComparisonChart months={monthly} />
           </section>}
