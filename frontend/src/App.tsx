@@ -132,7 +132,7 @@ export const App = () => {
           />
         }
       >
-        <Route index element={<HomePage admin={admin!} bills={data.bills} customers={data.customers} invoices={data.invoices} items={data.items} summary={data.summary} vendors={data.vendors} onRefresh={() => (token ? loadData(token) : Promise.resolve())} />} />
+        <Route index element={<HomePage />} />
         <Route
           path="items"
           element={
