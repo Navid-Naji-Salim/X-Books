@@ -1331,6 +1331,31 @@ th {
   overflow-wrap: anywhere;
 }
 
+.dashboard-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.55rem;
+  padding: 0 0.2rem;
+}
+
+.dashboard-section-heading > div { display: grid; gap: 0.18rem; }
+.dashboard-section-heading span {
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.dashboard-section-heading h2 { margin: 0; color: #0f172a; font-size: 1.15rem; }
+.dashboard-section-heading p { margin: 0; color: var(--muted); font-size: 0.82rem; font-weight: 750; }
+.dashboard-trend-heading { margin-top: 1.1rem; }
+
+.dashboard-snapshot-section .dashboard-card {
+  border-top: 3px solid rgba(37, 99, 235, 0.58);
+}
+
 .dashboard-hero p:last-child {
   max-width: 50rem;
   margin: 0;
@@ -1839,16 +1864,34 @@ th {
   line-height: 1.5;
 }
 
-.dashboard-live-chip {
+.dashboard-insight {
   align-self: center;
   border-radius: 999px;
   padding: 0.44rem 0.72rem;
-  color: #075985;
-  background: rgba(224, 242, 254, 0.76);
+  color: #047857;
+  background: rgba(209, 250, 229, 0.72);
   font-size: 0.78rem;
   font-weight: 900;
   white-space: nowrap;
 }
+
+.dashboard-insight.is-negative { color: #be123c; background: rgba(255, 228, 230, 0.75); }
+
+.dashboard-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.15rem;
+  padding: 1rem 1.35rem 0;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.dashboard-chart-legend span { display: inline-flex; align-items: center; gap: 0.42rem; }
+.dashboard-chart-legend i { width: 0.68rem; height: 0.68rem; border-radius: 3px; }
+.dashboard-chart-legend .is-incoming { background: #10b981; }
+.dashboard-chart-legend .is-outgoing { background: #dc4660; }
+.dashboard-chart-legend .is-balance { width: 1.15rem; height: 0.18rem; border-radius: 999px; background: #2563eb; }
 
 .dashboard-cash-layout {
   grid-template-columns: minmax(0, 1fr) minmax(15rem, 0.32fr);
@@ -2004,40 +2047,54 @@ th {
 
 .dashboard-comparison-chart {
   display: grid;
-  gap: 0.62rem;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.55rem;
+  min-height: 15rem;
   padding: 1.25rem 1.2rem 1.35rem;
 }
 
-.dashboard-comparison-chart span {
+.dashboard-comparison-chart > span {
   display: grid;
-  grid-template-columns: 2.4rem 1fr;
-  grid-template-rows: 0.55rem 0.55rem;
-  gap: 0.22rem 0.7rem;
-  align-items: center;
+  grid-template-rows: 1fr auto;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
 .dashboard-comparison-chart em {
-  grid-row: 1 / 3;
   color: #475569;
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-style: normal;
   font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dashboard-comparison-bars {
+  display: flex;
+  height: 100%;
+  align-items: end;
+  justify-content: center;
+  gap: 0.2rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 24%, rgba(148, 163, 184, 0.12) 25%);
 }
 
 .dashboard-comparison-chart i {
   display: block;
-  min-width: 0.25rem;
-  height: 100%;
-  border-radius: 999px;
+  width: min(0.75rem, 42%);
+  min-height: 0.2rem;
+  border-radius: 999px 999px 0 0;
 }
 
 .dashboard-comparison-chart .is-income {
-  background: linear-gradient(90deg, #10b981, rgba(16, 185, 129, 0.28));
+  background: #10b981;
 }
 
 .dashboard-comparison-chart .is-purchases {
-  background: linear-gradient(90deg, #dc4660, rgba(220, 70, 96, 0.24));
+  background: #dc4660;
 }
+
+.dashboard-comparison-legend { padding-bottom: 0; }
 
 .dashboard-expense-list {
   padding: 1.25rem;
@@ -2065,6 +2122,8 @@ th {
   .dashboard-cash-summary > div {
     justify-items: start;
   }
+
+  .dashboard-section-heading { align-items: start; flex-direction: column; gap: 0.3rem; }
 
   .report-library { grid-template-columns: 1fr; }
 

@@ -18,6 +18,7 @@ type MonthValue = { key: string; label: string; income: number; purchases: numbe
 
 const fiscalYear = new Date().getFullYear();
 const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const fiscalYearShort = String(fiscalYear).slice(-2);
 
 const greeting = () => {
   const hour = new Date().getHours();
@@ -41,6 +42,12 @@ const compactMoney = (value: number) => {
 const isPaid = (status: string) => status.toLowerCase() === "paid";
 const isCurrentYear = (value: string) => new Date(value).getFullYear() === fiscalYear;
 const axisMax = (values: number[]) => Math.max(1, ...values.map((value) => Math.abs(value)));
+const lastActiveMonth = (months: MonthValue[], fields: (keyof MonthValue)[]) => {
+  const active = months.reduce<number[]>((indexes, month, index) => (
+    fields.some((field) => typeof month[field] === "number" && month[field] !== 0) ? [...indexes, index] : indexes
+  ), []);
+  return active.at(-1) ?? new Date().getMonth();
+};
 
 const buildMonthly = (invoices: Invoice[], bills: Bill[], cashFlow?: DashboardSummary["cashFlow"]): MonthValue[] => {
   const months = monthLabels.map((label, index) => ({
@@ -94,7 +101,7 @@ const TimelineChart = ({ months }: { months: MonthValue[] }) => {
   }).join(" ");
 
   return (
-    <div className="dashboard-flow-chart" role="img" aria-label="Cash movement by month">
+    <div className="dashboard-flow-chart" role="img" aria-label={`Incoming money, outgoing money, and running cash balance by month for ${fiscalYear}`}>
       <svg viewBox="0 0 100 92" preserveAspectRatio="none">
         {[10, 27, 44, 61, 78].map((y) => <line key={y} x1="0" x2="100" y1={y} y2={y} />)}
         <polyline points={points} />
@@ -107,7 +114,7 @@ const TimelineChart = ({ months }: { months: MonthValue[] }) => {
           </span>
         ))}
       </div>
-      <div className="dashboard-month-axis">{months.map((month) => <span key={month.key}>{month.label}</span>)}</div>
+      <div className="dashboard-month-axis">{months.map((month) => <span key={month.key}>{month.label} '{fiscalYearShort}</span>)}</div>
     </div>
   );
 };
@@ -118,9 +125,11 @@ const ComparisonChart = ({ months }: { months: MonthValue[] }) => {
     <div className="dashboard-comparison-chart" role="img" aria-label="Invoice income compared with bill purchases">
       {months.map((month) => (
         <span key={month.key}>
-          <i className="is-income" style={{ width: `${month.income / max * 100}%` }} />
-          <i className="is-purchases" style={{ width: `${month.purchases / max * 100}%` }} />
-          <em>{month.label}</em>
+          <span className="dashboard-comparison-bars">
+            <i className="is-income" title={`${month.label} income: ${currency.format(month.income)}`} style={{ height: `${Math.max(2, month.income / max * 100)}%` }} />
+            <i className="is-purchases" title={`${month.label} purchases: ${currency.format(month.purchases)}`} style={{ height: `${Math.max(2, month.purchases / max * 100)}%` }} />
+          </span>
+          <em>{month.label} '{fiscalYearShort}</em>
         </span>
       ))}
     </div>
@@ -134,7 +143,7 @@ const EmptyWidget = ({ children }: { children: string }) => (
   </div>
 );
 
-export const HomePage = ({ admin, bills, customers, invoices, items, onRefresh, summary, vendors }: HomePageProps) => {
+export const HomePage = ({ admin, bills, invoices, items, onRefresh, summary }: HomePageProps) => {
   const today = todayKey();
   const dashboard = summary.dashboard;
   const monthly = useMemo(() => buildMonthly(invoices, bills, dashboard?.cashFlow), [bills, dashboard?.cashFlow, invoices]);
@@ -157,6 +166,13 @@ export const HomePage = ({ admin, bills, customers, invoices, items, onRefresh, 
   const incoming = dashboard?.cashFlow.incoming ?? invoices.filter((invoice) => isPaid(invoice.status) && isCurrentYear(invoice.invoiceDate)).reduce((total, invoice) => total + invoice.total, 0);
   const outgoing = dashboard?.cashFlow.outgoing ?? bills.filter((bill) => isPaid(bill.status) && isCurrentYear(bill.billDate)).reduce((total, bill) => total + bill.total, 0);
   const endingBalance = dashboard?.cashFlow.endingBalance ?? incoming - outgoing;
+  const cashActiveIndex = lastActiveMonth(monthly, ["incoming", "outgoing", "cash"]);
+  const activityActiveIndex = lastActiveMonth(monthly, ["income", "purchases"]);
+  const currentCashMonth = monthly[cashActiveIndex];
+  const previousCashMonth = monthly[Math.max(0, cashActiveIndex - 1)];
+  const cashDirection = currentCashMonth.cash > previousCashMonth.cash ? "improved" : currentCashMonth.cash < previousCashMonth.cash ? "declined" : "held steady";
+  const currentActivityMonth = monthly[activityActiveIndex];
+  const activityLead = currentActivityMonth.income >= currentActivityMonth.purchases ? "Income exceeded purchases" : "Purchases exceeded income";
   const expenseRows = useMemo(() => {
     const totals = new Map<string, number>();
     bills.filter((bill) => isCurrentYear(bill.billDate)).forEach((bill) => {
@@ -181,10 +197,14 @@ export const HomePage = ({ admin, bills, customers, invoices, items, onRefresh, 
       <section className="dashboard-hero">
         <p className="eyebrow">Home</p>
         <h1>{greeting()}, {admin.name || "there"}!</h1>
-        <p>Live bookkeeping pulse for {customers.length} customers, {vendors.length} vendors, {items.length} catalog items, {invoices.length} invoices, and {bills.length} bills.</p>
+        <p>Monitor receivables, payables, and cash position from one place.</p>
       </section>
 
-      <section className="dashboard-status-grid">
+      <div className="dashboard-section-heading">
+        <div><span>Current position</span><h2>What needs your attention now</h2></div>
+        <p>Outstanding balances as of today.</p>
+      </div>
+      <section className="dashboard-status-grid dashboard-snapshot-section">
         <section className="panel dashboard-card dashboard-ledger-card">
           <header className="dashboard-card-head">
             <div><h2>Receivables</h2><p>Customer invoices waiting to become cash.</p></div>
@@ -230,11 +250,20 @@ export const HomePage = ({ admin, bills, customers, invoices, items, onRefresh, 
         </section>
       </section>
 
+      <div className="dashboard-section-heading dashboard-trend-heading">
+        <div><span>Fiscal year {fiscalYear}</span><h2>How money is moving</h2></div>
+        <p>Monthly activity and running balances over time.</p>
+      </div>
       <section className="panel dashboard-card dashboard-cash-card">
         <header className="dashboard-card-head">
-          <div><h2>Cash Flow</h2><p>Recorded payments in and out during the fiscal year.</p></div>
-          <span className="dashboard-live-chip">Refreshes automatically</span>
+          <div><h2>Cash Flow</h2><p>Recorded payments and running cash balance for fiscal year {fiscalYear}.</p></div>
+          <strong className={`dashboard-insight ${cashDirection === "declined" ? "is-negative" : ""}`}>Cash position {cashDirection} in {currentCashMonth.label}.</strong>
         </header>
+        <div className="dashboard-chart-legend" aria-label="Cash flow chart legend">
+          <span><i className="is-incoming" />Incoming money</span>
+          <span><i className="is-outgoing" />Outgoing money</span>
+          <span><i className="is-balance" />Running cash balance</span>
+        </div>
         <div className="dashboard-cash-layout">
           <TimelineChart months={monthly} />
           <aside className="dashboard-cash-summary">
@@ -249,12 +278,17 @@ export const HomePage = ({ admin, bills, customers, invoices, items, onRefresh, 
       <section className="dashboard-lower-grid">
         <section className="panel dashboard-card dashboard-comparison-card">
           <header className="dashboard-card-head">
-            <div><h2>Income vs Purchases</h2><p>Invoices issued compared with bills entered.</p></div>
+            <div><h2>Income vs Purchases</h2><p>Invoices issued compared with bills entered in fiscal year {fiscalYear}.</p></div>
+            <strong className={`dashboard-insight ${currentActivityMonth.purchases > currentActivityMonth.income ? "is-negative" : ""}`}>{activityLead} in {currentActivityMonth.label}.</strong>
           </header>
           <div className="dashboard-money-pair">
             <div><span>Income</span><strong>{currency.format(income)}</strong></div>
             <div><span>Purchases</span><strong>{currency.format(purchases)}</strong></div>
             <div><span>Net activity</span><strong>{currency.format(income - purchases)}</strong></div>
+          </div>
+          <div className="dashboard-chart-legend dashboard-comparison-legend" aria-label="Income and purchases chart legend">
+            <span><i className="is-incoming" />Income</span>
+            <span><i className="is-outgoing" />Purchases</span>
           </div>
           <ComparisonChart months={monthly} />
         </section>
