@@ -1,6 +1,7 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 import { ensureAdminUser } from "./services/admin-bootstrap.js";
+import { resetPrismaConnection } from "./lib/prisma.js";
 
 const withStartupTimeout = async <T>(task: Promise<T>, timeoutMs: number) => {
   let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -35,6 +36,7 @@ const initializeDatabase = async () => {
       lastError = error;
       if (attempt < attempts) {
         console.warn(`Database connection unavailable; retrying (${attempt}/${attempts})...`);
+        await resetPrismaConnection();
         await wait(1000);
       }
     }
