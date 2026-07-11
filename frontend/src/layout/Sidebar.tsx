@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { icons } from "../icons";
 import type { Admin, PageId } from "../types";
+import { useLanguage, type Language } from "../i18n";
 
 const navItems: Array<{ id: PageId; label: string; to: string }> = [
   { id: "home", label: "Home", to: "/" },
@@ -23,6 +24,8 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
   const location = useLocation();
   const [isSalesOpen, setIsSalesOpen] = useState(location.pathname.startsWith("/sales"));
   const [isPurchasesOpen, setIsPurchasesOpen] = useState(location.pathname.startsWith("/purchases"));
+  const { language, setLanguage } = useLanguage();
+  const languageOptions: Array<{ value: Language; label: string }> = [{ value: "en", label: "English" }, { value: "ku", label: "Kurdish" }, { value: "ar", label: "Arabic" }];
 
   return (
     <aside className={`sidebar ${isCollapsed ? "is-collapsed" : ""}`}>
@@ -97,6 +100,12 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
       <div className="sidebar-footer">
         {isSettingsOpen && (
           <div className="profile-menu">
+            <div className="language-setting">
+              <span>Language</span>
+              <div role="group" aria-label="Language">
+                {languageOptions.map((option) => <button className={language === option.value ? "is-selected" : ""} key={option.value} type="button" onClick={() => setLanguage(option.value)}>{option.label}</button>)}
+              </div>
+            </div>
             <button type="button" onClick={onLogout}>
               Log out
             </button>
@@ -106,7 +115,7 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
           {isCollapsed ? (
             <button
               aria-expanded={isSettingsOpen}
-              aria-label="Open admin settings"
+                aria-label="Open admin settings"
               className="brand-mark profile-mark-button"
               type="button"
               onClick={() => setIsSettingsOpen((current) => !current)}
