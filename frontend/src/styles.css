@@ -511,7 +511,34 @@ textarea:focus {
 .language-setting > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.3rem; }
 .language-setting button { padding: 0.5rem 0.3rem; border-radius: 9px; font-size: 0.72rem; text-align: center; }
 .language-setting button.is-selected { color: white; background: rgba(33,150,243,0.36); }
-.is-rtl { font-family: "Segoe UI", "Noto Sans Arabic", Tahoma, Arial, sans-serif; }
+.is-rtl {
+  --rtl-font: "Noto Sans Arabic Variable", "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family: var(--rtl-font);
+  font-optical-sizing: auto;
+}
+.is-rtl :where(p, span, label, h2, h3, th, td, button, a, summary, strong, small, input, textarea, select),
+.is-rtl .home-hero h1,
+.is-rtl .page-title h1,
+.is-rtl .report-page-head h1,
+.is-rtl .report-document,
+.is-rtl .report-document h1,
+.is-rtl .report-document table,
+.is-rtl .recharts-wrapper text {
+  font-family: var(--rtl-font) !important;
+  letter-spacing: 0 !important;
+}
+.is-rtl :where(p, label, button, a, summary, th, td, input, textarea, select) { line-height: 1.55; }
+.is-rtl .eyebrow { font-weight: 700; }
+.is-rtl :where(.nav a, .nav-control, .nav-group-button, button, label, summary, th) { font-weight: 650 !important; }
+.is-rtl .home-card-head > div > span,
+.is-rtl .home-aging-split span,
+.is-rtl .home-activity-summary span { font-weight: 600; }
+.is-rtl .invoice-status,
+.is-rtl .home-card-head > a,
+.is-rtl .report-back { font-weight: 650; }
+.is-rtl .home-hero h1,
+.is-rtl .page-title h1,
+.is-rtl .report-page-head h1 { font-weight: 650; }
 .is-rtl :where(p, span, label, h2, h3, th, td, button, a, summary, strong, small) { direction: rtl; unicode-bidi: plaintext; }
 .is-rtl :where(.page-title, .home-hero, .item-form-head > div, .home-chart-head > div, .login-heading) { text-align: right; }
 .is-rtl input:not([type="email"]):not([type="number"]):not([type="date"]),

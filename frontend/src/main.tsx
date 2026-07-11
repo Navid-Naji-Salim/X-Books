@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import "@fontsource-variable/noto-sans-arabic/index.css";
 import "./styles.css";
 import { App } from "./App";
 import { LanguageProvider } from "./i18n";
