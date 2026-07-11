@@ -511,16 +511,12 @@ textarea:focus {
 .language-setting > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.3rem; }
 .language-setting button { padding: 0.5rem 0.3rem; border-radius: 9px; font-size: 0.72rem; text-align: center; }
 .language-setting button.is-selected { color: white; background: rgba(33,150,243,0.36); }
-.is-rtl { font-family: Tahoma, Arial, sans-serif; }
-.is-rtl .app-shell { direction: rtl; }
-.is-rtl .content, .is-rtl .sidebar { text-align: right; }
-.is-rtl .nav-chevron { margin-right: auto; margin-left: 0; }
-.is-rtl .nav-submenu a { padding-right: 3.7rem; padding-left: 0.9rem; }
-.is-rtl .profile-menu { text-align: right; }
-.is-rtl .item-form-head, .is-rtl .home-card-head, .is-rtl .home-due-row { direction: rtl; }
-.is-rtl input, .is-rtl textarea, .is-rtl select { text-align: right; }
-.is-rtl input[type="number"], .is-rtl input[type="date"], .is-rtl input[type="email"] { direction: ltr; text-align: right; }
-.is-rtl table { direction: rtl; }
+.is-rtl { font-family: "Segoe UI", "Noto Sans Arabic", Tahoma, Arial, sans-serif; }
+.is-rtl :where(p, span, label, h2, h3, th, td, button, a, summary, strong, small) { direction: rtl; unicode-bidi: plaintext; }
+.is-rtl :where(.page-title, .home-hero, .item-form-head > div, .home-chart-head > div, .login-heading) { text-align: right; }
+.is-rtl input:not([type="email"]):not([type="number"]):not([type="date"]),
+.is-rtl textarea { direction: rtl; text-align: right; }
+.is-rtl input[type="email"], .is-rtl input[type="number"], .is-rtl input[type="date"] { direction: ltr; text-align: left; }
 
 .content {
   padding: clamp(1rem, 3vw, 2.5rem);

@@ -52,7 +52,9 @@ const sourceAttributes = new WeakMap<Element, Map<string, string>>();
 
 const translateDocument = (language: Language, sourceLanguage: Language = language) => {
   document.documentElement.lang = language === "ku" ? "ckb" : language;
-  document.documentElement.dir = language === "en" ? "ltr" : "rtl";
+  // XBooks keeps one stable application layout. Arabic-script languages only
+  // change text flow; they do not mirror navigation, grids, or controls.
+  document.documentElement.dir = "ltr";
   document.body.classList.toggle("is-rtl", language !== "en");
   const root = document.getElementById("root");
   if (!root) return;
