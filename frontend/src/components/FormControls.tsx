@@ -39,8 +39,9 @@ export const DropdownField = ({
   const isOpen = openDropdown === name;
 
   useEffect(() => {
+    if (!isOpen) return;
     const closeOnOutsideClick = (event: MouseEvent) => {
-      if (isOpen && !detailsRef.current?.contains(event.target as Node)) setOpenDropdown(null);
+      if (!detailsRef.current?.contains(event.target as Node)) setOpenDropdown(null);
     };
     document.addEventListener("mousedown", closeOnOutsideClick);
     return () => document.removeEventListener("mousedown", closeOnOutsideClick);
@@ -55,7 +56,7 @@ export const DropdownField = ({
           event.preventDefault();
           if (!disabled) setOpenDropdown(isOpen ? null : name);
         }}>{selectedLabel || placeholder}</summary>
-        <div className="select-options">
+        {isOpen ? <div className="select-options">
           {options.map((option) => {
             const optionValue = typeof option === "string" ? option : option.value;
             const optionLabel = typeof option === "string" ? option : option.label;
@@ -65,7 +66,7 @@ export const DropdownField = ({
               setOpenDropdown(null);
             }}>{optionLabel}</button>;
           })}
-        </div>
+        </div> : null}
       </details>
     </div>
   );

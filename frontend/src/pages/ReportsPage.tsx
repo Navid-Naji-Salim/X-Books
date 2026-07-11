@@ -4,6 +4,7 @@ import { PageTitle } from "../components/PageTitle";
 import { api, ApiError } from "../api";
 import { currency } from "../lib/format";
 import type { Bill, Contact, Invoice } from "../types";
+import { useLanguage } from "../i18n";
 
 type Props = { bills: Bill[]; customers: Contact[]; invoices: Invoice[]; vendors: Contact[]; token: string };
 const reports = [
@@ -15,7 +16,6 @@ const reports = [
 ] as const;
 
 const Summary = ({ entries }: { entries: Array<[string, string]> }) => <div className="report-summary">{entries.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>;
-const status = (value: string) => <span className={`invoice-status ${value === "Paid" ? "is-paid" : "is-unpaid"}`}>{value}</span>;
 
 export const ReportsPage = (props: Props) => {
   const { reportId } = useParams();
@@ -25,16 +25,23 @@ export const ReportsPage = (props: Props) => {
   return <ReportDetail {...props} id={report.id} title={report.title} description={report.description} />;
 };
 
-const ReportLibrary = () => <>
-  <PageTitle eyebrow="Reports" title="Generated reports." description="Open a focused view of sales, purchases, customers, vendors, or profitability." />
-  <section className="report-library">{reports.map((report) => <Link className="panel report-card" key={report.id} to={`/reports/${report.id}`}><div><span className="report-card-mark">↗</span><h2>{report.title}</h2><p>{report.description}</p></div><strong>View report <span aria-hidden="true">→</span></strong></Link>)}</section>
-</>;
+const ReportLibrary = () => {
+  const { language } = useLanguage();
+  const isRtl = language !== "en";
+
+  return <>
+    <PageTitle eyebrow="Reports" title="Generated reports." description="Open a focused view of sales, purchases, customers, vendors, or profitability." />
+    <section className="report-library">{reports.map((report) => <Link className="panel report-card" key={report.id} to={`/reports/${report.id}`}><div><span className="report-card-mark">{isRtl ? "↖" : "↗"}</span><h2>{report.title}</h2><p>{report.description}</p></div><strong>View report <span aria-hidden="true">{isRtl ? "←" : "→"}</span></strong></Link>)}</section>
+  </>;
+};
 
 const inputDate = (date: Date) => { const adjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60_000); return adjusted.toISOString().slice(0, 10); };
 const reportDate = (value: string | Date) => typeof value === "string" && !value ? "—" : new Date(typeof value === "string" ? `${value}T00:00:00` : value).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 const generatedTime = (value: Date) => `${reportDate(value)}, ${value.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
 const ReportDetail = ({ id, title, description, token }: Props & { id: string; title: string; description: string }) => {
+  const { language } = useLanguage();
+  const isRtl = language !== "en";
   const today = new Date();
   const [fromDate, setFromDate] = useState(() => inputDate(new Date(today.getFullYear(), 0, 1)));
   const [toDate, setToDate] = useState(() => inputDate(today));
@@ -49,9 +56,17 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
   const purchases = bills.reduce((sum, bill) => sum + bill.total, 0);
   const paidSales = invoices.filter((invoice) => invoice.status === "Paid").reduce((sum, invoice) => sum + invoice.total, 0);
   const paidPurchases = bills.filter((bill) => bill.status === "Paid").reduce((sum, bill) => sum + bill.total, 0);
-  const aggregate = (contacts: Contact[], entries: Array<{ contactId: string; total: number; status: string }>) => contacts.map((contact) => { const related = entries.filter((entry) => entry.contactId === contact.id); return { contact, count: related.length, total: related.reduce((sum, entry) => sum + entry.total, 0), outstanding: related.filter((entry) => entry.status !== "Paid").reduce((sum, entry) => sum + entry.total, 0) }; }).sort((a, b) => b.total - a.total);
+  const aggregate = (contacts: Contact[], entries: Array<{ contactId: string; total: number; status: string }>) => {
+    const totals = new Map<string, { count: number; total: number; outstanding: number }>();
+    entries.forEach((entry) => {
+      const current = totals.get(entry.contactId) ?? { count: 0, total: 0, outstanding: 0 };
+      current.count += 1; current.total += entry.total;
+      if (entry.status !== "Paid") current.outstanding += entry.total;
+      totals.set(entry.contactId, current);
+    });
+    return contacts.map((contact) => ({ contact, ...(totals.get(contact.id) ?? { count: 0, total: 0, outstanding: 0 }) })).sort((a, b) => b.total - a.total);
+  };
 
-  let content;
   let pdfSummary: Array<[string, string]> = [];
   let pdfHeaders: string[] = [];
   let pdfRows: string[][] = [];
@@ -60,17 +75,14 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
     detailTitle = "Profit & Loss Details";
     pdfSummary = [["Sales", currency.format(sales)], ["Purchases", currency.format(purchases)], ["Net profit", currency.format(sales - purchases)]];
     pdfHeaders = ["Category", "Amount"]; pdfRows = [["Sales income", currency.format(sales)], ["Purchases", `-${currency.format(purchases)}`], ["Net profit", currency.format(sales - purchases)]];
-    content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Profit & loss detail</h2><div className="table-wrap"><table><thead><tr><th>Category</th><th>Amount</th></tr></thead><tbody>{pdfRows.map((row) => <tr key={row[0]}><td>{row[0]}</td><td><strong>{row[1]}</strong></td></tr>)}</tbody></table></div></section></>;
   } else if (id === "sales") {
     detailTitle = "Invoice Details";
     pdfSummary = [["Total sales", currency.format(sales)], ["Paid", currency.format(paidSales)], ["Outstanding", currency.format(sales - paidSales)]];
     pdfHeaders = ["Invoice", "Customer", "Date", "Status", "Total"]; pdfRows = invoices.map((invoice) => [invoice.invoiceNumber, invoice.customer.displayName, new Date(invoice.invoiceDate).toLocaleDateString(), invoice.status, currency.format(invoice.total)]);
-    content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Invoice detail</h2><div className="table-wrap"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>{invoices.length ? invoices.map((invoice) => <tr key={invoice.id}><td><strong>{invoice.invoiceNumber}</strong></td><td>{invoice.customer.displayName}</td><td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td><td>{status(invoice.status)}</td><td><strong>{currency.format(invoice.total)}</strong></td></tr>) : <tr><td className="muted" colSpan={5}>No sales activity yet.</td></tr>}</tbody></table></div></section></>;
   } else if (id === "purchases") {
     detailTitle = "Bill Details";
     pdfSummary = [["Total purchases", currency.format(purchases)], ["Paid", currency.format(paidPurchases)], ["Outstanding", currency.format(purchases - paidPurchases)]];
     pdfHeaders = ["Bill", "Vendor", "Date", "Status", "Total"]; pdfRows = bills.map((bill) => [bill.billNumber, bill.vendor.displayName, new Date(bill.billDate).toLocaleDateString(), bill.status, currency.format(bill.total)]);
-    content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>Bill detail</h2><div className="table-wrap"><table><thead><tr><th>Bill</th><th>Vendor</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>{bills.length ? bills.map((bill) => <tr key={bill.id}><td><strong>{bill.billNumber}</strong></td><td>{bill.vendor.displayName}</td><td>{new Date(bill.billDate).toLocaleDateString()}</td><td>{status(bill.status)}</td><td><strong>{currency.format(bill.total)}</strong></td></tr>) : <tr><td className="muted" colSpan={5}>No purchase activity yet.</td></tr>}</tbody></table></div></section></>;
   } else {
     const isCustomers = id === "customers";
     detailTitle = `${isCustomers ? "Customer" : "Vendor"} Details`;
@@ -78,7 +90,6 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
     const total = rows.reduce((sum, row) => sum + row.total, 0); const outstanding = rows.reduce((sum, row) => sum + row.outstanding, 0);
     pdfSummary = [[isCustomers ? "Customers" : "Vendors", String(rows.length)], ["Transaction total", currency.format(total)], ["Outstanding", currency.format(outstanding)]];
     pdfHeaders = ["Name", "Transactions", "Total", "Outstanding"]; pdfRows = rows.map((row) => [row.contact.displayName, String(row.count), currency.format(row.total), currency.format(row.outstanding)]);
-    content = <><Summary entries={pdfSummary} /><section className="report-section"><h2>{isCustomers ? "Customer" : "Vendor"} detail</h2><div className="table-wrap"><table><thead><tr><th>Name</th><th>Transactions</th><th>Total</th><th>Outstanding</th></tr></thead><tbody>{rows.length ? rows.map((row) => <tr key={row.contact.id}><td><strong>{row.contact.displayName}</strong><br /><span className="muted">{row.contact.email || "No email"}</span></td><td>{row.count}</td><td><strong>{currency.format(row.total)}</strong></td><td>{currency.format(row.outstanding)}</td></tr>) : <tr><td className="muted" colSpan={4}>No {isCustomers ? "customers" : "vendors"} yet.</td></tr>}</tbody></table></div></section></>;
   }
   const firstPageCapacity = 16;
   const continuedPageCapacity = 24;
@@ -125,7 +136,7 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
     });
     pdf.save(`${id}-${generated.fromDate}-${generated.toDate}.pdf`);
   };
-  return <div className="report-page"><header className="report-page-head report-screen-only"><Link className="report-back" to="/reports">← Reports</Link><h1>{title}</h1><p>{description}</p></header>
+  return <div className="report-page"><header className="report-page-head report-screen-only"><Link className="report-back" to="/reports"><span aria-hidden="true">{isRtl ? "→" : "←"}</span> <span>Reports</span></Link><h1>{title}</h1><p>{description}</p></header>
     <section className="report-toolbar report-screen-only"><div className="field"><label htmlFor="reportFrom">From</label><input id="reportFrom" type="date" value={fromDate} onChange={(event) => setFromDate(event.currentTarget.value)} /></div><div className="field"><label htmlFor="reportTo">To</label><input id="reportTo" type="date" value={toDate} onChange={(event) => setToDate(event.currentTarget.value)} /></div><button className="button" disabled={isGenerating} type="button" onClick={() => void generate()}>{isGenerating ? "Generating..." : "Generate report"}</button><div className="message">{error}</div></section>
     <section className="report-viewer">{generated ? <div className="report-document-shell"><div className="report-document-actions report-screen-only"><span>{paginatedRows.length} page{paginatedRows.length === 1 ? "" : "s"}</span><div><button className="ghost-button" type="button" onClick={() => window.print()}>Print</button><button className="button" type="button" onClick={() => void exportPdf()}>Export PDF</button></div></div><div className="report-pages">{paginatedRows.map((rows, pageIndex) => <article className="report-document" key={pageIndex}><header className="report-document-head"><span>XBooks</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(generated.fromDate)} – {reportDate(generated.toDate)}</span><span>Generated: {generatedTime(generated.generatedAt)}</span></div></header><div className="report-detail">{pageIndex === 0 ? <Summary entries={pdfSummary} /> : null}<section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cellIndex === row.length - 1 ? <strong>{cell}</strong> : cell}</td>)}</tr>) : <tr><td className="muted" colSpan={Math.max(1, pdfHeaders.length)}>No activity in this period.</td></tr>}</tbody></table></div></section></div></article>)}</div></div> : <div className="report-document-shell report-template-shell"><article className="report-document report-document-template"><header className="report-document-head"><span>XBooks</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(fromDate)} – {reportDate(toDate)}</span><span>Generated: —</span></div></header><div className="report-detail"><div className="report-template-summary" aria-hidden="true">{pdfSummary.map(([label]) => <div key={label}><span>{label}</span><i /></div>)}</div><section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{templateRows.map((row, rowIndex) => <tr className="report-template-row" key={rowIndex}>{row.map((cell, column) => <td key={`${pdfHeaders[column]}-${column}`}>{cell || column === 0 && id === "profit-loss" ? cell : <i />}</td>)}</tr>)}</tbody></table></div><p className="report-template-message">Choose a date range and generate this report.</p></section></div></article></div>}</section>
   </div>;

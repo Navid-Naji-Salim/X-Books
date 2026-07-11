@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 export type Language = "en" | "ku" | "ar";
 
@@ -50,44 +50,61 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 const sourceText = new WeakMap<Text, string>();
 const sourceAttributes = new WeakMap<Element, Map<string, string>>();
 
-const translateDocument = (language: Language, sourceLanguage: Language = language) => {
-  document.documentElement.lang = language === "ku" ? "ckb" : language;
-  // XBooks keeps one stable application layout. Arabic-script languages only
-  // change text flow; they do not mirror navigation, grids, or controls.
-  document.documentElement.dir = "ltr";
-  document.body.classList.toggle("is-rtl", language !== "en");
-  const root = document.getElementById("root");
-  if (!root) return;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+const translateTextNode = (node: Text, language: Language, sourceLanguage: Language = language) => {
+  const parent = node.parentElement;
+  if (!parent || ["SCRIPT", "STYLE"].includes(parent.tagName)) return;
+  const previousSource = sourceText.get(node);
+  if (previousSource) {
+    const previousTrimmed = previousSource.trim();
+    const previousTranslation = sourceLanguage === "en" ? previousTrimmed : dynamicTranslate(previousTrimmed, sourceLanguage);
+    const previousDesired = previousTrimmed ? previousSource.replace(previousTrimmed, previousTranslation) : previousSource;
+    if (node.data !== previousSource && node.data !== previousDesired) sourceText.set(node, node.data);
+  } else sourceText.set(node, node.data);
+  const original = sourceText.get(node) ?? node.data;
+  const trimmed = original.trim();
+  const translated = language === "en" ? trimmed : dynamicTranslate(trimmed, language);
+  const desired = trimmed ? original.replace(trimmed, translated) : original;
+  if (node.data !== desired) node.data = desired;
+};
+
+const translateAttributes = (element: Element, language: Language, sourceLanguage: Language = language) => {
+  const originals = sourceAttributes.get(element) ?? new Map<string, string>();
+  ["placeholder", "aria-label", "title"].forEach((attribute) => {
+    const current = element.getAttribute(attribute);
+    const previousSource = originals.get(attribute);
+    if (current !== null && previousSource) {
+      const previousTranslation = sourceLanguage === "en" ? previousSource : dynamicTranslate(previousSource, sourceLanguage);
+      if (current !== previousSource && current !== previousTranslation) originals.set(attribute, current);
+    } else if (current !== null) originals.set(attribute, current);
+    const original = originals.get(attribute);
+    if (original) {
+      const desired = language === "en" ? original : dynamicTranslate(original, language);
+      if (current !== desired) element.setAttribute(attribute, desired);
+    }
+  });
+  sourceAttributes.set(element, originals);
+};
+
+const translateSubtree = (target: Node, language: Language, sourceLanguage: Language = language) => {
+  if (target instanceof Text) {
+    translateTextNode(target, language, sourceLanguage);
+    return;
+  }
+  if (!(target instanceof Element)) return;
+  translateAttributes(target, language, sourceLanguage);
+  const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
   let node = walker.nextNode() as Text | null;
   while (node) {
-    const parent = node.parentElement;
-    if (parent && !["SCRIPT", "STYLE"].includes(parent.tagName)) {
-      const previousSource = sourceText.get(node);
-      if (previousSource) {
-        const previousTrimmed = previousSource.trim();
-        const previousTranslation = sourceLanguage === "en" ? previousTrimmed : dynamicTranslate(previousTrimmed, sourceLanguage);
-        const previousDesired = previousTrimmed ? previousSource.replace(previousTrimmed, previousTranslation) : previousSource;
-        if (node.data !== previousSource && node.data !== previousDesired) sourceText.set(node, node.data);
-      } else sourceText.set(node, node.data);
-      const original = sourceText.get(node) ?? node.data;
-      const trimmed = original.trim();
-      const translated = language === "en" ? trimmed : dynamicTranslate(trimmed, language);
-      const desired = trimmed ? original.replace(trimmed, translated) : original;
-      if (node.data !== desired) node.data = desired;
-    }
+    translateTextNode(node, language, sourceLanguage);
     node = walker.nextNode() as Text | null;
   }
-  root.querySelectorAll("[placeholder], [aria-label], [title]").forEach((element) => {
-    const originals = sourceAttributes.get(element) ?? new Map<string, string>();
-    ["placeholder", "aria-label", "title"].forEach((attribute) => {
-      const current = element.getAttribute(attribute);
-      if (current !== null && !originals.has(attribute)) originals.set(attribute, current);
-      const original = originals.get(attribute);
-      if (original) element.setAttribute(attribute, language === "en" ? original : dynamicTranslate(original, language));
-    });
-    sourceAttributes.set(element, originals);
-  });
+  target.querySelectorAll("[placeholder], [aria-label], [title]").forEach((element) => translateAttributes(element, language, sourceLanguage));
+};
+
+const prepareDocument = (language: Language) => {
+  document.documentElement.lang = language === "ku" ? "ckb" : language;
+  document.documentElement.dir = language === "en" ? "ltr" : "rtl";
+  document.body.classList.toggle("is-rtl", language !== "en");
 };
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
@@ -97,11 +114,20 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   });
   const previousLanguage = useRef<Language>(language);
   const setLanguage = (next: Language) => { localStorage.setItem("xbooksLanguage", next); setLanguageState(next); };
-  useEffect(() => {
-    translateDocument(language, previousLanguage.current);
+  useLayoutEffect(() => {
+    prepareDocument(language);
+    const root = document.getElementById("root");
+    if (!root) return;
+    translateSubtree(root, language, previousLanguage.current);
     previousLanguage.current = language;
-    const observer = new MutationObserver(() => translateDocument(language));
-    observer.observe(document.getElementById("root") ?? document.body, { childList: true, subtree: true, characterData: true });
+    const observer = new MutationObserver((records) => {
+      records.forEach((record) => {
+        if (record.type === "characterData") translateTextNode(record.target as Text, language);
+        else if (record.type === "attributes") translateAttributes(record.target as Element, language);
+        else record.addedNodes.forEach((node) => translateSubtree(node, language));
+      });
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ["placeholder", "aria-label", "title"], childList: true, subtree: true, characterData: true });
     return () => observer.disconnect();
   }, [language]);
   const value = useMemo(() => ({ language, setLanguage, t: (text: string) => language === "en" ? text : dynamicTranslate(text, language) }), [language]);

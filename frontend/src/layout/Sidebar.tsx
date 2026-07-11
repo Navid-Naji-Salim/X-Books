@@ -25,6 +25,7 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
   const [isSalesOpen, setIsSalesOpen] = useState(location.pathname.startsWith("/sales"));
   const [isPurchasesOpen, setIsPurchasesOpen] = useState(location.pathname.startsWith("/purchases"));
   const { language, setLanguage } = useLanguage();
+  const isRtl = language !== "en";
   const languageOptions: Array<{ value: Language; label: string }> = [{ value: "en", label: "English" }, { value: "ku", label: "Kurdish" }, { value: "ar", label: "Arabic" }];
 
   return (
@@ -41,7 +42,7 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
         >
           <svg className="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
-              d={isCollapsed ? "m10 7 5 5-5 5" : "m14 7-5 5 5 5"}
+              d={isCollapsed !== isRtl ? "m10 7 5 5-5 5" : "m14 7-5 5 5 5"}
               stroke="currentColor"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -76,7 +77,7 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
             return (
               <div className={`nav-group ${isPurchasesOpen ? "is-open" : ""}`} key="purchases">
                 <button aria-expanded={isPurchasesOpen} className={!isPurchasesOpen && location.pathname.startsWith("/purchases") ? "nav-group-button has-active-child" : "nav-group-button"} type="button" onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsPurchasesOpen(true); } else setIsPurchasesOpen((current) => !current); }}>
-                  {icons.purchases({ className: "nav-icon" })}<span>Purchases</span>
+                  {icons.purchases({ className: "nav-icon nav-icon-directional" })}<span>Purchases</span>
                   <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                 </button>
                 {!isCollapsed ? <div aria-hidden={!isPurchasesOpen} className={`nav-submenu ${isPurchasesOpen ? "is-visible" : ""}`}><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/vendors">Vendors</NavLink><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/bills">Bills</NavLink></div> : null}

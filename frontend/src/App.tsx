@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { Sidebar } from "./layout/Sidebar";
-import { BillsPage } from "./pages/BillsPage";
-import { CustomersPage } from "./pages/CustomersPage";
-import { HomePage } from "./pages/HomePage";
-import { ItemsPage } from "./pages/ItemsPage";
-import { InvoicesPage } from "./pages/InvoicesPage";
 import { LoginPage } from "./pages/LoginPage";
-import { ReportsPage } from "./pages/ReportsPage";
-import { VendorsPage } from "./pages/VendorsPage";
 import type { Admin, Bill, Contact, Invoice, Item, Summary } from "./types";
+
+const BillsPage = lazy(() => import("./pages/BillsPage").then((module) => ({ default: module.BillsPage })));
+const CustomersPage = lazy(() => import("./pages/CustomersPage").then((module) => ({ default: module.CustomersPage })));
+const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
+const ItemsPage = lazy(() => import("./pages/ItemsPage").then((module) => ({ default: module.ItemsPage })));
+const InvoicesPage = lazy(() => import("./pages/InvoicesPage").then((module) => ({ default: module.InvoicesPage })));
+const ReportsPage = lazy(() => import("./pages/ReportsPage").then((module) => ({ default: module.ReportsPage })));
+const VendorsPage = lazy(() => import("./pages/VendorsPage").then((module) => ({ default: module.VendorsPage })));
 
 type AppData = {
   summary: Summary;
@@ -239,6 +240,16 @@ const ProtectedLayout = ({ admin, onLogout, token }: ProtectedLayoutProps) => {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  useEffect(() => {
+    const compactLayout = window.matchMedia("(max-width: 980px)");
+    const keepNavigationVisible = () => {
+      if (compactLayout.matches) setIsSidebarCollapsed(false);
+    };
+    keepNavigationVisible();
+    compactLayout.addEventListener("change", keepNavigationVisible);
+    return () => compactLayout.removeEventListener("change", keepNavigationVisible);
+  }, []);
+
   if (!token || !admin) {
     return <Navigate to="/login" replace />;
   }
@@ -257,7 +268,9 @@ const ProtectedLayout = ({ admin, onLogout, token }: ProtectedLayoutProps) => {
         onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
       />
       <main className="content">
-        <Outlet />
+        <Suspense fallback={<div className="loading-screen">Preparing your books workspace...</div>}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );
