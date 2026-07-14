@@ -560,6 +560,7 @@ textarea:focus {
 .is-rtl .brand-mark { direction: ltr; unicode-bidi: isolate; }
 .is-rtl .sidebar-wordmark { text-align: right; white-space: nowrap; }
 .is-rtl .nav-chevron { margin-right: auto; margin-left: 0; }
+.is-rtl .nav-group:not(.is-open) .nav-chevron { transform: rotate(90deg); }
 .is-rtl .nav-icon-directional { transform: scaleX(-1); }
 .is-rtl .nav-submenu a { padding-right: 3.7rem; padding-left: 0.9rem; }
 .is-rtl .sidebar.is-collapsed .profile-menu { right: calc(100% + 0.65rem); left: auto; }
