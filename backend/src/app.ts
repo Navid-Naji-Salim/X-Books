@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 import path from "node:path";
 import { env } from "./config/env.js";
-import { requireAdmin } from "./middleware/auth.js";
+import { requireUser } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { authRouter } from "./routes/auth.js";
 import { billsRouter } from "./routes/bills.js";
@@ -23,7 +23,7 @@ export const createApp = () => {
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
 
-  app.use("/api", requireAdmin);
+  app.use("/api", requireUser);
   app.use("/api/summary", summaryRouter);
   app.use("/api/items", itemsRouter);
   app.use("/api/bills", billsRouter);

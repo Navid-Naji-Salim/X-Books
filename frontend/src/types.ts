@@ -1,9 +1,10 @@
 export type PageId = "home" | "items" | "sales" | "purchases" | "reports";
 
-export type Admin = {
+export type User = {
   id: string;
   email: string;
   name: string;
+  role: string;
 };
 
 export type Summary = {

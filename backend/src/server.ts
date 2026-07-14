@@ -1,6 +1,6 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
-import { ensureAdminUser } from "./services/admin-bootstrap.js";
+import { ensureUser } from "./services/user-bootstrap.js";
 import { resetPrismaConnection } from "./lib/prisma.js";
 
 const withStartupTimeout = async <T>(task: Promise<T>, timeoutMs: number) => {
@@ -30,7 +30,7 @@ const initializeDatabase = async () => {
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      await withStartupTimeout(ensureAdminUser(), 7000);
+      await withStartupTimeout(ensureUser(), 7000);
       return;
     } catch (error) {
       lastError = error;

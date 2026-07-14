@@ -18,10 +18,12 @@ const requiredEnv = (key: string) => {
 };
 
 export const env = {
-  adminEmail: process.env.ADMIN_EMAIL ?? "admin@example.com",
-  adminPassword: process.env.ADMIN_PASSWORD ?? "admin12345",
   databaseUrl: requiredEnv("DATABASE_URL"),
   frontendPath: path.join(projectRoot, "frontend"),
   jwtSecret: process.env.JWT_SECRET ?? "change-this-development-secret",
   port: Number(process.env.PORT ?? 3000),
+  userEmail: requiredEnv("USER_EMAIL").toLowerCase(),
+  userName: process.env.USER_NAME ?? "Nawid",
+  userPassword: requiredEnv("USER_PASSWORD"),
+  userRole: process.env.USER_ROLE ?? "User",
 };

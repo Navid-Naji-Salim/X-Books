@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { icons } from "../icons";
-import type { Admin, PageId } from "../types";
+import type { PageId, User } from "../types";
 import { useLanguage, type Language } from "../i18n";
 
 const navItems: Array<{ id: PageId; label: string; to: string }> = [
@@ -13,13 +13,13 @@ const navItems: Array<{ id: PageId; label: string; to: string }> = [
 ];
 
 type SidebarProps = {
-  admin: Admin;
+  user: User;
   isCollapsed: boolean;
   onLogout: () => void;
   onToggleCollapse: () => void;
 };
 
-export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: SidebarProps) => {
+export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: SidebarProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const location = useLocation();
   const [isSalesOpen, setIsSalesOpen] = useState(location.pathname.startsWith("/sales"));
@@ -116,25 +116,25 @@ export const Sidebar = ({ admin, isCollapsed, onLogout, onToggleCollapse }: Side
           {isCollapsed ? (
             <button
               aria-expanded={isSettingsOpen}
-                aria-label="Open admin settings"
+              aria-label="Open user settings"
               className="brand-mark profile-mark-button"
               type="button"
               onClick={() => setIsSettingsOpen((current) => !current)}
             >
-              A
+              {user.name.trim().charAt(0).toUpperCase() || "N"}
             </button>
           ) : (
             <>
-              <div className="brand-mark">A</div>
+              <div className="brand-mark">{user.name.trim().charAt(0).toUpperCase() || "N"}</div>
               <div className="profile-copy">
-                <strong>Admin</strong>
-                <span>Administrator</span>
+                <strong>{user.name}</strong>
+                <span>{user.role}</span>
               </div>
             </>
           )}
           <button
             aria-expanded={isSettingsOpen}
-            aria-label="Open admin settings"
+            aria-label="Open user settings"
             className="settings-button"
             type="button"
             onClick={() => setIsSettingsOpen((current) => !current)}

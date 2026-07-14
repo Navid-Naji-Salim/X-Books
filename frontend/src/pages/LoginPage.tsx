@@ -13,6 +13,7 @@ export const LoginPage = ({ onLogin }: LoginPageProps) => {
     <main className="login-shell">
       <section className="login-card">
         <form
+          autoComplete="on"
           className="login-form"
           onSubmit={async (event) => {
             event.preventDefault();
@@ -37,11 +38,11 @@ export const LoginPage = ({ onLogin }: LoginPageProps) => {
           </div>
           <div className="field">
             <label htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" defaultValue="admin@example.com" required />
+            <input autoComplete="username" id="email" name="email" type="email" defaultValue="nawid@example.com" required />
           </div>
           <div className="field">
             <label htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" defaultValue="admin12345" required />
+            <input autoComplete="current-password" id="password" name="password" type="password" required />
           </div>
           <button className="button" type="submit" disabled={isSubmitting}>
             {isSubmitting ? <span className="button-spinner" aria-label="Logging in" /> : "Log in"}

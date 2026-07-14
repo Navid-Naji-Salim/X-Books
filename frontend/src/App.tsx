@@ -3,7 +3,7 @@ import { Navigate, Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { Sidebar } from "./layout/Sidebar";
 import { LoginPage } from "./pages/LoginPage";
-import type { Admin, Bill, Contact, Invoice, Item, Summary } from "./types";
+import type { Bill, Contact, Invoice, Item, Summary, User } from "./types";
 
 const BillsPage = lazy(() => import("./pages/BillsPage").then((module) => ({ default: module.BillsPage })));
 const CustomersPage = lazy(() => import("./pages/CustomersPage").then((module) => ({ default: module.CustomersPage })));
@@ -50,16 +50,16 @@ const normalizedSummary = (summary: Summary): Summary => ({
 });
 
 export const App = () => {
-  const [token, setToken] = useState(() => localStorage.getItem("adminToken"));
-  const [admin, setAdmin] = useState<Admin | null>(null);
+  const [token, setToken] = useState(() => localStorage.getItem("userToken"));
+  const [user, setUser] = useState<User | null>(null);
   const [data, setData] = useState<AppData>(emptyData);
   const [booting, setBooting] = useState(true);
   const [dataError, setDataError] = useState("");
 
   const logout = () => {
-    localStorage.removeItem("adminToken");
+    localStorage.removeItem("userToken");
     setToken(null);
-    setAdmin(null);
+    setUser(null);
     setData(emptyData);
     setDataError("");
   };
@@ -93,7 +93,7 @@ export const App = () => {
           return;
         }
 
-        setAdmin(response.admin);
+        setUser(response.user);
         await loadData(token).catch(() => {
           setDataError("Some workspace data could not be loaded. Try refreshing in a moment.");
         });
@@ -124,9 +124,9 @@ export const App = () => {
         path="/login"
         element={
           <LoginRoute
-            admin={admin}
+            user={user}
             loadData={loadData}
-            setAdmin={setAdmin}
+            setUser={setUser}
             setToken={setToken}
             token={token}
           />
@@ -135,13 +135,13 @@ export const App = () => {
       <Route
         element={
           <ProtectedLayout
-            admin={admin}
+            user={user}
             onLogout={logout}
             token={token}
           />
         }
       >
-        <Route index element={<HomePage admin={admin!} dataError={dataError} summary={data.summary} />} />
+        <Route index element={<HomePage user={user!} dataError={dataError} summary={data.summary} />} />
         <Route
           path="items"
           element={
@@ -202,15 +202,15 @@ export const App = () => {
 };
 
 type LoginRouteProps = {
-  admin: Admin | null;
+  user: User | null;
   loadData: (activeToken: string) => Promise<void>;
-  setAdmin: (admin: Admin) => void;
+  setUser: (user: User) => void;
   setToken: (token: string) => void;
   token: string | null;
 };
 
-const LoginRoute = ({ admin, loadData, setAdmin, setToken, token }: LoginRouteProps) => {
-  if (token && admin) {
+const LoginRoute = ({ user, loadData, setUser, setToken, token }: LoginRouteProps) => {
+  if (token && user) {
     return <Navigate to="/" replace />;
   }
 
@@ -218,9 +218,9 @@ const LoginRoute = ({ admin, loadData, setAdmin, setToken, token }: LoginRoutePr
     <LoginPage
       onLogin={async (email, password) => {
         const response = await api.login(email, password);
-        localStorage.setItem("adminToken", response.token);
+        localStorage.setItem("userToken", response.token);
         setToken(response.token);
-        setAdmin(response.admin);
+        setUser(response.user);
         void loadData(response.token).catch(() => {
           // The user is authenticated; keep them in the app even if a secondary
           // workspace request needs another try.
@@ -231,12 +231,12 @@ const LoginRoute = ({ admin, loadData, setAdmin, setToken, token }: LoginRoutePr
 };
 
 type ProtectedLayoutProps = {
-  admin: Admin | null;
+  user: User | null;
   onLogout: () => void;
   token: string | null;
 };
 
-const ProtectedLayout = ({ admin, onLogout, token }: ProtectedLayoutProps) => {
+const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -250,7 +250,7 @@ const ProtectedLayout = ({ admin, onLogout, token }: ProtectedLayoutProps) => {
     return () => compactLayout.removeEventListener("change", keepNavigationVisible);
   }, []);
 
-  if (!token || !admin) {
+  if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
 
@@ -262,7 +262,7 @@ const ProtectedLayout = ({ admin, onLogout, token }: ProtectedLayoutProps) => {
   return (
     <div className={`app-shell ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <Sidebar
-        admin={admin}
+        user={user}
         isCollapsed={isSidebarCollapsed}
         onLogout={logout}
         onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}

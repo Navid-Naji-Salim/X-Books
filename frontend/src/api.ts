@@ -1,12 +1,12 @@
-import type { Admin, Bill, Contact, Invoice, Item, Summary } from "./types";
+import type { Bill, Contact, Invoice, Item, Summary, User } from "./types";
 
 type LoginResponse = {
   token: string;
-  admin: Admin;
+  user: User;
 };
 
 type MeResponse = {
-  admin: Admin;
+  user: User;
 };
 
 export class ApiError extends Error {}
