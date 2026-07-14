@@ -325,7 +325,7 @@ textarea:focus {
 .nav-chevron {
   width: 17px;
   margin-left: auto;
-  transform: rotate(180deg);
+  transform: rotate(-90deg);
   transition: transform 180ms ease;
 }
 
@@ -859,7 +859,7 @@ textarea:focus {
   margin-left: 0.85rem;
   border-top: 2px solid #64748b;
   border-left: 2px solid #64748b;
-  transform: translateY(0.1rem) rotate(45deg);
+  transform: translateY(-0.1rem) rotate(225deg);
   transform-origin: center;
   transition:
     border-color 180ms ease,
@@ -877,7 +877,7 @@ textarea:focus {
 
 .select-menu[open] summary::after {
   border-color: var(--accent);
-  transform: translateY(-0.1rem) rotate(225deg);
+  transform: translateY(0.1rem) rotate(45deg);
 }
 
 .select-menu summary[aria-disabled="true"] {
