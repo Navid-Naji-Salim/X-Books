@@ -12,6 +12,7 @@ import {
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import { useLanguage } from "../i18n";
+import { useKeyboardFocusIntent } from "./useKeyboardFocusIntent";
 
 type FlyoutChildProps = {
   "aria-controls"?: string;
@@ -37,11 +38,11 @@ const CLOSE_DELAY = 120;
 export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyoutProps) => {
   const { t } = useLanguage();
   const menuId = useId();
+  const keyboardFocusIntent = useKeyboardFocusIntent();
   const anchorRef = useRef<HTMLSpanElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pointerFocus = useRef(false);
   const [isRendered, setIsRendered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [side, setSide] = useState<Side>("right");
@@ -87,23 +88,19 @@ export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyou
     if (!anchor || disabled) return;
     const showOnHover = () => open(false);
     const hideOnHover = () => close(false);
-    const markPointerFocus = () => { pointerFocus.current = true; };
     const showOnFocus = () => {
-      if (!pointerFocus.current) open(true);
-      pointerFocus.current = false;
+      if (keyboardFocusIntent.current) open(true);
     };
     const hideOnBlur = (event: FocusEvent) => {
       if (!menuRef.current?.contains(event.relatedTarget as Node | null)) close(false);
     };
     anchor.addEventListener("mouseenter", showOnHover);
     anchor.addEventListener("mouseleave", hideOnHover);
-    anchor.addEventListener("pointerdown", markPointerFocus);
     anchor.addEventListener("focusin", showOnFocus);
     anchor.addEventListener("focusout", hideOnBlur);
     return () => {
       anchor.removeEventListener("mouseenter", showOnHover);
       anchor.removeEventListener("mouseleave", hideOnHover);
-      anchor.removeEventListener("pointerdown", markPointerFocus);
       anchor.removeEventListener("focusin", showOnFocus);
       anchor.removeEventListener("focusout", hideOnBlur);
     };

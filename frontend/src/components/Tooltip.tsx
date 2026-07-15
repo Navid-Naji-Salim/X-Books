@@ -10,6 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "../i18n";
+import { useKeyboardFocusIntent } from "./useKeyboardFocusIntent";
 
 type TooltipPlacement = "side" | "top" | "bottom";
 type ResolvedPlacement = "left" | "right" | "top" | "bottom";
@@ -32,9 +33,11 @@ const HOVER_DELAY = 140;
 export const Tooltip = ({ children, content, disabled = false, placement = "top" }: TooltipProps) => {
   const { t } = useLanguage();
   const tooltipId = useId();
+  const keyboardFocusIntent = useKeyboardFocusIntent();
   const anchorRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLSpanElement>(null);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pointerActivation = useRef(false);
   const [isRendered, setIsRendered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [resolvedPlacement, setResolvedPlacement] = useState<ResolvedPlacement>("top");
@@ -65,7 +68,18 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
 
   useEffect(() => {
     const anchor = anchorRef.current;
+    if (!anchor) return;
+    const rememberPointerActivation = () => {
+      pointerActivation.current = true;
+    };
+    anchor.addEventListener("pointerdown", rememberPointerActivation);
+    return () => anchor.removeEventListener("pointerdown", rememberPointerActivation);
+  }, []);
+
+  useEffect(() => {
+    const anchor = anchorRef.current;
     if (isDisabled) {
+      pointerActivation.current = false;
       clearOpenTimer();
       setIsVisible(false);
       setIsRendered(false);
@@ -74,7 +88,9 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
 
     if (!anchor) return clearOpenTimer;
     const showOnHover = () => show(false);
-    const showOnFocus = () => show(true);
+    const showOnFocus = () => {
+      if (keyboardFocusIntent.current) show(true);
+    };
     const hideOnBlur = (event: FocusEvent) => {
       if (!anchor.contains(event.relatedTarget as Node | null)) hide();
     };
@@ -84,10 +100,13 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
     anchor.addEventListener("focusout", hideOnBlur);
 
     // A tooltip can become enabled while its trigger is already hovered or
-    // focused (for example, immediately after the sidebar collapses). In that
-    // case no new pointer/focus event fires, so synchronize with current state.
-    if (anchor.contains(document.activeElement)) show(true);
-    else if (anchor.matches(":hover")) show(false);
+    // keyboard-focused (for example, immediately after the sidebar collapses).
+    // Pointer-created focus must not resurrect a tooltip after the window returns.
+    if (pointerActivation.current) {
+      pointerActivation.current = false;
+      show(false);
+    } else if (anchor.matches(":hover")) show(false);
+    else if (keyboardFocusIntent.current && anchor.contains(document.activeElement)) show(true);
 
     return () => {
       clearOpenTimer();
