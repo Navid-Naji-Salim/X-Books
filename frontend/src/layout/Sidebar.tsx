@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, useLocation } from "react-router-dom";
-import { icons } from "../icons";
+import { appIcons, icons } from "../icons";
 import { Tooltip } from "../components/Tooltip";
 import { NavFlyout } from "../components/NavFlyout";
 import type { PageId, User } from "../types";
@@ -34,6 +34,13 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   const [isPurchasesOpen, setIsPurchasesOpen] = useState(location.pathname.startsWith("/purchases"));
   const { language, setLanguage, t } = useLanguage();
   const isRtl = language !== "en";
+  const SidebarStateIcon = isRtl
+    ? isCollapsed ? appIcons.sidebar.expandRight : appIcons.sidebar.collapseRight
+    : isCollapsed ? appIcons.sidebar.expandLeft : appIcons.sidebar.collapseLeft;
+  const ChevronDownIcon = appIcons.disclosure.down;
+  const SettingsIcon = appIcons.actions.settings;
+  const SalesIcon = icons.sales;
+  const PurchasesIcon = icons.purchases;
   const languageOptions: Array<{ value: Language; label: string }> = [{ value: "en", label: "English" }, { value: "ku", label: "Kurdish" }, { value: "ar", label: "Arabic" }];
 
   useEffect(() => {
@@ -145,32 +152,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
             type="button"
             onClick={onToggleCollapse}
           >
-            <svg className="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <g transform={isRtl ? "translate(24 0) scale(-1 1)" : undefined}>
-                <rect
-                  x="3"
-                  y="3"
-                  width="18"
-                  height="18"
-                  rx="2.25"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                />
-                <path
-                  d="M9 3v18"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeWidth="1.8"
-                />
-                <path
-                  d={isCollapsed ? "m14 9 3 3-3 3" : "m16 9-3 3 3 3"}
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="1.8"
-                />
-              </g>
-            </svg>
+            <SidebarStateIcon className="nav-icon" />
             <span>{isCollapsed ? "Expand" : "Collapse"}</span>
           </button>
         </Tooltip>
@@ -186,8 +168,8 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
                     type="button"
                     onClick={() => { if (!isCollapsed) setIsSalesOpen((current) => !current); }}
                   >
-                    {icons.sales({ className: "nav-icon" })}<span>Sales</span>
-                    <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                    <SalesIcon className="nav-icon" /><span>Sales</span>
+                    <ChevronDownIcon className="nav-chevron" />
                   </button>
                 </NavFlyout>
                 {!isCollapsed ? (
@@ -204,8 +186,8 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
               <div className={`nav-group ${isPurchasesOpen ? "is-open" : ""}`} key="purchases">
                 <NavFlyout disabled={!isCollapsed} label="Purchases" items={[{ label: "Vendors", to: "/purchases/vendors" }, { label: "Bills", to: "/purchases/bills" }]}>
                   <button aria-expanded={isPurchasesOpen} aria-label={isCollapsed ? t("Purchases") : undefined} className={(isCollapsed || !isPurchasesOpen) && location.pathname.startsWith("/purchases") ? "nav-group-button has-active-child" : "nav-group-button"} type="button" onClick={() => { if (!isCollapsed) setIsPurchasesOpen((current) => !current); }}>
-                    {icons.purchases({ className: "nav-icon nav-icon-directional" })}<span>Purchases</span>
-                    <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                    <PurchasesIcon className="nav-icon nav-icon-directional" /><span>Purchases</span>
+                    <ChevronDownIcon className="nav-chevron" />
                   </button>
                 </NavFlyout>
                 {!isCollapsed ? <div aria-hidden={!isPurchasesOpen} className={`nav-submenu ${isPurchasesOpen ? "is-visible" : ""}`}><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/vendors">Vendors</NavLink><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/bills">Bills</NavLink></div> : null}
@@ -246,20 +228,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
             type="button"
             onClick={toggleSettings}
           >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              />
-              <path
-                d="M19.1 13.4c.1-.5.1-.9.1-1.4s0-.9-.1-1.4l2-1.5-2-3.5-2.4 1a8 8 0 0 0-2.4-1.4L14 2.6h-4l-.4 2.6a8 8 0 0 0-2.4 1.4l-2.4-1-2 3.5 2 1.5a8.8 8.8 0 0 0 0 2.8l-2 1.5 2 3.5 2.4-1a8 8 0 0 0 2.4 1.4l.4 2.6h4l.4-2.6a8 8 0 0 0 2.4-1.4l2.4 1 2-3.5-2.1-1.5Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.8"
-              />
-            </svg>
+            <SettingsIcon />
           </button>
         </div>
       </div>

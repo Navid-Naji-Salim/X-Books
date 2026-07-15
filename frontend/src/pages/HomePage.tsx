@@ -3,6 +3,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { currency } from "../lib/format";
 import type { AccountAging, Summary, User } from "../types";
 import { useLanguage } from "../i18n";
+import { appIcons } from "../icons";
 
 const compactAxisMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
 const standardAxisMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -18,8 +19,9 @@ const greeting = () => {
 
 const AgingCard = ({ title, data, to }: { title: string; data: AccountAging; to: string }) => {
   const { language } = useLanguage();
+  const ForwardIcon = language === "en" ? appIcons.direction.forward : appIcons.direction.back;
   return <section className="panel home-aging-card">
-    <div className="home-card-head"><div><span>{title}</span><strong>{fullMoney(data.outstanding)}</strong><small>Total outstanding</small></div><Link to={to}>View all <span aria-hidden="true">{language === "en" ? "→" : "←"}</span></Link></div>
+    <div className="home-card-head"><div><span>{title}</span><strong>{fullMoney(data.outstanding)}</strong><small>Total outstanding</small></div><Link to={to}>View all <ForwardIcon className="inline-direction-icon" /></Link></div>
     <div className="home-aging-split"><div><span>Current</span><strong>{fullMoney(data.current)}</strong></div><div className={data.overdue > 0 ? "is-overdue" : ""}><span>Overdue</span><strong>{fullMoney(data.overdue)}</strong></div></div>
     <div className="home-due-list">
       {data.entries.length === 0 ? <p className="home-empty">Nothing outstanding.</p> : data.entries.map((entry) => <Link className="home-due-row" key={entry.id} to={to}><div><strong>{entry.number}</strong><span>{entry.name}</span></div><div><strong>{fullMoney(entry.amount)}</strong><span className={entry.overdue ? "is-overdue" : ""}>{entry.overdue ? "Overdue" : "Due"} {new Date(entry.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span></div></Link>)}

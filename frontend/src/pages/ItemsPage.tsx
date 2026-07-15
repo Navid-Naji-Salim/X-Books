@@ -4,6 +4,7 @@ import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { currency } from "../lib/format";
+import { appIcons } from "../icons";
 import type { Contact, Item } from "../types";
 
 type ItemsPageProps = {
@@ -25,6 +26,7 @@ const purchaseAccounts = ["Cost of Goods Sold", "Supplies Expense", "Inventory A
 const unitOptions = ["box", "cm", "dz", "ft", "g", "in", "kg", "km", "lb", "mg", "ml", "m", "pcs"];
 
 export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: ItemsPageProps) => {
+  const ImageIcon = appIcons.media.image;
   const [message, setMessage] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -109,11 +111,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
               <label className="image-drop compact-image-drop">
                 <input type="file" accept="image/*" aria-label="Item image" />
                 <span className="image-glyph" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M5 19V5h14v14H5Z" stroke="currentColor" strokeWidth="1.8" />
-                    <path d="m8 15 2.7-3 2.2 2.4 1.4-1.6L17 16H7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor" />
-                  </svg>
+                  <ImageIcon />
                 </span>
                 <strong>Item image</strong>
                 <span>Drop or browse</span>
