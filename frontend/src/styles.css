@@ -1013,7 +1013,9 @@ textarea:focus {
   font-weight: 800;
   line-height: 1.25;
   text-decoration: none;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition:
+    background-color 420ms ease,
+    color 420ms ease;
 }
 
 .x-nav-flyout-items a:hover,

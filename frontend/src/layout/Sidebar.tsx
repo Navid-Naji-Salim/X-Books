@@ -138,7 +138,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
         <div className="sidebar-wordmark">{isCollapsed ? "XB" : "XBooks"}</div>
       </div>
       <nav className="nav">
-        <Tooltip content={isCollapsed ? "Expand sidebar" : "Collapse sidebar"} disabled={!isCollapsed} placement="side">
+        <Tooltip content="Expand" disabled={!isCollapsed} placement="side">
           <button
             aria-label={t(isCollapsed ? "Expand sidebar" : "Collapse sidebar")}
             className="nav-control"
@@ -219,18 +219,17 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
             <strong>{user.name}</strong>
             <span>{user.role}</span>
           </div>
-          <Tooltip content="Settings" disabled={isSettingsOpen} placement="side">
-            <button
-              aria-controls="user-settings-menu"
-              aria-expanded={isSettingsOpen}
-              aria-haspopup="dialog"
-              aria-label={t(isSettingsOpen ? "Close user settings" : "Open user settings")}
-              className="settings-button"
-              ref={settingsButtonRef}
-              type="button"
-              onClick={toggleSettings}
-            >
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <button
+            aria-controls="user-settings-menu"
+            aria-expanded={isSettingsOpen}
+            aria-haspopup="dialog"
+            aria-label={t(isSettingsOpen ? "Close user settings" : "Open user settings")}
+            className="settings-button"
+            ref={settingsButtonRef}
+            type="button"
+            onClick={toggleSettings}
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
                 stroke="currentColor"
@@ -243,9 +242,8 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
                 strokeLinejoin="round"
                 strokeWidth="1.8"
               />
-              </svg>
-            </button>
-          </Tooltip>
+            </svg>
+          </button>
         </div>
       </div>
     </aside>
