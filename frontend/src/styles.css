@@ -459,13 +459,6 @@ textarea:focus {
   height: 38px;
 }
 
-.sidebar.is-collapsed .profile-menu {
-  right: auto;
-  bottom: 0;
-  left: calc(100% + 0.65rem);
-  width: 250px;
-}
-
 .settings-button {
   display: grid;
   width: 34px;
@@ -507,13 +500,22 @@ textarea:focus {
   position: fixed;
   z-index: 100;
   right: auto;
+  bottom: auto;
+  transform-origin: bottom left;
   max-height: calc(100dvh - 1rem);
-  animation: settings-flyout-enter 160ms ease-out;
 }
+
+.profile-menu.is-floating.is-open { animation: settings-flyout-enter 170ms ease-out both; }
+.profile-menu.is-floating.is-closing { pointer-events: none; animation: settings-flyout-exit 130ms ease-in both; }
 
 @keyframes settings-flyout-enter {
   from { opacity: 0; transform: translateY(4px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes settings-flyout-exit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(4px) scale(0.98); }
 }
 
 .profile-menu-head {
@@ -600,7 +602,7 @@ textarea:focus {
 .is-rtl .nav-group:not(.is-open) .nav-chevron { transform: rotate(90deg); }
 .is-rtl .nav-icon-directional { transform: scaleX(-1); }
 .is-rtl .nav-submenu a { padding-right: 3.7rem; padding-left: 0.9rem; }
-.is-rtl .sidebar.is-collapsed .profile-menu { right: calc(100% + 0.65rem); left: auto; }
+.is-rtl .profile-menu.is-floating { transform-origin: bottom right; }
 .is-rtl .profile-menu button { text-align: right; }
 .is-rtl .profile-menu-head small { direction: ltr; text-align: right; }
 .is-rtl .home-aging-split > div + div,

@@ -22,7 +22,8 @@ type SidebarProps = {
 
 export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: SidebarProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [floatingMenuStyle, setFloatingMenuStyle] = useState({ bottom: 8, left: 8, width: 280 });
+  const [isSettingsRendered, setIsSettingsRendered] = useState(false);
+  const [floatingMenuStyle, setFloatingMenuStyle] = useState({ left: 8, top: 8, width: 280 });
   const footerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
@@ -51,38 +52,66 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   }, [isSettingsOpen]);
 
   useLayoutEffect(() => {
-    if (!isSettingsOpen || !isCollapsed) return;
+    if (!isSettingsRendered) return;
+    const menu = menuRef.current;
+    if (!menu) return;
     const updatePosition = () => {
       const button = settingsButtonRef.current;
       const sidebar = footerRef.current?.closest(".sidebar");
-      if (!button || !sidebar) return;
+      if (!button || !sidebar || !menu) return;
       const rect = button.getBoundingClientRect();
       const sidebarRect = sidebar.getBoundingClientRect();
       const edge = 8;
       const gap = 12;
       const width = Math.min(280, window.innerWidth - edge * 2);
-      const preferredLeft = isRtl ? sidebarRect.left - width - gap : sidebarRect.right + gap;
-      const left = Math.min(Math.max(edge, preferredLeft), window.innerWidth - width - edge);
-      const bottom = Math.max(edge, window.innerHeight - rect.bottom);
-      setFloatingMenuStyle({ bottom, left, width });
+      const rightPlacement = Math.max(rect.right, sidebarRect.right) + gap;
+      const leftPlacement = Math.min(rect.left, sidebarRect.left) - width - gap;
+      const preferredLeft = isRtl ? leftPlacement : rightPlacement;
+      const fallbackLeft = isRtl ? rightPlacement : leftPlacement;
+      const fitsHorizontally = (left: number) => left >= edge && left + width <= window.innerWidth - edge;
+      const left = fitsHorizontally(preferredLeft)
+        ? preferredLeft
+        : fitsHorizontally(fallbackLeft)
+          ? fallbackLeft
+          : Math.min(Math.max(edge, preferredLeft), window.innerWidth - width - edge);
+      const height = Math.min(menu.offsetHeight, window.innerHeight - edge * 2);
+      const preferredTop = rect.bottom - height;
+      const top = Math.min(Math.max(edge, preferredTop), window.innerHeight - height - edge);
+      setFloatingMenuStyle({ left, top, width });
     };
     updatePosition();
+    const resizeObserver = new ResizeObserver(updatePosition);
+    resizeObserver.observe(menu);
     window.addEventListener("resize", updatePosition);
     document.addEventListener("scroll", updatePosition, true);
     return () => {
+      resizeObserver.disconnect();
       window.removeEventListener("resize", updatePosition);
       document.removeEventListener("scroll", updatePosition, true);
     };
-  }, [isCollapsed, isRtl, isSettingsOpen]);
+  }, [isCollapsed, isRtl, isSettingsRendered]);
+
+  const toggleSettings = () => {
+    if (isSettingsOpen) {
+      setIsSettingsOpen(false);
+      return;
+    }
+    setIsSettingsRendered(true);
+    setIsSettingsOpen(true);
+  };
 
   const settingsMenu = (
     <div
       aria-label={t("User settings")}
-      className={`profile-menu ${isCollapsed ? "is-floating" : ""}`}
+      aria-hidden={!isSettingsOpen}
+      className={`profile-menu is-floating ${isSettingsOpen ? "is-open" : "is-closing"}`}
       id="user-settings-menu"
       ref={menuRef}
       role="dialog"
-      style={isCollapsed ? floatingMenuStyle : undefined}
+      style={floatingMenuStyle}
+      onAnimationEnd={(event) => {
+        if (event.animationName === "settings-flyout-exit" && !isSettingsOpen) setIsSettingsRendered(false);
+      }}
     >
       <div className="profile-menu-head">
         <span>{t("Settings")}</span>
@@ -172,7 +201,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
         })}
       </nav>
       <div className="sidebar-footer" ref={footerRef}>
-        {isSettingsOpen ? (isCollapsed ? createPortal(settingsMenu, document.body) : settingsMenu) : null}
+        {isSettingsRendered ? createPortal(settingsMenu, document.body) : null}
         <div className="profile-card">
           <div className="brand-mark">{user.name.trim().charAt(0).toUpperCase() || "N"}</div>
           <div className="profile-copy">
@@ -188,7 +217,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
             ref={settingsButtonRef}
             title={t("Settings")}
             type="button"
-            onClick={() => setIsSettingsOpen((current) => !current)}
+            onClick={toggleSettings}
           >
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
