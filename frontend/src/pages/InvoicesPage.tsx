@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
+import { Tooltip } from "../components/Tooltip";
 import { currency } from "../lib/format";
 import type { Contact, Invoice, Item } from "../types";
 
@@ -160,7 +161,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                   <td><input aria-label="Rate" type="number" min="0" step="0.01" value={line.rate} onChange={(event) => updateLine(line.id, { rate: Number(event.currentTarget.value) })} /></td>
                   <td className="invoice-tax-cell"><DropdownField label="Tax" name={`tax-${line.id}`} options={TAX_OPTIONS} placeholder="Select a tax" openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.tax} onChange={(value) => updateLine(line.id, { tax: value })} /></td>
                   <td className="invoice-amount">{currency.format(line.quantity * line.rate)}</td>
-                  <td><button aria-label="Remove line" className="invoice-remove-line" disabled={lines.length === 1} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}>×</button></td>
+                  <td><Tooltip content="Remove line" disabled={lines.length === 1} placement="top"><button aria-label="Remove line" className="invoice-remove-line" disabled={lines.length === 1} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}>×</button></Tooltip></td>
                 </tr>
               ))}</tbody>
             </table>

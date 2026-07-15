@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, useLocation } from "react-router-dom";
 import { icons } from "../icons";
+import { Tooltip } from "../components/Tooltip";
 import type { PageId, User } from "../types";
 import { useLanguage, type Language } from "../i18n";
 
@@ -136,36 +137,41 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
         <div className="sidebar-wordmark">{isCollapsed ? "XB" : "XBooks"}</div>
       </div>
       <nav className="nav">
-        <button
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="nav-control"
-          type="button"
-          onClick={onToggleCollapse}
-        >
-          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d={isCollapsed !== isRtl ? "m10 7 5 5-5 5" : "m14 7-5 5 5 5"}
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-          </svg>
-          <span>{isCollapsed ? "Expand" : "Collapse"}</span>
-        </button>
+        <Tooltip content={isCollapsed ? "Expand sidebar" : "Collapse sidebar"} disabled={!isCollapsed} placement="side">
+          <button
+            aria-label={t(isCollapsed ? "Expand sidebar" : "Collapse sidebar")}
+            className="nav-control"
+            type="button"
+            onClick={onToggleCollapse}
+          >
+            <svg className="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d={isCollapsed !== isRtl ? "m10 7 5 5-5 5" : "m14 7-5 5 5 5"}
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+              />
+            </svg>
+            <span>{isCollapsed ? "Expand" : "Collapse"}</span>
+          </button>
+        </Tooltip>
         {navItems.map((item) => {
           if (item.id === "sales") {
             return (
               <div className={`nav-group ${isSalesOpen ? "is-open" : ""}`} key="sales">
-                <button
-                  aria-expanded={isSalesOpen}
-                  className={!isSalesOpen && location.pathname.startsWith("/sales") ? "nav-group-button has-active-child" : "nav-group-button"}
-                  type="button"
-                  onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsSalesOpen(true); } else setIsSalesOpen((current) => !current); }}
-                >
-                  {icons.sales({ className: "nav-icon" })}<span>Sales</span>
-                  <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                </button>
+                <Tooltip content="Sales" disabled={!isCollapsed} placement="side">
+                  <button
+                    aria-expanded={isSalesOpen}
+                    aria-label={isCollapsed ? t("Sales") : undefined}
+                    className={!isSalesOpen && location.pathname.startsWith("/sales") ? "nav-group-button has-active-child" : "nav-group-button"}
+                    type="button"
+                    onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsSalesOpen(true); } else setIsSalesOpen((current) => !current); }}
+                  >
+                    {icons.sales({ className: "nav-icon" })}<span>Sales</span>
+                    <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  </button>
+                </Tooltip>
                 {!isCollapsed ? (
                   <div aria-hidden={!isSalesOpen} className={`nav-submenu ${isSalesOpen ? "is-visible" : ""}`}>
                     <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/invoices">Invoices</NavLink>
@@ -178,25 +184,29 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           if (item.id === "purchases") {
             return (
               <div className={`nav-group ${isPurchasesOpen ? "is-open" : ""}`} key="purchases">
-                <button aria-expanded={isPurchasesOpen} className={!isPurchasesOpen && location.pathname.startsWith("/purchases") ? "nav-group-button has-active-child" : "nav-group-button"} type="button" onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsPurchasesOpen(true); } else setIsPurchasesOpen((current) => !current); }}>
-                  {icons.purchases({ className: "nav-icon nav-icon-directional" })}<span>Purchases</span>
-                  <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                </button>
+                <Tooltip content="Purchases" disabled={!isCollapsed} placement="side">
+                  <button aria-expanded={isPurchasesOpen} aria-label={isCollapsed ? t("Purchases") : undefined} className={!isPurchasesOpen && location.pathname.startsWith("/purchases") ? "nav-group-button has-active-child" : "nav-group-button"} type="button" onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsPurchasesOpen(true); } else setIsPurchasesOpen((current) => !current); }}>
+                    {icons.purchases({ className: "nav-icon nav-icon-directional" })}<span>Purchases</span>
+                    <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  </button>
+                </Tooltip>
                 {!isCollapsed ? <div aria-hidden={!isPurchasesOpen} className={`nav-submenu ${isPurchasesOpen ? "is-visible" : ""}`}><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/vendors">Vendors</NavLink><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/bills">Bills</NavLink></div> : null}
               </div>
             );
           }
           const Icon = icons[item.id];
           return (
-            <NavLink
-              className={({ isActive }) => (isActive ? "active" : undefined)}
-              end={item.to === "/"}
-              key={item.id}
-              to={item.to}
-            >
-              <Icon className="nav-icon" />
-              <span>{item.label}</span>
-            </NavLink>
+            <Tooltip content={item.label} disabled={!isCollapsed} key={item.id} placement="side">
+              <NavLink
+                aria-label={isCollapsed ? t(item.label) : undefined}
+                className={({ isActive }) => (isActive ? "active" : undefined)}
+                end={item.to === "/"}
+                to={item.to}
+              >
+                <Icon className="nav-icon" />
+                <span>{item.label}</span>
+              </NavLink>
+            </Tooltip>
           );
         })}
       </nav>
@@ -208,18 +218,18 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
             <strong>{user.name}</strong>
             <span>{user.role}</span>
           </div>
-          <button
-            aria-controls="user-settings-menu"
-            aria-expanded={isSettingsOpen}
-            aria-haspopup="dialog"
-            aria-label={t(isSettingsOpen ? "Close user settings" : "Open user settings")}
-            className="settings-button"
-            ref={settingsButtonRef}
-            title={t("Settings")}
-            type="button"
-            onClick={toggleSettings}
-          >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <Tooltip content="Settings" disabled={isSettingsOpen} placement="side">
+            <button
+              aria-controls="user-settings-menu"
+              aria-expanded={isSettingsOpen}
+              aria-haspopup="dialog"
+              aria-label={t(isSettingsOpen ? "Close user settings" : "Open user settings")}
+              className="settings-button"
+              ref={settingsButtonRef}
+              type="button"
+              onClick={toggleSettings}
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
                 stroke="currentColor"
@@ -232,8 +242,9 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
                 strokeLinejoin="round"
                 strokeWidth="1.8"
               />
-            </svg>
-          </button>
+              </svg>
+            </button>
+          </Tooltip>
         </div>
       </div>
     </aside>
