@@ -146,13 +146,30 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
             onClick={onToggleCollapse}
           >
             <svg className="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d={isCollapsed !== isRtl ? "m10 7 5 5-5 5" : "m14 7-5 5 5 5"}
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
+              <g transform={isRtl ? "translate(24 0) scale(-1 1)" : undefined}>
+                <rect
+                  x="3"
+                  y="3"
+                  width="18"
+                  height="18"
+                  rx="2.25"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M9 3v18"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d={isCollapsed ? "m14 9 3 3-3 3" : "m16 9-3 3 3 3"}
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.8"
+                />
+              </g>
             </svg>
             <span>{isCollapsed ? "Expand" : "Collapse"}</span>
           </button>
