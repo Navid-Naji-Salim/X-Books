@@ -979,6 +979,58 @@ textarea:focus {
 .x-tooltip.is-visible { animation: x-tooltip-enter 145ms ease-out both; }
 .x-tooltip.is-closing { animation: x-tooltip-exit 100ms ease-in both; }
 
+.x-nav-flyout {
+  display: block;
+  width: min(208px, calc(100vw - 16px));
+  min-height: 0;
+  padding: 7px;
+  pointer-events: auto;
+}
+
+.x-nav-flyout-title {
+  padding: 7px 9px 8px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.x-nav-flyout-items {
+  display: grid;
+  gap: 3px;
+}
+
+.x-nav-flyout-items a {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.x-nav-flyout-items a:hover,
+.x-nav-flyout-items a:focus-visible {
+  color: white;
+  background: var(--nav-soft);
+  outline: none;
+}
+
+.x-nav-flyout-items a.active {
+  color: white;
+  background: var(--nav-active);
+}
+
+.is-rtl .x-nav-flyout-title,
+.is-rtl .x-nav-flyout-items a { text-align: right; }
+
 @keyframes x-tooltip-enter {
   from { opacity: 0; transform: translate(var(--tooltip-shift-x), var(--tooltip-shift-y)) scale(0.98); }
   to { opacity: 1; transform: translate(0, 0) scale(1); }

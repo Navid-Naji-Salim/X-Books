@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { NavLink, useLocation } from "react-router-dom";
 import { icons } from "../icons";
 import { Tooltip } from "../components/Tooltip";
+import { NavFlyout } from "../components/NavFlyout";
 import type { PageId, User } from "../types";
 import { useLanguage, type Language } from "../i18n";
 
@@ -160,18 +161,18 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           if (item.id === "sales") {
             return (
               <div className={`nav-group ${isSalesOpen ? "is-open" : ""}`} key="sales">
-                <Tooltip content="Sales" disabled={!isCollapsed} placement="side">
+                <NavFlyout disabled={!isCollapsed} label="Sales" items={[{ label: "Invoices", to: "/sales/invoices" }, { label: "Customers", to: "/sales/customers" }]}>
                   <button
                     aria-expanded={isSalesOpen}
                     aria-label={isCollapsed ? t("Sales") : undefined}
-                    className={!isSalesOpen && location.pathname.startsWith("/sales") ? "nav-group-button has-active-child" : "nav-group-button"}
+                    className={(isCollapsed || !isSalesOpen) && location.pathname.startsWith("/sales") ? "nav-group-button has-active-child" : "nav-group-button"}
                     type="button"
-                    onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsSalesOpen(true); } else setIsSalesOpen((current) => !current); }}
+                    onClick={() => { if (!isCollapsed) setIsSalesOpen((current) => !current); }}
                   >
                     {icons.sales({ className: "nav-icon" })}<span>Sales</span>
                     <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                   </button>
-                </Tooltip>
+                </NavFlyout>
                 {!isCollapsed ? (
                   <div aria-hidden={!isSalesOpen} className={`nav-submenu ${isSalesOpen ? "is-visible" : ""}`}>
                     <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/invoices">Invoices</NavLink>
@@ -184,12 +185,12 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           if (item.id === "purchases") {
             return (
               <div className={`nav-group ${isPurchasesOpen ? "is-open" : ""}`} key="purchases">
-                <Tooltip content="Purchases" disabled={!isCollapsed} placement="side">
-                  <button aria-expanded={isPurchasesOpen} aria-label={isCollapsed ? t("Purchases") : undefined} className={!isPurchasesOpen && location.pathname.startsWith("/purchases") ? "nav-group-button has-active-child" : "nav-group-button"} type="button" onClick={() => { if (isCollapsed) { onToggleCollapse(); setIsPurchasesOpen(true); } else setIsPurchasesOpen((current) => !current); }}>
+                <NavFlyout disabled={!isCollapsed} label="Purchases" items={[{ label: "Vendors", to: "/purchases/vendors" }, { label: "Bills", to: "/purchases/bills" }]}>
+                  <button aria-expanded={isPurchasesOpen} aria-label={isCollapsed ? t("Purchases") : undefined} className={(isCollapsed || !isPurchasesOpen) && location.pathname.startsWith("/purchases") ? "nav-group-button has-active-child" : "nav-group-button"} type="button" onClick={() => { if (!isCollapsed) setIsPurchasesOpen((current) => !current); }}>
                     {icons.purchases({ className: "nav-icon nav-icon-directional" })}<span>Purchases</span>
                     <svg className="nav-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                   </button>
-                </Tooltip>
+                </NavFlyout>
                 {!isCollapsed ? <div aria-hidden={!isPurchasesOpen} className={`nav-submenu ${isPurchasesOpen ? "is-visible" : ""}`}><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/vendors">Vendors</NavLink><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/bills">Bills</NavLink></div> : null}
               </div>
             );
