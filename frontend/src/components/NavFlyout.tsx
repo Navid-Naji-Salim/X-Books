@@ -12,6 +12,7 @@ import {
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import { useLanguage } from "../i18n";
+import { useContainedWheel } from "./useContainedWheel";
 import { useKeyboardFocusIntent } from "./useKeyboardFocusIntent";
 
 type FlyoutChildProps = {
@@ -47,6 +48,8 @@ export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyou
   const [isVisible, setIsVisible] = useState(false);
   const [side, setSide] = useState<Side>("right");
   const [position, setPosition] = useState<CSSProperties>({ left: EDGE, top: EDGE });
+
+  useContainedWheel(menuRef, isRendered);
 
   const clearTimers = () => {
     if (openTimer.current) clearTimeout(openTimer.current);

@@ -515,6 +515,7 @@ textarea:focus {
   bottom: auto;
   transform-origin: bottom left;
   max-height: calc(100dvh - 1rem);
+  overscroll-behavior: contain;
 }
 
 .profile-menu.is-floating.is-open { animation: settings-flyout-enter 170ms ease-out both; }
@@ -987,6 +988,7 @@ textarea:focus {
   width: min(208px, calc(100vw - 16px));
   min-height: 0;
   padding: 7px;
+  overscroll-behavior: contain;
   pointer-events: auto;
 }
 

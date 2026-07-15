@@ -4,6 +4,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { appIcons, icons } from "../icons";
 import { Tooltip } from "../components/Tooltip";
 import { NavFlyout } from "../components/NavFlyout";
+import { useContainedWheel } from "../components/useContainedWheel";
 import type { PageId, User } from "../types";
 import { useLanguage, type Language } from "../i18n";
 import { reportNavigationItems } from "../reportDefinitions";
@@ -45,6 +46,8 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   const PurchasesIcon = icons.purchases;
   const ReportsIcon = icons.reports;
   const languageOptions: Array<{ value: Language; label: string }> = [{ value: "en", label: "English" }, { value: "ku", label: "Kurdish" }, { value: "ar", label: "Arabic" }];
+
+  useContainedWheel(menuRef, isSettingsRendered);
 
   useEffect(() => {
     if (!isSettingsOpen) return;
