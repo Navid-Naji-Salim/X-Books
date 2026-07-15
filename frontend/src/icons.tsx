@@ -2,8 +2,6 @@ import type { ComponentType } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  ArrowUpLeft,
-  ArrowUpRight,
   ChartNoAxesCombined,
   ChevronDown,
   House,
@@ -55,8 +53,6 @@ export const appIcons = {
   direction: {
     back: xbooksIcon(ArrowLeft),
     forward: xbooksIcon(ArrowRight),
-    openExternal: xbooksIcon(ArrowUpRight),
-    openExternalRtl: xbooksIcon(ArrowUpLeft),
   },
   disclosure: {
     down: xbooksIcon(ChevronDown),

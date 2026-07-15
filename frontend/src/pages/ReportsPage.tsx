@@ -1,41 +1,20 @@
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useState } from "react";
-import { PageTitle } from "../components/PageTitle";
 import { api, ApiError } from "../api";
 import { currency } from "../lib/format";
 import type { Bill, Contact, Invoice } from "../types";
-import { useLanguage } from "../i18n";
-import { appIcons } from "../icons";
+import { reports } from "../reportDefinitions";
 
 type Props = { bills: Bill[]; customers: Contact[]; invoices: Invoice[]; vendors: Contact[]; token: string };
-const reports = [
-  { id: "profit-loss", title: "Profit & Loss", description: "Compare invoiced sales with recorded purchases and review net profit." },
-  { id: "sales", title: "Sales Report", description: "Review invoice totals, payment status, customers, and sales activity." },
-  { id: "purchases", title: "Purchases Report", description: "Review bill totals, payment status, vendors, and purchase activity." },
-  { id: "customers", title: "Customers Report", description: "See customer activity, invoiced totals, and outstanding balances." },
-  { id: "vendors", title: "Vendors Report", description: "See vendor activity, billed totals, and outstanding balances." },
-] as const;
 
 const Summary = ({ entries }: { entries: Array<[string, string]> }) => <div className="report-summary">{entries.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>;
 
 export const ReportsPage = (props: Props) => {
   const { reportId } = useParams();
-  if (!reportId) return <ReportLibrary />;
+  if (!reportId) return <Navigate to="/reports/profit-loss" replace />;
   const report = reports.find((entry) => entry.id === reportId);
   if (!report) return <Navigate to="/reports" replace />;
   return <ReportDetail {...props} id={report.id} title={report.title} description={report.description} />;
-};
-
-const ReportLibrary = () => {
-  const { language } = useLanguage();
-  const isRtl = language !== "en";
-  const ForwardIcon = isRtl ? appIcons.direction.back : appIcons.direction.forward;
-  const OpenReportIcon = isRtl ? appIcons.direction.openExternalRtl : appIcons.direction.openExternal;
-
-  return <>
-    <PageTitle eyebrow="Reports" title="Generated reports." description="Open a focused view of sales, purchases, customers, vendors, or profitability." />
-    <section className="report-library">{reports.map((report) => <Link className="panel report-card" key={report.id} to={`/reports/${report.id}`}><div><span className="report-card-mark"><OpenReportIcon /></span><h2>{report.title}</h2><p>{report.description}</p></div><strong>View report <ForwardIcon className="inline-direction-icon" /></strong></Link>)}</section>
-  </>;
 };
 
 const inputDate = (date: Date) => { const adjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60_000); return adjusted.toISOString().slice(0, 10); };
@@ -43,9 +22,6 @@ const reportDate = (value: string | Date) => typeof value === "string" && !value
 const generatedTime = (value: Date) => `${reportDate(value)}, ${value.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
 const ReportDetail = ({ id, title, description, token }: Props & { id: string; title: string; description: string }) => {
-  const { language } = useLanguage();
-  const isRtl = language !== "en";
-  const BackIcon = isRtl ? appIcons.direction.forward : appIcons.direction.back;
   const today = new Date();
   const [fromDate, setFromDate] = useState(() => inputDate(new Date(today.getFullYear(), 0, 1)));
   const [toDate, setToDate] = useState(() => inputDate(today));
@@ -140,7 +116,7 @@ const ReportDetail = ({ id, title, description, token }: Props & { id: string; t
     });
     pdf.save(`${id}-${generated.fromDate}-${generated.toDate}.pdf`);
   };
-  return <div className="report-page"><header className="report-page-head report-screen-only"><Link className="report-back" to="/reports"><BackIcon className="inline-direction-icon" /><span>Reports</span></Link><h1>{title}</h1><p>{description}</p></header>
+  return <div className="report-page"><header className="report-page-head report-screen-only"><h1>{title}</h1><p>{description}</p></header>
     <section className="report-toolbar report-screen-only"><div className="field"><label htmlFor="reportFrom">From</label><input id="reportFrom" type="date" value={fromDate} onChange={(event) => setFromDate(event.currentTarget.value)} /></div><div className="field"><label htmlFor="reportTo">To</label><input id="reportTo" type="date" value={toDate} onChange={(event) => setToDate(event.currentTarget.value)} /></div><button className="button" disabled={isGenerating} type="button" onClick={() => void generate()}>{isGenerating ? "Generating..." : "Generate report"}</button><div className="message">{error}</div></section>
     <section className="report-viewer">{generated ? <div className="report-document-shell"><div className="report-document-actions report-screen-only"><span>{paginatedRows.length} page{paginatedRows.length === 1 ? "" : "s"}</span><div><button className="ghost-button" type="button" onClick={() => window.print()}>Print</button><button className="button" type="button" onClick={() => void exportPdf()}>Export PDF</button></div></div><div className="report-pages">{paginatedRows.map((rows, pageIndex) => <article className="report-document" key={pageIndex}><header className="report-document-head"><span>XBooks</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(generated.fromDate)} – {reportDate(generated.toDate)}</span><span>Generated: {generatedTime(generated.generatedAt)}</span></div></header><div className="report-detail">{pageIndex === 0 ? <Summary entries={pdfSummary} /> : null}<section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cellIndex === row.length - 1 ? <strong>{cell}</strong> : cell}</td>)}</tr>) : <tr><td className="muted" colSpan={Math.max(1, pdfHeaders.length)}>No activity in this period.</td></tr>}</tbody></table></div></section></div></article>)}</div></div> : <div className="report-document-shell report-template-shell"><article className="report-document report-document-template"><header className="report-document-head"><span>XBooks</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(fromDate)} – {reportDate(toDate)}</span><span>Generated: —</span></div></header><div className="report-detail"><div className="report-template-summary" aria-hidden="true">{pdfSummary.map(([label]) => <div key={label}><span>{label}</span><i /></div>)}</div><section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{templateRows.map((row, rowIndex) => <tr className="report-template-row" key={rowIndex}>{row.map((cell, column) => <td key={`${pdfHeaders[column]}-${column}`}>{cell || column === 0 && id === "profit-loss" ? cell : <i />}</td>)}</tr>)}</tbody></table></div><p className="report-template-message">Choose a date range and generate this report.</p></section></div></article></div>}</section>
   </div>;

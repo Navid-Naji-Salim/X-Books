@@ -360,6 +360,8 @@ textarea:focus {
     visibility 0s;
 }
 
+.nav-submenu-reports.is-visible { max-height: 16rem; }
+
 .nav-submenu a {
   width: 100%;
   padding: 0.72rem 0.9rem 0.72rem 3.7rem;
@@ -597,7 +599,6 @@ textarea:focus {
 .is-rtl .home-activity-summary span { font-weight: 600; }
 .is-rtl .invoice-status,
 .is-rtl .home-card-head > a,
-.is-rtl .report-back { font-weight: 650; }
 .is-rtl .home-hero h1,
 .is-rtl .page-title h1,
 .is-rtl .report-page-head h1 { font-weight: 650; }
@@ -1550,15 +1551,6 @@ th {
   font-weight: 800;
 }
 
-.report-library { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.report-card { display: flex; min-height: 12rem; justify-content: space-between; align-items: flex-end; color: inherit; text-decoration: none; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
-.report-card:hover { transform: translateY(-2px); border-color: rgba(33, 150, 243, 0.35); box-shadow: 0 28px 76px rgba(30, 41, 59, 0.2); }
-.report-card h2 { margin-top: 1rem; }
-.report-card p { max-width: 32rem; margin: 0.5rem 0 1.3rem; color: var(--muted); line-height: 1.55; }
-.report-card > strong { display: inline-flex; gap: 0.28rem; align-items: center; color: #0369a1; white-space: nowrap; }
-.report-card-mark { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: 12px; color: #075985; background: #e0f2fe; font-weight: 900; }
-.report-card-mark svg { width: 18px; height: 18px; }
-.report-back { display: inline-flex; gap: 0.3rem; align-items: center; margin-top: 0.7rem; color: #0369a1; font-weight: 900; text-decoration: none; }
 .inline-direction-icon { width: 15px; height: 15px; flex: 0 0 auto; }
 .report-detail { display: grid; gap: 1rem; }
 .report-summary { display: grid; gap: 0; }
@@ -1569,7 +1561,6 @@ th {
 .report-section h2 { margin-top: 2px; padding-bottom: 7px; border-bottom: 1px solid #94a3b8; color: #14213d; font-size: 19px; line-height: 1; }
 .report-page { display: grid; gap: 1rem; }
 .report-page-head { display: grid; gap: 0.3rem; margin: 0.35rem 0 0.15rem; }
-.report-page-head .report-back { margin: 0 0 0.35rem; }
 .report-page-head h1 { font-family: "Newsreader", serif; font-size: clamp(2rem, 4vw, 3rem); line-height: 1; }
 .report-page-head p { max-width: 48rem; margin: 0; color: var(--muted); line-height: 1.45; }
 .report-toolbar { display: grid; grid-template-columns: minmax(10rem, 13rem) minmax(10rem, 13rem) auto minmax(0, 1fr); gap: 0.75rem; align-items: end; padding: 0.8rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -1631,7 +1622,6 @@ th {
   .home-aging-grid { grid-template-columns: 1fr; }
   .home-chart-head { display: grid; }
 
-  .report-library { grid-template-columns: 1fr; }
 
   .sidebar {
     position: static;
