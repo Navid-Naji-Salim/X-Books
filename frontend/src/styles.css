@@ -253,11 +253,6 @@ textarea:focus {
   font-weight: 900;
 }
 
-.profile-mark-button {
-  border: 0;
-  color: white;
-}
-
 .profile-copy {
   min-width: 0;
   flex: 1;
@@ -449,13 +444,19 @@ textarea:focus {
 
 .sidebar.is-collapsed .profile-card {
   display: grid;
+  gap: 0.45rem;
   justify-items: center;
-  padding: 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.sidebar.is-collapsed .settings-button,
 .sidebar.is-collapsed .profile-copy {
   display: none;
+}
+
+.sidebar.is-collapsed .settings-button {
+  width: 44px;
+  height: 38px;
 }
 
 .sidebar.is-collapsed .profile-menu {
@@ -502,6 +503,37 @@ textarea:focus {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
 }
 
+.profile-menu.is-floating {
+  position: fixed;
+  z-index: 100;
+  right: auto;
+  max-height: calc(100dvh - 1rem);
+  animation: settings-flyout-enter 160ms ease-out;
+}
+
+@keyframes settings-flyout-enter {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.profile-menu-head {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.55rem 0.45rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.profile-menu-head span {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-menu-head strong { color: white; }
+.profile-menu-head small { overflow: hidden; color: rgba(255, 255, 255, 0.62); text-overflow: ellipsis; white-space: nowrap; }
+
 .profile-menu button {
   width: 100%;
   border: 0;
@@ -517,11 +549,16 @@ textarea:focus {
 }
 
 .profile-menu button:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-menu .logout-button:hover {
   color: #fecaca;
   background: rgba(239, 68, 68, 0.18);
 }
 
-.language-setting { display: grid; gap: 0.45rem; margin-bottom: 0.4rem; padding: 0.55rem 0.45rem 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.language-setting { display: grid; gap: 0.45rem; margin-bottom: 0.4rem; padding: 0.7rem 0.45rem; border-bottom: 1px solid rgba(255,255,255,0.12); }
 .language-setting > span { color: rgba(255,255,255,0.58); font-size: 0.7rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
 .language-setting > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.3rem; }
 .language-setting button { padding: 0.5rem 0.3rem; border-radius: 9px; font-size: 0.72rem; text-align: center; }
@@ -565,6 +602,7 @@ textarea:focus {
 .is-rtl .nav-submenu a { padding-right: 3.7rem; padding-left: 0.9rem; }
 .is-rtl .sidebar.is-collapsed .profile-menu { right: calc(100% + 0.65rem); left: auto; }
 .is-rtl .profile-menu button { text-align: right; }
+.is-rtl .profile-menu-head small { direction: ltr; text-align: right; }
 .is-rtl .home-aging-split > div + div,
 .is-rtl .home-activity-summary > div + div { border-right: 1px solid var(--line); border-left: 0; }
 .is-rtl .money-field span { border-right: 1px solid var(--line); border-left: 0; border-radius: 0 16px 16px 0; }

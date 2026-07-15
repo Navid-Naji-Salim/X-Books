@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { NavLink, useLocation } from "react-router-dom";
 import { icons } from "../icons";
 import type { PageId, User } from "../types";
@@ -21,12 +22,84 @@ type SidebarProps = {
 
 export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: SidebarProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [floatingMenuStyle, setFloatingMenuStyle] = useState({ bottom: 8, left: 8, width: 280 });
+  const footerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
   const [isSalesOpen, setIsSalesOpen] = useState(location.pathname.startsWith("/sales"));
   const [isPurchasesOpen, setIsPurchasesOpen] = useState(location.pathname.startsWith("/purchases"));
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const isRtl = language !== "en";
   const languageOptions: Array<{ value: Language; label: string }> = [{ value: "en", label: "English" }, { value: "ku", label: "Kurdish" }, { value: "ar", label: "Arabic" }];
+
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (!footerRef.current?.contains(target) && !menuRef.current?.contains(target)) setIsSettingsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsSettingsOpen(false);
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isSettingsOpen]);
+
+  useLayoutEffect(() => {
+    if (!isSettingsOpen || !isCollapsed) return;
+    const updatePosition = () => {
+      const button = settingsButtonRef.current;
+      const sidebar = footerRef.current?.closest(".sidebar");
+      if (!button || !sidebar) return;
+      const rect = button.getBoundingClientRect();
+      const sidebarRect = sidebar.getBoundingClientRect();
+      const edge = 8;
+      const gap = 12;
+      const width = Math.min(280, window.innerWidth - edge * 2);
+      const preferredLeft = isRtl ? sidebarRect.left - width - gap : sidebarRect.right + gap;
+      const left = Math.min(Math.max(edge, preferredLeft), window.innerWidth - width - edge);
+      const bottom = Math.max(edge, window.innerHeight - rect.bottom);
+      setFloatingMenuStyle({ bottom, left, width });
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    document.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      document.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [isCollapsed, isRtl, isSettingsOpen]);
+
+  const settingsMenu = (
+    <div
+      aria-label={t("User settings")}
+      className={`profile-menu ${isCollapsed ? "is-floating" : ""}`}
+      id="user-settings-menu"
+      ref={menuRef}
+      role="dialog"
+      style={isCollapsed ? floatingMenuStyle : undefined}
+    >
+      <div className="profile-menu-head">
+        <span>{t("Settings")}</span>
+        <strong>{user.name}</strong>
+        <small>{user.email}</small>
+      </div>
+      <div className="language-setting">
+        <span>{t("Language")}</span>
+        <div role="group" aria-label={t("Language")}>
+          {languageOptions.map((option) => <button className={language === option.value ? "is-selected" : ""} key={option.value} type="button" onClick={() => setLanguage(option.value)}>{t(option.label)}</button>)}
+        </div>
+      </div>
+      <button className="logout-button" type="button" onClick={onLogout}>
+        {t("Log out")}
+      </button>
+    </div>
+  );
 
   return (
     <aside className={`sidebar ${isCollapsed ? "is-collapsed" : ""}`}>
@@ -98,44 +171,22 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           );
         })}
       </nav>
-      <div className="sidebar-footer">
-        {isSettingsOpen && (
-          <div className="profile-menu">
-            <div className="language-setting">
-              <span>Language</span>
-              <div role="group" aria-label="Language">
-                {languageOptions.map((option) => <button className={language === option.value ? "is-selected" : ""} key={option.value} type="button" onClick={() => setLanguage(option.value)}>{option.label}</button>)}
-              </div>
-            </div>
-            <button type="button" onClick={onLogout}>
-              Log out
-            </button>
-          </div>
-        )}
+      <div className="sidebar-footer" ref={footerRef}>
+        {isSettingsOpen ? (isCollapsed ? createPortal(settingsMenu, document.body) : settingsMenu) : null}
         <div className="profile-card">
-          {isCollapsed ? (
-            <button
-              aria-expanded={isSettingsOpen}
-              aria-label="Open user settings"
-              className="brand-mark profile-mark-button"
-              type="button"
-              onClick={() => setIsSettingsOpen((current) => !current)}
-            >
-              {user.name.trim().charAt(0).toUpperCase() || "N"}
-            </button>
-          ) : (
-            <>
-              <div className="brand-mark">{user.name.trim().charAt(0).toUpperCase() || "N"}</div>
-              <div className="profile-copy">
-                <strong>{user.name}</strong>
-                <span>{user.role}</span>
-              </div>
-            </>
-          )}
+          <div className="brand-mark">{user.name.trim().charAt(0).toUpperCase() || "N"}</div>
+          <div className="profile-copy">
+            <strong>{user.name}</strong>
+            <span>{user.role}</span>
+          </div>
           <button
+            aria-controls="user-settings-menu"
             aria-expanded={isSettingsOpen}
-            aria-label="Open user settings"
+            aria-haspopup="dialog"
+            aria-label={t(isSettingsOpen ? "Close user settings" : "Open user settings")}
             className="settings-button"
+            ref={settingsButtonRef}
+            title={t("Settings")}
             type="button"
             onClick={() => setIsSettingsOpen((current) => !current)}
           >
