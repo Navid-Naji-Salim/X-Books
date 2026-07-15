@@ -82,6 +82,13 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
     anchor.addEventListener("mouseleave", hide);
     anchor.addEventListener("focusin", showOnFocus);
     anchor.addEventListener("focusout", hideOnBlur);
+
+    // A tooltip can become enabled while its trigger is already hovered or
+    // focused (for example, immediately after the sidebar collapses). In that
+    // case no new pointer/focus event fires, so synchronize with current state.
+    if (anchor.contains(document.activeElement)) show(true);
+    else if (anchor.matches(":hover")) show(false);
+
     return () => {
       clearOpenTimer();
       anchor.removeEventListener("mouseenter", showOnHover);

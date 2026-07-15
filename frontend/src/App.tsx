@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Navigate, Outlet, Route, Routes, useNavigate } from "react-router-dom";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { Sidebar } from "./layout/Sidebar";
 import { LoginPage } from "./pages/LoginPage";
@@ -238,7 +238,14 @@ type ProtectedLayoutProps = {
 
 const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const contentRef = useRef<HTMLElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  useLayoutEffect(() => {
+    window.scrollTo({ left: 0, top: 0, behavior: "auto" });
+    contentRef.current?.scrollTo({ left: 0, top: 0, behavior: "auto" });
+  }, [pathname]);
 
   useEffect(() => {
     const compactLayout = window.matchMedia("(max-width: 980px)");
@@ -267,7 +274,7 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
         onLogout={logout}
         onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
       />
-      <main className="content">
+      <main className="content" ref={contentRef}>
         <Suspense fallback={<div className="loading-screen">Preparing your books workspace...</div>}>
           <Outlet />
         </Suspense>
