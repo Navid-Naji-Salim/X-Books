@@ -7,6 +7,7 @@ import { NavFlyout } from "../components/NavFlyout";
 import { useContainedWheel } from "../components/useContainedWheel";
 import type { PageId, User } from "../types";
 import { useLanguage, type Language } from "../i18n";
+import xbooksLogo from "../assets/xbooks-logo.png";
 
 const navItems: Array<{ id: PageId; label: string; to: string }> = [
   { id: "home", label: "Home", to: "/" },
@@ -145,7 +146,14 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   return (
     <aside className={`sidebar ${isCollapsed ? "is-collapsed" : ""}`}>
       <div className="sidebar-head">
-        <div className="sidebar-wordmark">{isCollapsed ? "XB" : "XBooks"}</div>
+        <div className="sidebar-brand">
+          <img
+            alt={isCollapsed ? "XBooks" : ""}
+            className="sidebar-logo"
+            src={xbooksLogo}
+          />
+          {!isCollapsed ? <div className="sidebar-wordmark">XBooks</div> : null}
+        </div>
       </div>
       <nav className="nav">
         <Tooltip content="Expand" disabled={!isCollapsed} placement="side" resetKey={isCollapsed}>

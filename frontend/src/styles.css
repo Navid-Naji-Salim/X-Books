@@ -229,8 +229,23 @@ textarea:focus {
   display: block;
 }
 
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem 1.35rem;
+  direction: ltr;
+}
+
+.sidebar-logo {
+  display: block;
+  width: auto;
+  height: 38px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
 .sidebar-wordmark {
-  padding: 0.7rem 0.9rem 1.45rem;
   color: white;
   font-family: "Newsreader", serif;
   font-size: 1.9rem;
@@ -404,11 +419,13 @@ textarea:focus {
   justify-items: center;
 }
 
-.sidebar.is-collapsed .sidebar-wordmark {
-  padding: 0.6rem 0 1.1rem;
-  font-size: 1.9rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+.sidebar.is-collapsed .sidebar-brand {
+  justify-content: center;
+  padding: 0.45rem 0 1rem;
+}
+
+.sidebar.is-collapsed .sidebar-logo {
+  height: 40px;
 }
 
 .sidebar.is-collapsed .nav {
@@ -605,6 +622,7 @@ textarea:focus {
 .is-rtl .report-page-head h1 { font-weight: 650; }
 .is-rtl :where(p, span, label, h2, h3, th, td, button, a, summary, strong, small) { direction: rtl; unicode-bidi: plaintext; }
 .is-rtl .app-shell { direction: rtl; }
+.is-rtl .sidebar-brand,
 .is-rtl .sidebar-wordmark,
 .is-rtl .brand-mark { direction: ltr; unicode-bidi: isolate; }
 .is-rtl .sidebar-wordmark { text-align: right; white-space: nowrap; }
