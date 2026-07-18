@@ -16,11 +16,13 @@ export const useKeyboardFocusIntent = () => {
 
     document.addEventListener("keydown", markKeyboardIntent, true);
     document.addEventListener("pointerdown", clearKeyboardIntent, true);
+    document.addEventListener("pointermove", clearKeyboardIntent, true);
     window.addEventListener("blur", clearKeyboardIntent);
     document.addEventListener("visibilitychange", clearWhenHidden);
     return () => {
       document.removeEventListener("keydown", markKeyboardIntent, true);
       document.removeEventListener("pointerdown", clearKeyboardIntent, true);
+      document.removeEventListener("pointermove", clearKeyboardIntent, true);
       window.removeEventListener("blur", clearKeyboardIntent);
       document.removeEventListener("visibilitychange", clearWhenHidden);
     };

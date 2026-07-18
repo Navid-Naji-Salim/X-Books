@@ -24,26 +24,33 @@ type TooltipProps = {
   content: string;
   disabled?: boolean;
   placement?: TooltipPlacement;
+  resetKey?: string | number | boolean;
 };
 
 const EDGE = 8;
 const GAP = 12;
 const HOVER_DELAY = 140;
+const TOOLTIP_OPEN_EVENT = "xbooks:tooltip-open";
 
-export const Tooltip = ({ children, content, disabled = false, placement = "top" }: TooltipProps) => {
+export const Tooltip = ({ children, content, disabled = false, placement = "top", resetKey }: TooltipProps) => {
   const { t } = useLanguage();
   const tooltipId = useId();
   const keyboardFocusIntent = useKeyboardFocusIntent();
   const anchorRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLSpanElement>(null);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openRequest = useRef(0);
   const pointerActivation = useRef(false);
   const [isRendered, setIsRendered] = useState(false);
+  const isRenderedRef = useRef(isRendered);
+  isRenderedRef.current = isRendered;
   const [isVisible, setIsVisible] = useState(false);
   const [resolvedPlacement, setResolvedPlacement] = useState<ResolvedPlacement>("top");
   const [position, setPosition] = useState<CSSProperties>({ left: EDGE, top: EDGE });
   const translatedContent = t(content);
   const isDisabled = disabled || Boolean(children.props.disabled);
+  const isDisabledRef = useRef(isDisabled);
+  isDisabledRef.current = isDisabled;
 
   const clearOpenTimer = () => {
     if (openTimer.current) clearTimeout(openTimer.current);
@@ -53,7 +60,11 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
   const show = (immediate: boolean) => {
     if (isDisabled) return;
     clearOpenTimer();
+    const request = ++openRequest.current;
     const open = () => {
+      if (request !== openRequest.current || isDisabledRef.current) return;
+      window.dispatchEvent(new CustomEvent<string>(TOOLTIP_OPEN_EVENT, { detail: tooltipId }));
+      isRenderedRef.current = true;
       setIsRendered(true);
       setIsVisible(true);
     };
@@ -62,8 +73,19 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
   };
 
   const hide = () => {
+    openRequest.current += 1;
     clearOpenTimer();
     setIsVisible(false);
+  };
+
+  const dismiss = () => {
+    pointerActivation.current = false;
+    if (!isRenderedRef.current && !openTimer.current) return;
+    openRequest.current += 1;
+    clearOpenTimer();
+    isRenderedRef.current = false;
+    setIsVisible(false);
+    setIsRendered(false);
   };
 
   useEffect(() => {
@@ -78,11 +100,13 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
 
   useEffect(() => {
     const anchor = anchorRef.current;
+    openRequest.current += 1;
+    clearOpenTimer();
+    isRenderedRef.current = false;
+    setIsVisible(false);
+    setIsRendered(false);
     if (isDisabled) {
       pointerActivation.current = false;
-      clearOpenTimer();
-      setIsVisible(false);
-      setIsRendered(false);
       return clearOpenTimer;
     }
 
@@ -109,13 +133,43 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
     else if (keyboardFocusIntent.current && anchor.contains(document.activeElement)) show(true);
 
     return () => {
+      openRequest.current += 1;
       clearOpenTimer();
       anchor.removeEventListener("mouseenter", showOnHover);
       anchor.removeEventListener("mouseleave", hide);
       anchor.removeEventListener("focusin", showOnFocus);
       anchor.removeEventListener("focusout", hideOnBlur);
     };
-  }, [isDisabled]);
+  }, [isDisabled, resetKey]);
+
+  useEffect(() => {
+    const dismissForAnotherTooltip = (event: Event) => {
+      if ((event as CustomEvent<string>).detail !== tooltipId) dismiss();
+    };
+    window.addEventListener(TOOLTIP_OPEN_EVENT, dismissForAnotherTooltip);
+    return () => window.removeEventListener(TOOLTIP_OPEN_EVENT, dismissForAnotherTooltip);
+  }, [tooltipId]);
+
+  useEffect(() => {
+    const dismissOnBlur = () => dismiss();
+    const dismissWhenHidden = () => {
+      if (document.hidden) dismiss();
+    };
+    const dismissWhenPointerLeavesAnchor = (event: PointerEvent) => {
+      const anchor = anchorRef.current;
+      if (anchor && !anchor.contains(event.target as Node)) dismiss();
+    };
+    window.addEventListener("blur", dismissOnBlur);
+    document.addEventListener("visibilitychange", dismissWhenHidden);
+    document.addEventListener("pointermove", dismissWhenPointerLeavesAnchor, true);
+    document.addEventListener("pointerdown", dismissWhenPointerLeavesAnchor, true);
+    return () => {
+      window.removeEventListener("blur", dismissOnBlur);
+      document.removeEventListener("visibilitychange", dismissWhenHidden);
+      document.removeEventListener("pointermove", dismissWhenPointerLeavesAnchor, true);
+      document.removeEventListener("pointerdown", dismissWhenPointerLeavesAnchor, true);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (!isRendered) return;

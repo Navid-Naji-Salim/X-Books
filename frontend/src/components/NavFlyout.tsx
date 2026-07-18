@@ -44,6 +44,9 @@ export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyou
   const menuRef = useRef<HTMLDivElement>(null);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const interactionRequest = useRef(0);
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
   const [isRendered, setIsRendered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [side, setSide] = useState<Side>("right");
@@ -64,7 +67,9 @@ export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyou
     closeTimer.current = null;
     if (isVisible) return;
     if (openTimer.current) clearTimeout(openTimer.current);
+    const request = ++interactionRequest.current;
     const reveal = () => {
+      if (request !== interactionRequest.current || disabledRef.current) return;
       setIsRendered(true);
       setIsVisible(true);
       openTimer.current = null;
@@ -74,6 +79,7 @@ export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyou
   };
 
   const close = (immediate = false) => {
+    interactionRequest.current += 1;
     if (openTimer.current) clearTimeout(openTimer.current);
     openTimer.current = null;
     const conceal = () => {
@@ -85,6 +91,14 @@ export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyou
   };
 
   useEffect(() => clearTimers, []);
+
+  useEffect(() => {
+    if (!disabled) return;
+    interactionRequest.current += 1;
+    clearTimers();
+    setIsVisible(false);
+    setIsRendered(false);
+  }, [disabled]);
 
   useEffect(() => {
     const anchor = anchorRef.current;

@@ -148,7 +148,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
         <div className="sidebar-wordmark">{isCollapsed ? "XB" : "XBooks"}</div>
       </div>
       <nav className="nav">
-        <Tooltip content="Expand" disabled={!isCollapsed} placement="side">
+        <Tooltip content="Expand" disabled={!isCollapsed} placement="side" resetKey={isCollapsed}>
           <button
             aria-label={t(isCollapsed ? "Expand sidebar" : "Collapse sidebar")}
             className="nav-control"
@@ -199,7 +199,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           }
           const Icon = icons[item.id];
           return (
-            <Tooltip content={item.label} disabled={!isCollapsed} key={item.id} placement="side">
+            <Tooltip content={item.label} disabled={!isCollapsed} key={item.id} placement="side" resetKey={isCollapsed}>
               <NavLink
                 aria-label={isCollapsed ? t(item.label) : undefined}
                 className={({ isActive }) => (isActive ? "active" : undefined)}
