@@ -56,7 +56,7 @@ const FinancialChart = ({ title, description, data, series, summary }: { title: 
 
 export const HomePage = ({ user, dataError, summary }: { user: User; dataError: string; summary: Summary }) => (
   <div className="home-page">
-    <header className="home-hero"><p className="eyebrow">Financial overview · {summary.year}</p><h1>{greeting()}, {user.name || "Nawid"}</h1><p>Your financial overview, clearly presented.</p></header>
+    <header className="home-hero"><h1>{greeting()}, {user.name || "Nawid"}</h1><p>Your financial overview, clearly presented.</p></header>
     {dataError ? <div className="panel page-alert">{dataError}</div> : null}
     <div className="home-aging-grid"><AgingCard title="Receivables" data={summary.receivables} to="/sales/invoices" /><AgingCard title="Payables" data={summary.payables} to="/purchases/bills" /></div>
     <FinancialChart title="Cash flow" description={`Cash received and paid by month · ${summary.year}`} data={summary.months} series={[{ key: "cashReceived", label: "Incoming cash", color: "#15803d" }, { key: "cashPaid", label: "Outgoing cash", color: "#dc2626" }]} />

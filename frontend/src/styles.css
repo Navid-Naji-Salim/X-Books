@@ -642,10 +642,9 @@ textarea:focus {
 }
 
 .home-page { display: grid; gap: 1rem; max-width: 1480px; margin: 0 auto; }
-.home-hero { display: grid; gap: 0.5rem; margin: 0.65rem 0 0.45rem; }
-.home-hero .eyebrow { margin: 0; }
+.home-hero { display: grid; gap: 0.45rem; margin: 0.35rem 0 0.65rem; }
 .home-hero h1 { font-family: "Newsreader", serif; font-size: clamp(2.35rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.025em; }
-.home-hero > p:last-child { margin: 0.15rem 0 0; color: var(--muted); font-size: 1rem; }
+.home-hero > p { max-width: 42rem; margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.5; }
 .home-aging-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .home-aging-card { display: grid; gap: 1rem; min-width: 0; box-shadow: 0 16px 48px rgba(30, 41, 59, 0.1); }
 .home-card-head { display: flex; gap: 1rem; align-items: flex-start; justify-content: space-between; }
@@ -1562,7 +1561,7 @@ th {
 .report-section { display: grid; gap: 12px; overflow: hidden; }
 .report-section h2 { margin-top: 2px; padding-bottom: 7px; border-bottom: 1px solid #94a3b8; color: #14213d; font-size: 19px; line-height: 1; }
 .report-page { display: grid; gap: 1rem; }
-.report-page-head { display: grid; gap: 0.3rem; margin: 0.35rem 0 0.15rem; }
+.report-page-head { display: grid; gap: 0.45rem; margin: 0.45rem 0 0.4rem; }
 .report-page-head h1 { font-family: "Newsreader", serif; font-size: clamp(2rem, 4vw, 3rem); line-height: 1; }
 .report-page-head p { max-width: 48rem; margin: 0; color: var(--muted); line-height: 1.45; }
 .report-toolbar { display: grid; grid-template-columns: minmax(13rem, 1.2fr) minmax(9rem, 0.75fr) minmax(9rem, 0.75fr) auto; gap: 0.75rem; align-items: end; padding: 0.8rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
