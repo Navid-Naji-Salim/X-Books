@@ -251,6 +251,7 @@ textarea:focus {
   font-size: 1.9rem;
   font-weight: 650;
   letter-spacing: -0.04em;
+  word-spacing: 0.16em;
 }
 
 .profile-card {
