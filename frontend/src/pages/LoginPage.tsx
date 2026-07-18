@@ -34,7 +34,7 @@ export const LoginPage = ({ onLogin }: LoginPageProps) => {
           }}
         >
           <div className="login-heading">
-            <h1>XBooks</h1>
+            <h1>X Books</h1>
           </div>
           <div className="field">
             <label htmlFor="email">Email</label>

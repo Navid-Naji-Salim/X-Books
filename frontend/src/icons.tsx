@@ -21,10 +21,10 @@ import {
 } from "lucide-react";
 import type { PageId } from "./types";
 
-export type XBooksIcon = ComponentType<LucideProps>;
+export type AppIcon = ComponentType<LucideProps>;
 
-const xbooksIcon = (Icon: LucideIcon): XBooksIcon => {
-  const XBooksIconComponent = (props: LucideProps) => (
+const createAppIcon = (Icon: LucideIcon): AppIcon => {
+  const AppIconComponent = (props: LucideProps) => (
     <Icon
       {...props}
       aria-hidden="true"
@@ -32,38 +32,38 @@ const xbooksIcon = (Icon: LucideIcon): XBooksIcon => {
       strokeWidth={1.8}
     />
   );
-  XBooksIconComponent.displayName = `XBooksIcon(${Icon.displayName ?? Icon.name})`;
-  return XBooksIconComponent;
+  AppIconComponent.displayName = `AppIcon(${Icon.displayName ?? Icon.name})`;
+  return AppIconComponent;
 };
 
-export const icons: Record<PageId, XBooksIcon> = {
-  home: xbooksIcon(House),
-  items: xbooksIcon(Package),
-  sales: xbooksIcon(ReceiptText),
-  purchases: xbooksIcon(ShoppingCart),
-  reports: xbooksIcon(ChartNoAxesCombined),
+export const icons: Record<PageId, AppIcon> = {
+  home: createAppIcon(House),
+  items: createAppIcon(Package),
+  sales: createAppIcon(ReceiptText),
+  purchases: createAppIcon(ShoppingCart),
+  reports: createAppIcon(ChartNoAxesCombined),
 };
 
 export const appIcons = {
   actions: {
-    add: xbooksIcon(Plus),
-    remove: xbooksIcon(X),
-    settings: xbooksIcon(Settings),
+    add: createAppIcon(Plus),
+    remove: createAppIcon(X),
+    settings: createAppIcon(Settings),
   },
   direction: {
-    back: xbooksIcon(ArrowLeft),
-    forward: xbooksIcon(ArrowRight),
+    back: createAppIcon(ArrowLeft),
+    forward: createAppIcon(ArrowRight),
   },
   disclosure: {
-    down: xbooksIcon(ChevronDown),
+    down: createAppIcon(ChevronDown),
   },
   media: {
-    image: xbooksIcon(ImageIcon),
+    image: createAppIcon(ImageIcon),
   },
   sidebar: {
-    collapseLeft: xbooksIcon(PanelLeftClose),
-    collapseRight: xbooksIcon(PanelRightClose),
-    expandLeft: xbooksIcon(PanelLeftOpen),
-    expandRight: xbooksIcon(PanelRightOpen),
+    collapseLeft: createAppIcon(PanelLeftClose),
+    collapseRight: createAppIcon(PanelRightClose),
+    expandLeft: createAppIcon(PanelLeftOpen),
+    expandRight: createAppIcon(PanelRightOpen),
   },
 } as const;

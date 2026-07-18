@@ -7,7 +7,7 @@ import { NavFlyout } from "../components/NavFlyout";
 import { useContainedWheel } from "../components/useContainedWheel";
 import type { PageId, User } from "../types";
 import { useLanguage, type Language } from "../i18n";
-import xbooksLogo from "../assets/xbooks-logo.png";
+import brandLogo from "../assets/x-books-logo.png";
 
 const navItems: Array<{ id: PageId; label: string; to: string }> = [
   { id: "home", label: "Home", to: "/" },
@@ -150,7 +150,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           <img
             alt={isCollapsed ? "X Books" : ""}
             className="sidebar-logo"
-            src={xbooksLogo}
+            src={brandLogo}
           />
           {!isCollapsed ? <div className="sidebar-wordmark">X Books</div> : null}
         </div>

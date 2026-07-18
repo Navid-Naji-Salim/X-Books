@@ -109,11 +109,11 @@ const prepareDocument = (language: Language) => {
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem("xbooksLanguage");
+    const saved = localStorage.getItem("x-books-language");
     return saved === "ku" || saved === "ar" ? saved : "en";
   });
   const previousLanguage = useRef<Language>(language);
-  const setLanguage = (next: Language) => { localStorage.setItem("xbooksLanguage", next); setLanguageState(next); };
+  const setLanguage = (next: Language) => { localStorage.setItem("x-books-language", next); setLanguageState(next); };
   useLayoutEffect(() => {
     prepareDocument(language);
     const root = document.getElementById("root");

@@ -21,14 +21,14 @@ const databaseIsHealthy = async () => {
 };
 
 if (await databaseIsHealthy()) {
-  console.log("XBooks database is already healthy.");
+  console.log("X Books database is already healthy.");
   process.exit(0);
 }
 
 // Prisma Dev can retain a process that reports `running` after its PostgreSQL
 // socket has stopped accepting queries. Cycle it only in that unhealthy state;
 // restarting a healthy database would invalidate the live backend connection.
-spawnSync(npx, ["prisma", "dev", "stop", "xbooks"], {
+spawnSync(npx, ["prisma", "dev", "stop", "x-books"], {
   cwd: process.cwd(),
   stdio: "ignore",
   shell: useShell,
@@ -36,7 +36,7 @@ spawnSync(npx, ["prisma", "dev", "stop", "xbooks"], {
 
 const started = spawnSync(
   npx,
-  ["prisma", "dev", "--name", "xbooks", "--port", "51223", "--db-port", "51224", "--shadow-db-port", "51225", "--detach"],
+  ["prisma", "dev", "--name", "x-books", "--port", "51223", "--db-port", "51224", "--shadow-db-port", "51225", "--detach"],
   { cwd: process.cwd(), stdio: "inherit", shell: useShell },
 );
 

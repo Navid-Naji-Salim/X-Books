@@ -50,7 +50,7 @@ const startServer = async () => {
 
   const app = createApp();
   app.listen(env.port, () => {
-    console.log(`Accounting and Books System is running on http://localhost:${env.port}`);
+    console.log(`X Books is running on http://localhost:${env.port}`);
   });
 };
 
@@ -65,7 +65,7 @@ startServer().catch((error: unknown) => {
       [
         "Failed to initialize the server: the database is not reachable.",
         "Start the development database first:",
-        '  cd "C:\\Users\\Navid\\Desktop\\XBooks"',
+        "  open the X Books project directory",
         "  npm run dev:db",
       ].join("\n"),
     );

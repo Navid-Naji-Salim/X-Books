@@ -11,7 +11,7 @@ const backendIsHealthy = async () => {
 };
 
 if (await backendIsHealthy()) {
-  console.log("XBooks backend is already running on http://127.0.0.1:3000");
+  console.log("X Books backend is already running on http://127.0.0.1:3000");
   process.exit(0);
 }
 
@@ -23,7 +23,7 @@ const started = spawnSync(npm, ["run", "dev", "--workspace", "backend"], {
 });
 
 if (started.error) {
-  console.error("Unable to start the XBooks backend:", started.error.message);
+  console.error("Unable to start the X Books backend:", started.error.message);
   process.exit(1);
 }
 

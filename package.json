@@ -1,5 +1,5 @@
 {
-  "name": "accounting-and-invoicing-system",
+  "name": "x-books",
   "version": "1.0.0",
   "description": "",
   "private": true,
@@ -21,17 +21,9 @@
     "db:push": "prisma db push",
     "test": "npm run test --workspace backend"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Navid-Naji-Salim/Accounting-and-Invoicing-System.git"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Navid-Naji-Salim/Accounting-and-Invoicing-System/issues"
-  },
-  "homepage": "https://github.com/Navid-Naji-Salim/Accounting-and-Invoicing-System#readme",
   "devDependencies": {
     "prisma": "^7.8.0"
   }

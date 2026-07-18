@@ -30,7 +30,7 @@ type TooltipProps = {
 const EDGE = 8;
 const GAP = 12;
 const HOVER_DELAY = 140;
-const TOOLTIP_OPEN_EVENT = "xbooks:tooltip-open";
+const TOOLTIP_OPEN_EVENT = "x-books:tooltip-open";
 
 export const Tooltip = ({ children, content, disabled = false, placement = "top", resetKey }: TooltipProps) => {
   const { t } = useLanguage();
