@@ -6,7 +6,4 @@ export const reports = [
   { id: "vendors", title: "Vendors Report", description: "See vendor activity, billed totals, and outstanding balances." },
 ] as const;
 
-export const reportNavigationItems = reports.map((report) => ({
-  label: report.title,
-  to: `/reports/${report.id}`,
-}));
+export type ReportId = typeof reports[number]["id"];

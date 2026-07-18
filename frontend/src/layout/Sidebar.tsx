@@ -7,7 +7,6 @@ import { NavFlyout } from "../components/NavFlyout";
 import { useContainedWheel } from "../components/useContainedWheel";
 import type { PageId, User } from "../types";
 import { useLanguage, type Language } from "../i18n";
-import { reportNavigationItems } from "../reportDefinitions";
 
 const navItems: Array<{ id: PageId; label: string; to: string }> = [
   { id: "home", label: "Home", to: "/" },
@@ -34,7 +33,6 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   const location = useLocation();
   const [isSalesOpen, setIsSalesOpen] = useState(location.pathname.startsWith("/sales"));
   const [isPurchasesOpen, setIsPurchasesOpen] = useState(location.pathname.startsWith("/purchases"));
-  const [isReportsOpen, setIsReportsOpen] = useState(location.pathname.startsWith("/reports"));
   const { language, setLanguage, t } = useLanguage();
   const isRtl = language !== "en";
   const SidebarStateIcon = isRtl
@@ -44,7 +42,6 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   const SettingsIcon = appIcons.actions.settings;
   const SalesIcon = icons.sales;
   const PurchasesIcon = icons.purchases;
-  const ReportsIcon = icons.reports;
   const languageOptions: Array<{ value: Language; label: string }> = [{ value: "en", label: "English" }, { value: "ku", label: "Kurdish" }, { value: "ar", label: "Arabic" }];
 
   useContainedWheel(menuRef, isSettingsRendered);
@@ -197,29 +194,6 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
                   </button>
                 </NavFlyout>
                 {!isCollapsed ? <div aria-hidden={!isPurchasesOpen} className={`nav-submenu ${isPurchasesOpen ? "is-visible" : ""}`}><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/vendors">Vendors</NavLink><NavLink tabIndex={isPurchasesOpen ? undefined : -1} to="/purchases/bills">Bills</NavLink></div> : null}
-              </div>
-            );
-          }
-          if (item.id === "reports") {
-            return (
-              <div className={`nav-group ${isReportsOpen ? "is-open" : ""}`} key="reports">
-                <NavFlyout disabled={!isCollapsed} label="Reports" items={reportNavigationItems}>
-                  <button
-                    aria-expanded={isReportsOpen}
-                    aria-label={isCollapsed ? t("Reports") : undefined}
-                    className={(isCollapsed || !isReportsOpen) && location.pathname.startsWith("/reports") ? "nav-group-button has-active-child" : "nav-group-button"}
-                    type="button"
-                    onClick={() => { if (!isCollapsed) setIsReportsOpen((current) => !current); }}
-                  >
-                    <ReportsIcon className="nav-icon" /><span>Reports</span>
-                    <ChevronDownIcon className="nav-chevron" />
-                  </button>
-                </NavFlyout>
-                {!isCollapsed ? (
-                  <div aria-hidden={!isReportsOpen} className={`nav-submenu nav-submenu-reports ${isReportsOpen ? "is-visible" : ""}`}>
-                    {reportNavigationItems.map((report) => <NavLink key={report.to} tabIndex={isReportsOpen ? undefined : -1} to={report.to}>{report.label}</NavLink>)}
-                  </div>
-                ) : null}
               </div>
             );
           }

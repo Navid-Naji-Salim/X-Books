@@ -3,7 +3,7 @@ import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState, 
 export type Language = "en" | "ku" | "ar";
 
 const translations: Record<string, { ku: string; ar: string }> = {
-  Home: { ku: "سەرەکی", ar: "الرئيسية" }, Items: { ku: "کاڵاکان", ar: "العناصر" }, Sales: { ku: "فرۆشتن", ar: "المبيعات" }, Purchases: { ku: "کڕین", ar: "المشتريات" }, Reports: { ku: "ڕاپۆرتەکان", ar: "التقارير" },
+  Home: { ku: "سەرەکی", ar: "الرئيسية" }, Items: { ku: "کاڵاکان", ar: "العناصر" }, Sales: { ku: "فرۆشتن", ar: "المبيعات" }, Purchases: { ku: "کڕین", ar: "المشتريات" }, Report: { ku: "ڕاپۆرت", ar: "التقرير" }, Reports: { ku: "ڕاپۆرتەکان", ar: "التقارير" },
   Invoices: { ku: "پسووڵەکان", ar: "الفواتير" }, Customers: { ku: "کڕیارەکان", ar: "العملاء" }, Vendors: { ku: "دابینکەرەکان", ar: "الموردون" }, Bills: { ku: "وەسڵەکان", ar: "فواتير الشراء" },
   Collapse: { ku: "داخستن", ar: "طي" }, Expand: { ku: "فراوانکردن", ar: "توسيع" }, "Collapse sidebar": { ku: "داخستنی لاتەنیشت", ar: "طي الشريط الجانبي" }, "Expand sidebar": { ku: "فراوانکردنی لاتەنیشت", ar: "توسيع الشريط الجانبي" },
   User: { ku: "بەکارهێنەر", ar: "المستخدم" }, Settings: { ku: "ڕێکخستنەکان", ar: "الإعدادات" }, "User settings": { ku: "ڕێکخستنەکانی بەکارهێنەر", ar: "إعدادات المستخدم" }, "Open user settings": { ku: "کردنەوەی ڕێکخستنەکانی بەکارهێنەر", ar: "فتح إعدادات المستخدم" }, "Close user settings": { ku: "داخستنی ڕێکخستنەکانی بەکارهێنەر", ar: "إغلاق إعدادات المستخدم" },

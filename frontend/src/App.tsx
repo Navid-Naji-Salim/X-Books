@@ -193,8 +193,7 @@ export const App = () => {
             />
           }
         />
-        <Route path="reports" element={<Navigate to="/reports/profit-loss" replace />} />
-        <Route path="reports/:reportId" element={<ReportsPage bills={data.bills} customers={data.customers} invoices={data.invoices} vendors={data.vendors} token={token ?? ""} />} />
+        <Route path="reports" element={<ReportsPage token={token ?? ""} />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

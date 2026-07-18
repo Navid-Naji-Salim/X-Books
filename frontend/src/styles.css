@@ -362,8 +362,6 @@ textarea:focus {
     visibility 0s;
 }
 
-.nav-submenu-reports.is-visible { max-height: 16rem; }
-
 .nav-submenu a {
   width: 100%;
   padding: 0.72rem 0.9rem 0.72rem 3.7rem;
@@ -1567,10 +1565,10 @@ th {
 .report-page-head { display: grid; gap: 0.3rem; margin: 0.35rem 0 0.15rem; }
 .report-page-head h1 { font-family: "Newsreader", serif; font-size: clamp(2rem, 4vw, 3rem); line-height: 1; }
 .report-page-head p { max-width: 48rem; margin: 0; color: var(--muted); line-height: 1.45; }
-.report-toolbar { display: grid; grid-template-columns: minmax(10rem, 13rem) minmax(10rem, 13rem) auto minmax(0, 1fr); gap: 0.75rem; align-items: end; padding: 0.8rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.report-toolbar { display: grid; grid-template-columns: minmax(13rem, 1.2fr) minmax(9rem, 0.75fr) minmax(9rem, 0.75fr) auto; gap: 0.75rem; align-items: end; padding: 0.8rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .report-toolbar input { height: 2.45rem; min-height: 2.45rem; border-radius: 10px; padding: 0.55rem 0.7rem; }
 .report-toolbar > .button { height: 2.45rem; min-height: 2.45rem; border-radius: 10px; padding: 0.55rem 0.8rem; font-size: 0.82rem; }
-.report-toolbar > .message { align-self: center; }
+.report-toolbar > .message { grid-column: 1 / -1; align-self: center; }
 .report-viewer { display: grid; min-height: 650px; place-items: start center; padding: clamp(1rem, 3vw, 2rem); border: 1px solid rgba(20, 33, 61, 0.08); border-radius: 20px; background: rgba(226, 232, 240, 0.46); }
 .report-document-shell { width: min(794px, 100%); animation: report-enter 180ms ease-out; }
 .report-document-actions { display: flex; justify-content: space-between; align-items: center; min-height: 3.4rem; border: 1px solid #cbd5e1; border-bottom: 0; border-radius: 8px 8px 0 0; padding: 0.55rem 0.7rem 0.55rem 1rem; color: #475569; background: #f8fafc; font-size: 0.78rem; font-weight: 800; }
@@ -1657,6 +1655,7 @@ th {
   .invoice-table-wrap { overflow-x: auto; }
   .invoice-totals-card > div { grid-template-columns: 1fr minmax(6rem, 0.7fr) minmax(5rem, auto); }
   .report-toolbar { grid-template-columns: 1fr 1fr; }
+  .report-toolbar > .dropdown-field { grid-column: 1 / -1; }
   .report-toolbar > .message { grid-column: 1 / -1; }
   .report-document-meta { display: grid; }
   .home-activity-summary { width: 100%; grid-template-columns: 1fr; }
