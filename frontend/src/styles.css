@@ -233,14 +233,14 @@ textarea:focus {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.55rem 0.75rem 1.35rem;
+  padding: 0.3rem 0.65rem 1.1rem;
   direction: ltr;
 }
 
 .sidebar-logo {
   display: block;
   width: auto;
-  height: 38px;
+  height: 58px;
   flex: 0 0 auto;
   object-fit: contain;
 }
@@ -421,11 +421,11 @@ textarea:focus {
 
 .sidebar.is-collapsed .sidebar-brand {
   justify-content: center;
-  padding: 0.45rem 0 1rem;
+  padding: 0.25rem 0 0.8rem;
 }
 
 .sidebar.is-collapsed .sidebar-logo {
-  height: 40px;
+  height: 60px;
 }
 
 .sidebar.is-collapsed .nav {
