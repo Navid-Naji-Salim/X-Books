@@ -148,11 +148,11 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
       <div className="sidebar-head">
         <div className="sidebar-brand">
           <img
-            alt={isCollapsed ? "XBooks" : ""}
+            alt={isCollapsed ? "X Books" : ""}
             className="sidebar-logo"
             src={xbooksLogo}
           />
-          {!isCollapsed ? <div className="sidebar-wordmark">XBooks</div> : null}
+          {!isCollapsed ? <div className="sidebar-wordmark">X Books</div> : null}
         </div>
       </div>
       <nav className="nav">
