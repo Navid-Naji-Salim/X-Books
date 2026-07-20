@@ -39,7 +39,7 @@ const FinancialChart = ({ title, description, data, series, summary }: { title: 
   <section className="panel home-chart-card" aria-label={title}>
     <div className="home-chart-head"><div><h2>{title}</h2><p>{description}</p></div>{summary ? <div className="home-activity-summary"><div><span>Income</span><strong>{fullMoney(summary.totalIncome)}</strong></div><div><span>Expenses</span><strong>{fullMoney(summary.totalExpenses)}</strong></div><div><span>Net activity</span><strong className={summary.netActivity < 0 ? "is-negative" : ""}>{fullMoney(summary.netActivity)}</strong></div></div> : null}</div>
     <div className="home-chart-wrap">
-      <ResponsiveContainer debounce={240} width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 18, right: 12, left: 10, bottom: 0 }} barGap={3} accessibilityLayer>
           <CartesianGrid stroke="#dbe3ed" strokeDasharray="3 4" vertical={false} />
           <XAxis dataKey="month" axisLine={false} reversed={isRtl} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
