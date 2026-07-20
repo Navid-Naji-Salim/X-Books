@@ -67,11 +67,11 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   useLayoutEffect(() => {
     if (!isSettingsRendered) return;
     const menu = menuRef.current;
-    if (!menu) return;
+    const sidebar = footerRef.current?.closest(".sidebar");
+    if (!menu || !sidebar) return;
     const updatePosition = () => {
       const button = settingsButtonRef.current;
-      const sidebar = footerRef.current?.closest(".sidebar");
-      if (!button || !sidebar || !menu) return;
+      if (!button) return;
       const rect = button.getBoundingClientRect();
       const sidebarRect = sidebar.getBoundingClientRect();
       const edge = 8;
@@ -95,6 +95,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
     updatePosition();
     const resizeObserver = new ResizeObserver(updatePosition);
     resizeObserver.observe(menu);
+    resizeObserver.observe(sidebar);
     window.addEventListener("resize", updatePosition);
     document.addEventListener("scroll", updatePosition, true);
     return () => {
@@ -152,7 +153,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
             className="sidebar-logo"
             src={brandLogo}
           />
-          {!isCollapsed ? <div className="sidebar-wordmark">X Books</div> : null}
+          <div aria-hidden={isCollapsed} className="sidebar-wordmark">X Books</div>
         </div>
       </div>
       <nav className="nav">

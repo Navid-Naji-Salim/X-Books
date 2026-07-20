@@ -205,6 +205,7 @@ textarea:focus {
   display: grid;
   grid-template-columns: 252px minmax(0, 1fr);
   min-height: 100vh;
+  transition: grid-template-columns 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-shell.sidebar-collapsed {
@@ -223,6 +224,7 @@ textarea:focus {
   background:
     linear-gradient(180deg, rgba(16, 35, 63, 0.98), rgba(10, 24, 46, 0.98)),
     radial-gradient(circle at 25% 10%, rgba(245, 158, 11, 0.28), transparent 18rem);
+  transition: padding-inline 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-head {
@@ -235,6 +237,9 @@ textarea:focus {
   gap: 0.85rem;
   padding: 0.3rem 0.65rem 1.1rem;
   direction: ltr;
+  transition:
+    gap 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-logo {
@@ -246,12 +251,21 @@ textarea:focus {
 }
 
 .sidebar-wordmark {
+  max-width: 8rem;
+  overflow: hidden;
   color: white;
   font-family: "Newsreader", serif;
   font-size: 1.9rem;
   font-weight: 650;
   letter-spacing: -0.04em;
   word-spacing: 0.16em;
+  white-space: nowrap;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    max-width 180ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 140ms ease-out,
+    transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .profile-card {
@@ -422,8 +436,15 @@ textarea:focus {
 }
 
 .sidebar.is-collapsed .sidebar-brand {
+  gap: 0;
   justify-content: center;
   padding: 0.25rem 0 0.8rem;
+}
+
+.sidebar.is-collapsed .sidebar-wordmark {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-0.35rem);
 }
 
 .sidebar.is-collapsed .sidebar-logo {
@@ -1654,6 +1675,15 @@ th {
   .sidebar-footer {
     position: static;
     margin-top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell,
+  .sidebar,
+  .sidebar-brand,
+  .sidebar-wordmark {
+    transition: none;
   }
 }
 
