@@ -240,6 +240,7 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
   const { pathname } = useLocation();
   const contentRef = useRef<HTMLElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [hasSidebarToggled, setHasSidebarToggled] = useState(false);
 
   useLayoutEffect(() => {
     window.scrollTo({ left: 0, top: 0, behavior: "auto" });
@@ -266,12 +267,15 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className={`app-shell ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+    <div className={`app-shell ${isSidebarCollapsed ? "sidebar-collapsed" : ""} ${hasSidebarToggled ? "sidebar-has-toggled" : ""}`}>
       <Sidebar
         user={user}
         isCollapsed={isSidebarCollapsed}
         onLogout={logout}
-        onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
+        onToggleCollapse={() => {
+          setHasSidebarToggled(true);
+          setIsSidebarCollapsed((current) => !current);
+        }}
       />
       <main className="content" ref={contentRef}>
         <Suspense fallback={<div className="loading-screen">Preparing your books workspace...</div>}>
