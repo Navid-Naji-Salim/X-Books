@@ -320,18 +320,14 @@ textarea:focus {
 }
 
 .profile-copy {
+  display: flex;
   min-width: 0;
   flex: 1;
+  align-items: center;
 }
 
-.profile-copy strong,
-.profile-copy span {
+.profile-copy strong {
   display: block;
-}
-
-.profile-copy span {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.78rem;
 }
 
 .sidebar:not(.is-collapsed) .profile-copy,

@@ -228,7 +228,6 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           <div className="brand-mark">{user.name.trim().charAt(0).toUpperCase() || "N"}</div>
           <div className="profile-copy">
             <strong>{user.name}</strong>
-            <span>{user.role}</span>
           </div>
           <button
             aria-controls="user-settings-menu"
