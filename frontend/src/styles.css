@@ -1657,10 +1657,11 @@ th {
 .invoice-status { display: inline-flex; border-radius: 999px; padding: 0.32rem 0.62rem; font-size: 0.75rem; font-weight: 900; }
 .invoice-status.is-unpaid { color: #991b1b; background: #fee2e2; }
 .invoice-status.is-paid { color: #166534; background: #dcfce7; }
-.record-payment-button { padding: 0.58rem 0.72rem; white-space: nowrap; }
-.record-edit-button { padding: 0.58rem 0.72rem; white-space: nowrap; }
-.invoice-row-actions { display: flex; justify-content: flex-end; gap: 0.45rem; }
-.invoice-delete-button { padding: 0.58rem 0.72rem; }
+.record-actions-heading,
+.record-actions-cell { width: 1%; white-space: nowrap; }
+.record-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.45rem; }
+.record-action-button { min-inline-size: 5.25rem; padding: 0.58rem 0.72rem; white-space: nowrap; text-align: center; }
+.record-payment-button { min-inline-size: 8.5rem; }
 .modal-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.42); backdrop-filter: blur(4px); }
 .payment-modal { display: grid; gap: 1rem; width: min(430px, 100%); background: var(--popup-light); box-shadow: 0 30px 80px rgba(20, 33, 61, 0.24); }
 .payment-modal-actions { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 0.25rem; }

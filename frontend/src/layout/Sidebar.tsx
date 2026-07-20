@@ -172,7 +172,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           if (item.id === "sales") {
             return (
               <div className={`nav-group ${isSalesOpen ? "is-open" : ""}`} key="sales">
-                <NavFlyout disabled={!isCollapsed} label="Sales" items={[{ label: "Invoices", to: "/sales/invoices" }, { label: "Customers", to: "/sales/customers" }]}>
+                <NavFlyout disabled={!isCollapsed} label="Sales" items={[{ label: "Customers", to: "/sales/customers" }, { label: "Invoices", to: "/sales/invoices" }]}>
                   <button
                     aria-expanded={isSalesOpen}
                     aria-label={isCollapsed ? t("Sales") : undefined}
@@ -186,8 +186,8 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
                 </NavFlyout>
                 {!isCollapsed ? (
                   <div aria-hidden={!isSalesOpen} className={`nav-submenu ${isSalesOpen ? "is-visible" : ""}`}>
-                    <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/invoices">Invoices</NavLink>
                     <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/customers">Customers</NavLink>
+                    <NavLink tabIndex={isSalesOpen ? undefined : -1} to="/sales/invoices">Invoices</NavLink>
                   </div>
                 ) : null}
               </div>

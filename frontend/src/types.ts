@@ -58,9 +58,11 @@ export type Item = {
   inventoryValue: number;
 };
 
+export type CustomerType = "business" | "individual";
+
 export type Contact = {
   id: string;
-  customerType?: string;
+  customerType?: CustomerType;
   firstName?: string | null;
   lastName?: string | null;
   displayName: string;

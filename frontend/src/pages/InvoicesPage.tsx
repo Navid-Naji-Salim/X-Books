@@ -81,7 +81,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     setCustomerNotes(invoice.customerNotes ?? ""); setOpenDropdown(null);
     setLines(invoice.lines.map((line, index) => ({ id: nextLineId + index, itemId: line.itemId ?? "", quantity: line.quantity, rate: line.rate, tax: line.tax ?? "" })));
     setNextLineId((value) => value + invoice.lines.length + 1);
-    window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const deleteInvoice = async (invoice: Invoice) => {
@@ -187,7 +187,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         <div className="item-form-head"><div><h2>Saved invoices</h2><p>{invoices.length} invoice{invoices.length === 1 ? "" : "s"}</p></div></div>
         <div className="table-wrap saved-invoices-table-wrap">
           <table className="saved-invoices-table">
-            <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th aria-label="Actions" /></tr></thead>
+            <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr></thead>
             <tbody>
               {invoices.length === 0 ? <tr><td className="muted" colSpan={7}>No saved invoices yet.</td></tr> : invoices.map((invoice) => (
                 <tr key={invoice.id}>
@@ -197,7 +197,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                   <td>{new Date(invoice.dueDate).toLocaleDateString()}</td>
                   <td><span className={`invoice-status ${invoice.status === "Paid" ? "is-paid" : "is-unpaid"}`}>{invoice.status}</span></td>
                   <td><strong>{currency.format(invoice.total)}</strong></td>
-                  <td><div className="invoice-row-actions">{invoice.status !== "Paid" ? <><button className="ghost-button record-payment-button" disabled={deletingId !== null} type="button" onClick={() => { setMessage(""); setPaymentInvoice(invoice); setPaymentDate(today); setPaymentAmount(invoice.total); }}>Record payment</button><button className="ghost-button record-edit-button" disabled={deletingId !== null} type="button" onClick={() => loadInvoice(invoice)}>Edit</button></> : null}<button className="ghost-button danger-button invoice-delete-button" disabled={deletingId !== null} type="button" onClick={() => void deleteInvoice(invoice)}>{deletingId === invoice.id ? "Deleting" : "Delete"}</button></div></td>
+                  <td className="record-actions-cell"><div className="record-actions">{invoice.status !== "Paid" ? <><button className="ghost-button record-action-button record-payment-button" disabled={deletingId !== null} type="button" onClick={() => { setMessage(""); setPaymentInvoice(invoice); setPaymentDate(today); setPaymentAmount(invoice.total); }}>Record payment</button><button className="ghost-button record-action-button record-edit-button" disabled={deletingId !== null} type="button" onClick={() => loadInvoice(invoice)}>Edit</button></> : null}<button className="ghost-button danger-button record-action-button record-delete-button" disabled={deletingId !== null} type="button" onClick={() => void deleteInvoice(invoice)}>{deletingId === invoice.id ? "Deleting" : "Delete"}</button></div></td>
                 </tr>
               ))}
             </tbody>

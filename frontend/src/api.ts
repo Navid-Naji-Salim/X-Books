@@ -96,6 +96,8 @@ export const api = {
     }),
   deleteCustomer: (token: string, id: string) =>
     request<null>(`/api/customers/${id}`, token, { method: "DELETE" }),
+  updateCustomer: (token: string, id: string, payload: Record<string, FormDataEntryValue>) =>
+    request<Contact>(`/api/customers/${id}`, token, { method: "PATCH", body: JSON.stringify(payload) }),
   updateVendor: (token: string, id: string, payload: Record<string, FormDataEntryValue>) =>
     request<Contact>(`/api/vendors/${id}`, token, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteVendor: (token: string, id: string) =>

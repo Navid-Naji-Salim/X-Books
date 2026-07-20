@@ -180,7 +180,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                   <th>Sales</th>
                   <th>Purchase</th>
                   <th>Vendor</th>
-                  <th aria-label="Actions"></th>
+                  <th className="record-actions-heading">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -208,15 +208,15 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                         <span className="muted">{item.purchaseAccount}</span>
                       </td>
                       <td>{item.preferredVendor?.displayName ?? "-"}</td>
-                      <td>
-                        <button
-                          className="ghost-button danger-button"
+                      <td className="record-actions-cell">
+                        <div className="record-actions"><button
+                          className="ghost-button danger-button record-action-button record-delete-button"
                           disabled={deletingId === item.id}
                           type="button"
                           onClick={() => void deleteItem(item)}
                         >
                           {deletingId === item.id ? "Deleting" : "Delete"}
-                        </button>
+                        </button></div>
                       </td>
                     </tr>
                   ))
