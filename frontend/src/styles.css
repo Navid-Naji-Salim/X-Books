@@ -203,6 +203,7 @@ textarea:focus {
 
 .app-shell {
   --sidebar-motion-duration: 340ms;
+  --sidebar-account-divider-gap: 0.65rem;
   --sidebar-content-clip: inset(0 166px 0 0);
   --sidebar-surface-clip: inset(0 166px 0 0);
   --sidebar-collapse-shift: 166px;
@@ -306,7 +307,7 @@ textarea:focus {
   display: flex;
   gap: 0.85rem;
   align-items: center;
-  padding: 0.65rem 0.25rem 0.1rem;
+  padding: var(--sidebar-account-divider-gap) 0.25rem 0.1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -536,7 +537,7 @@ textarea:focus {
   display: grid;
   gap: 0.45rem;
   justify-items: center;
-  padding: 0.75rem 0 0;
+  padding: var(--sidebar-account-divider-gap) 0 0;
 }
 
 .sidebar.is-collapsed .profile-copy {
