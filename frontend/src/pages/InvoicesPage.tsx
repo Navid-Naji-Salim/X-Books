@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
+import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { Tooltip } from "../components/Tooltip";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
@@ -185,7 +186,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
       </form>
       <section className="panel saved-invoices-panel">
         <div className="item-form-head"><div><h2>Saved invoices</h2><p>{invoices.length} invoice{invoices.length === 1 ? "" : "s"}</p></div></div>
-        <div className="table-wrap saved-invoices-table-wrap">
+        <div className="table-wrap saved-invoices-table-wrap record-table-wrap">
           <table className="saved-invoices-table">
             <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr></thead>
             <tbody>
@@ -197,7 +198,40 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                   <td>{new Date(invoice.dueDate).toLocaleDateString()}</td>
                   <td><span className={`invoice-status ${invoice.status === "Paid" ? "is-paid" : "is-unpaid"}`}>{invoice.status}</span></td>
                   <td><strong>{currency.format(invoice.total)}</strong></td>
-                  <td className="record-actions-cell"><div className="record-actions">{invoice.status !== "Paid" ? <><button className="ghost-button record-action-button record-payment-button" disabled={deletingId !== null} type="button" onClick={() => { setMessage(""); setPaymentInvoice(invoice); setPaymentDate(today); setPaymentAmount(invoice.total); }}>Record payment</button><button className="ghost-button record-action-button record-edit-button" disabled={deletingId !== null} type="button" onClick={() => loadInvoice(invoice)}>Edit</button></> : null}<button className="ghost-button danger-button record-action-button record-delete-button" disabled={deletingId !== null} type="button" onClick={() => void deleteInvoice(invoice)}>{deletingId === invoice.id ? "Deleting" : "Delete"}</button></div></td>
+                  <td className="record-actions-cell">
+                    <RecordActionsMenu
+                      disabled={deletingId !== null}
+                      recordLabel={invoice.invoiceNumber}
+                      actions={[
+                        ...(invoice.status !== "Paid" ? [
+                          {
+                            label: "Record payment",
+                            icon: appIcons.actions.payment,
+                            disabled: deletingId !== null,
+                            onSelect: () => {
+                              setMessage("");
+                              setPaymentInvoice(invoice);
+                              setPaymentDate(today);
+                              setPaymentAmount(invoice.total);
+                            },
+                          },
+                          {
+                            label: "Edit",
+                            icon: appIcons.actions.edit,
+                            disabled: deletingId !== null,
+                            onSelect: () => loadInvoice(invoice),
+                          },
+                        ] : []),
+                        {
+                          label: deletingId === invoice.id ? "Deleting" : "Delete",
+                          icon: appIcons.actions.delete,
+                          tone: "danger" as const,
+                          disabled: deletingId !== null,
+                          onSelect: () => void deleteInvoice(invoice),
+                        },
+                      ]}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

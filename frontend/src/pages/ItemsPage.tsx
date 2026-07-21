@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
+import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
 import type { Contact, Item } from "../types";
@@ -171,7 +172,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
               <p>{items.length} catalog entries</p>
             </div>
           </div>
-          <div className="table-wrap">
+          <div className="table-wrap record-table-wrap">
             <table>
               <thead>
                 <tr>
@@ -209,14 +210,16 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                       </td>
                       <td>{item.preferredVendor?.displayName ?? "-"}</td>
                       <td className="record-actions-cell">
-                        <div className="record-actions"><button
-                          className="ghost-button danger-button record-action-button record-delete-button"
-                          disabled={deletingId === item.id}
-                          type="button"
-                          onClick={() => void deleteItem(item)}
-                        >
-                          {deletingId === item.id ? "Deleting" : "Delete"}
-                        </button></div>
+                        <RecordActionsMenu
+                          recordLabel={item.name}
+                          actions={[{
+                            label: deletingId === item.id ? "Deleting" : "Delete",
+                            icon: appIcons.actions.delete,
+                            tone: "danger",
+                            disabled: deletingId === item.id,
+                            onSelect: () => void deleteItem(item),
+                          }]}
+                        />
                       </td>
                     </tr>
                   ))
