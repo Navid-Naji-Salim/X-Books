@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
+import { RecordListSearch } from "../components/RecordListSearch";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
 import type { Contact, Item } from "../types";
@@ -35,6 +36,34 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
   const [purchaseEnabled, setPurchaseEnabled] = useState(true);
   const [unit, setUnit] = useState("");
   const [resetVersion, setResetVersion] = useState(0);
+  const [query, setQuery] = useState("");
+  const filteredItems = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    if (!normalized) return items;
+    return items.filter((item) => [
+      item.name,
+      item.sku,
+      item.itemType,
+      item.unit,
+      item.description,
+      item.salesAccount,
+      item.salesTax,
+      item.salesDescription,
+      item.purchaseAccount,
+      item.purchaseTax,
+      item.purchaseDescription,
+      item.preferredVendor?.displayName,
+      item.salesEnabled ? "sales" : null,
+      item.purchaseEnabled ? "purchase" : null,
+      item.salesPrice,
+      item.unitCost,
+      item.quantity,
+      item.inventoryValue,
+    ].some((value) => String(value ?? "").toLocaleLowerCase().includes(normalized)));
+  }, [items, query]);
+  const countLabel = query.trim()
+    ? `${filteredItems.length} of ${items.length} items`
+    : `${items.length} item${items.length === 1 ? "" : "s"}`;
 
   const deleteItem = async (item: Item) => {
     const confirmed = window.confirm(`Delete ${item.name}?`);
@@ -166,11 +195,12 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
         </form>
 
         <div className="panel item-list-panel">
-          <div className="item-form-head">
+          <div className="item-form-head record-list-head">
             <div>
               <h2>Item list</h2>
-              <p>{items.length} catalog entries</p>
+              <p>{countLabel}</p>
             </div>
+            <RecordListSearch label="Search items" placeholder="Search items by any detail…" value={query} onChange={setQuery} />
           </div>
           <div className="table-wrap record-table-wrap">
             <table>
@@ -185,12 +215,12 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                 </tr>
               </thead>
               <tbody>
-                {items.length === 0 ? (
+                {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="muted">No items yet.</td>
+                    <td colSpan={6} className="muted">{query ? "No items match your search." : "No items yet."}</td>
                   </tr>
                 ) : (
-                  items.map((item) => (
+                  filteredItems.map((item) => (
                     <tr key={item.id}>
                       <td>
                         <strong>{item.name}</strong>

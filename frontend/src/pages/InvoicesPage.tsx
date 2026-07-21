@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
+import { RecordListSearch } from "../components/RecordListSearch";
 import { Tooltip } from "../components/Tooltip";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
@@ -51,7 +52,30 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   const sellableItems = items.filter((item) => item.salesEnabled);
+  const filteredInvoices = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    if (!normalized) return invoices;
+    return invoices.filter((invoice) => [
+      invoice.invoiceNumber,
+      invoice.customer.displayName,
+      invoice.invoiceDate,
+      invoice.terms,
+      invoice.dueDate,
+      invoice.status,
+      invoice.customerNotes,
+      invoice.subtotal,
+      invoice.discountPercent,
+      invoice.discountAmount,
+      invoice.taxTotal,
+      invoice.total,
+      ...invoice.lines.flatMap((line) => [line.itemName, line.quantity, line.rate, line.tax, line.amount]),
+    ].some((value) => String(value ?? "").toLocaleLowerCase().includes(normalized)));
+  }, [invoices, query]);
+  const countLabel = query.trim()
+    ? `${filteredInvoices.length} of ${invoices.length} invoices`
+    : `${invoices.length} invoice${invoices.length === 1 ? "" : "s"}`;
 
   const totals = useMemo(() => {
     const subtotal = lines.reduce((sum, line) => sum + line.quantity * line.rate, 0);
@@ -185,12 +209,12 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         <div className="message">{message}</div>
       </form>
       <section className="panel saved-invoices-panel">
-        <div className="item-form-head"><div><h2>Saved invoices</h2><p>{invoices.length} invoice{invoices.length === 1 ? "" : "s"}</p></div></div>
+        <div className="item-form-head record-list-head"><div><h2>Saved invoices</h2><p>{countLabel}</p></div><RecordListSearch label="Search invoices" placeholder="Search invoices by any detail…" value={query} onChange={setQuery} /></div>
         <div className="table-wrap saved-invoices-table-wrap record-table-wrap">
           <table className="saved-invoices-table">
             <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr></thead>
             <tbody>
-              {invoices.length === 0 ? <tr><td className="muted" colSpan={7}>No saved invoices yet.</td></tr> : invoices.map((invoice) => (
+              {filteredInvoices.length === 0 ? <tr><td className="muted" colSpan={7}>{query ? "No invoices match your search." : "No saved invoices yet."}</td></tr> : filteredInvoices.map((invoice) => (
                 <tr key={invoice.id}>
                   <td><strong>{invoice.invoiceNumber}</strong></td>
                   <td>{invoice.customer.displayName}</td>

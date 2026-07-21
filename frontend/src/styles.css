@@ -1438,6 +1438,7 @@ textarea:focus {
 .table-wrap {
   max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior: auto;
 }
 
 table {
@@ -1516,13 +1517,13 @@ th {
 
 .customer-notes textarea { min-height: 9rem; }
 
-.customer-list-head { gap: 1rem; }
-.customer-search {
+.record-list-head { gap: 1rem; }
+.record-list-search {
   position: relative;
   display: block;
   width: min(21rem, 48%);
 }
-.customer-search-icon {
+.record-list-search-icon {
   position: absolute;
   z-index: 1;
   inset-block-start: 50%;
@@ -1533,7 +1534,7 @@ th {
   pointer-events: none;
   transform: translateY(-50%);
 }
-.customer-search input {
+.record-list-search input {
   padding-block: 0.68rem;
   padding-inline-start: 2.45rem;
 }
@@ -1546,7 +1547,7 @@ th {
 .record-table-wrap {
   max-block-size: 27rem;
   overflow: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   scrollbar-gutter: stable;
   border: 1px solid rgba(20, 33, 61, 0.1);
   border-radius: 15px;
@@ -1903,8 +1904,8 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .customer-list-head { align-items: stretch; }
-  .customer-search { width: 100%; }
+  .record-list-head { align-items: stretch; }
+  .record-list-search { width: 100%; }
   .invoice-table-wrap { overflow-x: auto; }
   .invoice-totals-card > div { grid-template-columns: 1fr minmax(6rem, 0.7fr) minmax(5rem, auto); }
   .report-toolbar { grid-template-columns: 1fr 1fr; }

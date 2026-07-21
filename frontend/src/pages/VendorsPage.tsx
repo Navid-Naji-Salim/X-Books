@@ -3,6 +3,7 @@ import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
+import { RecordListSearch } from "../components/RecordListSearch";
 import { appIcons } from "../icons";
 import type { Contact } from "../types";
 
@@ -22,6 +23,9 @@ export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) =>
     const value = query.trim().toLowerCase();
     return value ? contacts.filter((vendor) => [vendor.displayName, vendor.email, vendor.phone, vendor.addressLine1, vendor.addressLine2, vendor.city, vendor.state, vendor.postalCode, vendor.country, vendor.taxRate, vendor.paymentTerms, vendor.notes].some((entry) => entry?.toLowerCase().includes(value))) : contacts;
   }, [contacts, query]);
+  const countLabel = query.trim()
+    ? `${filtered.length} of ${contacts.length} vendors`
+    : `${contacts.length} vendor${contacts.length === 1 ? "" : "s"}`;
   const set = (field: keyof Draft, value: string) => setDraft((current) => ({ ...current, [field]: value }));
   const reset = () => { setDraft(emptyDraft); setEditingId(null); setMessage(""); setOpenDropdown(null); };
 
@@ -44,7 +48,7 @@ export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) =>
         </div><div className="message">{message}</div>
       </form>
       <div className="panel item-list-panel customer-list-panel">
-        <div className="item-form-head customer-list-head"><div><h2>Vendor list</h2><p>{contacts.length} vendor{contacts.length === 1 ? "" : "s"}</p></div><label className="customer-search"><span className="sr-only">Search vendors</span><input type="search" value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="Search by any vendor detail..." /></label></div>
+        <div className="item-form-head record-list-head"><div><h2>Vendor list</h2><p>{countLabel}</p></div><RecordListSearch label="Search vendors" placeholder="Search vendors by any detail…" value={query} onChange={setQuery} /></div>
         <div className="table-wrap customer-table-wrap record-table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Location</th><th>Notes</th><th className="record-actions-heading">Actions</th></tr></thead><tbody>
           {filtered.length === 0 ? <tr><td colSpan={6} className="muted">{query ? "No vendors match your search." : "No vendors yet."}</td></tr> : filtered.map((vendor) => <tr key={vendor.id}><td><strong>{vendor.displayName}</strong></td><td>{vendor.email || "-"}</td><td>{vendor.phone || "-"}</td><td>{[vendor.addressLine1, vendor.addressLine2, vendor.city, vendor.state, vendor.postalCode, vendor.country].filter(Boolean).join(", ") || "-"}</td><td>{vendor.notes || "-"}</td><td className="record-actions-cell"><RecordActionsMenu recordLabel={vendor.displayName} actions={[{ label: "Edit", icon: appIcons.actions.edit, onSelect: () => { setEditingId(vendor.id); setDraft({ displayName: vendor.displayName, email: vendor.email ?? "", phone: vendor.phone ?? "", addressLine1: vendor.addressLine1 ?? "", addressLine2: vendor.addressLine2 ?? "", city: vendor.city ?? "", state: vendor.state ?? "", postalCode: vendor.postalCode ?? "", country: vendor.country ?? "", taxRate: vendor.taxRate ?? "", paymentTerms: vendor.paymentTerms ?? "Due on Receipt", notes: vendor.notes ?? "" }); window.scrollTo({ top: 0, behavior: "smooth" }); } }, { label: deletingId === vendor.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId === vendor.id, onSelect: async () => { if (!window.confirm(`Delete ${vendor.displayName}?`)) return; setDeletingId(vendor.id); setMessage(""); try { await api.deleteVendor(token, vendor.id); if (editingId === vendor.id) reset(); await onRefresh(); } catch (error) { setMessage(error instanceof ApiError ? error.message : "Unable to delete vendor."); } finally { setDeletingId(null); } } }]} /></td></tr>)}
         </tbody></table></div>

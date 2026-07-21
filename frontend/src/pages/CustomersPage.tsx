@@ -3,6 +3,7 @@ import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
+import { RecordListSearch } from "../components/RecordListSearch";
 import { appIcons } from "../icons";
 import { useLanguage } from "../i18n";
 import type { Contact, CustomerType } from "../types";
@@ -81,7 +82,6 @@ const draftsMatch = (left: CustomerDraft, right: CustomerDraft) =>
 
 export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) => {
   const { t } = useLanguage();
-  const SearchIcon = appIcons.actions.search;
   const [draft, setDraft] = useState<CustomerDraft>(emptyDraft);
   const [baseline, setBaseline] = useState<CustomerDraft>(emptyDraft);
   const [mode, setMode] = useState<CustomerMode>("new");
@@ -283,13 +283,9 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
         </form>
 
         <div className="panel item-list-panel customer-list-panel">
-          <div className="item-form-head customer-list-head">
+          <div className="item-form-head record-list-head">
             <div><h2>Customer list</h2><p>{countLabel}</p></div>
-            <label className="customer-search">
-              <span className="sr-only">Search customers</span>
-              <SearchIcon className="customer-search-icon" />
-              <input type="search" value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="Search customers by any detail…" />
-            </label>
+            <RecordListSearch label="Search customers" placeholder="Search customers by any detail…" value={query} onChange={setQuery} />
           </div>
           <div className="table-wrap customer-table-wrap record-table-wrap">
             <table>
