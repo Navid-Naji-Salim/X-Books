@@ -3,8 +3,8 @@ import test from "node:test";
 import { buildDashboardSummary, type DashboardBill, type DashboardInvoice } from "./dashboard-summary.js";
 
 const date = (value: string) => new Date(`${value}T00:00:00.000Z`);
-const invoice = (id: string, total: number, invoiceDate: string, dueDate: string, status = "Unpaid"): DashboardInvoice => ({ id, invoiceNumber: `INV-${id}`, invoiceDate: date(invoiceDate), dueDate: date(dueDate), status, total, customer: { displayName: `Customer ${id}` } });
-const bill = (sequence: number, total: number, billDate: string, dueDate: string, status = "Unpaid"): DashboardBill => ({ id: String(sequence), sequence, billDate: date(billDate), dueDate: date(dueDate), status, total, vendor: { displayName: `Vendor ${sequence}` } });
+const invoice = (id: string, total: number, invoiceDate: string, dueDate: string, status = "Unpaid", paid = 0): DashboardInvoice => ({ id, invoiceNumber: `INV-${id}`, invoiceDate: date(invoiceDate), dueDate: date(dueDate), status, total, payments: paid ? [{ amount: paid }] : [], customer: { displayName: `Customer ${id}` } });
+const bill = (sequence: number, total: number, billDate: string, dueDate: string, status = "Unpaid", paid = 0): DashboardBill => ({ id: String(sequence), sequence, billDate: date(billDate), dueDate: date(dueDate), status, total, payments: paid ? [{ amount: paid }] : [], vendor: { displayName: `Vendor ${sequence}` } });
 
 test("all Home accounting concepts remain distinct and complete", () => {
   const result = buildDashboardSummary({
@@ -37,4 +37,18 @@ test("zero values and all twelve chronological months are preserved", () => {
   assert.equal(result.months.length, 12);
   assert.deepEqual(result.months.map((month) => month.month), ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]);
   assert.ok(result.months.every((month) => month.cashReceived === 0 && month.cashPaid === 0 && month.income === 0 && month.expenses === 0));
+});
+
+test("partially paid documents contribute only their remaining balances", () => {
+  const result = buildDashboardSummary({
+    now: date("2026-07-11"),
+    invoices: [invoice("PARTIAL", 100, "2026-07-01", "2026-07-10", "Partially Paid", 40)],
+    bills: [bill(5, 80, "2026-07-01", "2026-08-01", "Partially Paid", 30)],
+    payments: [],
+    billPayments: [],
+  });
+  assert.equal(result.receivables.outstanding, 60);
+  assert.equal(result.receivables.entries[0]?.amount, 60);
+  assert.equal(result.payables.outstanding, 50);
+  assert.equal(result.payables.entries[0]?.amount, 50);
 });

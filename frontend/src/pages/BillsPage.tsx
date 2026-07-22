@@ -83,7 +83,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
   const selectedBill = selectedBillId
     ? bills.find((bill) => bill.id === selectedBillId) ?? null
     : null;
-  const isReadOnly = selectedBill?.status === "Paid";
+  const isReadOnly = Boolean(selectedBill && selectedBill.status !== "Unpaid");
   const purchasableItems = items.filter((item) => item.purchaseEnabled);
   const filteredBills = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -434,7 +434,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                   <td>{bill.vendor.displayName}</td>
                   <td>{new Date(bill.billDate).toLocaleDateString()}</td>
                   <td>{new Date(bill.dueDate).toLocaleDateString()}</td>
-                  <td><span className={`invoice-status ${bill.status === "Paid" ? "is-paid" : "is-unpaid"}`}>{bill.status}</span></td>
+                  <td><span className={`invoice-status ${bill.status === "Paid" ? "is-paid" : bill.status === "Partially Paid" ? "is-partially-paid" : "is-unpaid"}`}>{bill.status}</span></td>
                   <td><strong>{currency.format(bill.total)}</strong></td>
                   <td className="record-actions-cell">
                     <RecordActionsMenu
@@ -455,7 +455,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                             setMessage("");
                             setPaymentBill(bill);
                             setPaymentDate(today);
-                            setPaymentAmount(bill.total);
+                            setPaymentAmount(bill.remainingBalance);
                           },
                         }] : []),
                         {
@@ -508,7 +508,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
             </div>
             <div className="field">
               <label htmlFor="billPaymentAmount">Amount</label>
-              <input id="billPaymentAmount" type="number" min="0.01" step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} />
+              <input id="billPaymentAmount" type="number" min="0.01" max={paymentBill.remainingBalance} step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} />
             </div>
             <div className="message" role="status">{message}</div>
             <div className="payment-modal-actions">

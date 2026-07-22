@@ -2,12 +2,16 @@ import { Router } from "express";
 import { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 import { presentBill } from "../presenters/bill-presenter.js";
+import { paidAmount, paymentStatus, remainingAmount, toCents } from "../services/payment-status.js";
 import { ApiError } from "../utils/api-error.js";
 import { parseBody } from "../utils/request.js";
 import { optionalString, requiredString } from "../utils/validation.js";
 
 export const billsRouter = Router();
-const vendorInclude = { vendor: { select: { id: true, displayName: true } } };
+const vendorInclude = {
+  vendor: { select: { id: true, displayName: true } },
+  payments: { select: { amount: true } },
+};
 const decimal = (value: number) => new Prisma.Decimal(value.toFixed(2));
 const dateValue = (body: Record<string, unknown>, field: string) => {
   const value = requiredString(body, field);
@@ -77,7 +81,7 @@ billsRouter.patch("/:id", async (req, res, next) => {
   try {
     const existing = await prisma.bill.findUnique({ where: { id: req.params.id }, select: { status: true } });
     if (!existing) throw new ApiError(404, "Bill was not found.");
-    if (existing.status === "Paid") throw new ApiError(400, "Paid bills cannot be edited.");
+    if (existing.status !== "Unpaid") throw new ApiError(400, "Paid and partially paid bills cannot be edited.");
     const body = parseBody(req); const values = await billValues(body);
     const bill = await prisma.bill.update({ where: { id: req.params.id }, data: {
       vendorId: values.vendorId, billDate: dateValue(body, "billDate"), dueDate: dateValue(body, "dueDate"), terms: requiredString(body, "terms"), notes: optionalString(body, "notes"),
@@ -93,12 +97,19 @@ billsRouter.post("/:id/payment", async (req, res, next) => {
   try {
     const body = parseBody(req); const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount <= 0) throw new ApiError(400, "Payment amount must be greater than zero.");
-    const bill = await prisma.bill.findUnique({ where: { id: req.params.id }, select: { id: true, status: true } });
+    const bill = await prisma.bill.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, status: true, total: true, payments: { select: { amount: true } } },
+    });
     if (!bill) throw new ApiError(404, "Bill was not found.");
     if (bill.status === "Paid") throw new ApiError(400, "This bill is already paid.");
+    const amountPaid = paidAmount(bill.payments);
+    const balance = remainingAmount(bill.total, amountPaid);
+    if (toCents(amount) > toCents(balance)) throw new ApiError(400, "Payment amount cannot exceed the remaining balance.");
+    const nextStatus = paymentStatus(bill.total, amountPaid + amount);
     await prisma.$transaction([
       prisma.billPayment.create({ data: { billId: bill.id, paymentDate: dateValue(body, "paymentDate"), amount: decimal(amount) } }),
-      prisma.bill.update({ where: { id: bill.id }, data: { status: "Paid" } }),
+      prisma.bill.update({ where: { id: bill.id }, data: { status: nextStatus } }),
     ]);
     res.status(204).send();
   } catch (error) { next(error); }

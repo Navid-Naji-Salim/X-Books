@@ -74,18 +74,20 @@ model Invoice {
   taxTotal        Decimal       @default(0) @db.Decimal(12, 2)
   total           Decimal       @db.Decimal(12, 2)
   lines           InvoiceLine[]
-  payment         Payment?
+  payments        Payment[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
 
 model Payment {
   id          String   @id @default(cuid())
-  invoiceId   String   @unique
+  invoiceId   String
   invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   paymentDate DateTime
   amount      Decimal  @db.Decimal(12, 2)
   createdAt   DateTime @default(now())
+
+  @@index([invoiceId])
 }
 
 model InvoiceLine {
@@ -140,7 +142,7 @@ model Bill {
   taxTotal        Decimal       @default(0) @db.Decimal(12, 2)
   total           Decimal       @db.Decimal(12, 2)
   lines           BillLine[]
-  payment         BillPayment?
+  payments        BillPayment[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -161,11 +163,13 @@ model BillLine {
 
 model BillPayment {
   id          String   @id @default(cuid())
-  billId      String   @unique
+  billId      String
   bill        Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
   paymentDate DateTime
   amount      Decimal  @db.Decimal(12, 2)
   createdAt   DateTime @default(now())
+
+  @@index([billId])
 }
 
 model User {

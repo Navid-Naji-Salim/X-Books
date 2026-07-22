@@ -64,7 +64,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const selectedInvoice = selectedInvoiceId
     ? invoices.find((invoice) => invoice.id === selectedInvoiceId) ?? null
     : null;
-  const isViewingPaidInvoice = selectedInvoice?.status === "Paid";
+  const isViewingPaidInvoice = Boolean(selectedInvoice && selectedInvoice.status !== "Unpaid");
   const sellableItems = items.filter((item) => item.salesEnabled);
   const filteredInvoices = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -232,7 +232,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                   <td>{invoice.customer.displayName}</td>
                   <td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
                   <td>{new Date(invoice.dueDate).toLocaleDateString()}</td>
-                  <td><span className={`invoice-status ${invoice.status === "Paid" ? "is-paid" : "is-unpaid"}`}>{invoice.status}</span></td>
+                  <td><span className={`invoice-status ${invoice.status === "Paid" ? "is-paid" : invoice.status === "Partially Paid" ? "is-partially-paid" : "is-unpaid"}`}>{invoice.status}</span></td>
                   <td><strong>{currency.format(invoice.total)}</strong></td>
                   <td className="record-actions-cell">
                     <RecordActionsMenu
@@ -254,7 +254,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                               setMessage("");
                               setPaymentInvoice(invoice);
                               setPaymentDate(today);
-                              setPaymentAmount(invoice.total);
+                              setPaymentAmount(invoice.remainingBalance);
                             },
                           },
                         ] : []),
@@ -293,7 +293,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
           }}>
             <div className="item-form-head"><div><h2 id="payment-modal-title">Record payment</h2><p>{paymentInvoice.invoiceNumber} · {paymentInvoice.customer.displayName}</p></div></div>
             <div className="field"><label htmlFor="paymentDate">Payment date</label><input id="paymentDate" type="date" required value={paymentDate} onChange={(event) => setPaymentDate(event.currentTarget.value)} /></div>
-            <div className="field"><label htmlFor="paymentAmount">Amount</label><input id="paymentAmount" type="number" min="0.01" step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} /></div>
+            <div className="field"><label htmlFor="paymentAmount">Amount</label><input id="paymentAmount" type="number" min="0.01" max={paymentInvoice.remainingBalance} step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} /></div>
             <div className="message" role="status">{message}</div>
             <div className="payment-modal-actions"><button className="ghost-button" disabled={isRecordingPayment} type="button" onClick={() => setPaymentInvoice(null)}>Cancel</button><button className="button" disabled={isRecordingPayment} type="submit">{isRecordingPayment ? "Saving..." : "Save payment"}</button></div>
           </form>

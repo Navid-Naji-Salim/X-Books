@@ -2,13 +2,17 @@ import { Router } from "express";
 import { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 import { presentInvoice } from "../presenters/invoice-presenter.js";
+import { paidAmount, paymentStatus, remainingAmount, toCents } from "../services/payment-status.js";
 import { ApiError } from "../utils/api-error.js";
 import { parseBody } from "../utils/request.js";
 import { optionalString, requiredString } from "../utils/validation.js";
 
 export const invoicesRouter = Router();
 
-const customerInclude = { customer: { select: { id: true, displayName: true } } };
+const customerInclude = {
+  customer: { select: { id: true, displayName: true } },
+  payments: { select: { amount: true } },
+};
 
 const decimal = (value: number) => new Prisma.Decimal(value.toFixed(2));
 const dateValue = (body: Record<string, unknown>, field: string) => {
@@ -81,7 +85,7 @@ invoicesRouter.patch("/:id", async (req, res, next) => {
   try {
     const existingInvoice = await prisma.invoice.findUnique({ where: { id: req.params.id }, select: { status: true } });
     if (!existingInvoice) throw new ApiError(404, "Invoice was not found.");
-    if (existingInvoice.status === "Paid") throw new ApiError(400, "Paid invoices cannot be edited.");
+    if (existingInvoice.status !== "Unpaid") throw new ApiError(400, "Paid and partially paid invoices cannot be edited.");
 
     const body = parseBody(req);
     const customerId = requiredString(body, "customerId");
@@ -138,13 +142,21 @@ invoicesRouter.post("/:id/payment", async (req, res, next) => {
     const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount <= 0) throw new ApiError(400, "Payment amount must be greater than zero.");
 
-    const invoice = await prisma.invoice.findUnique({ where: { id: req.params.id }, select: { id: true, status: true } });
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, status: true, total: true, payments: { select: { amount: true } } },
+    });
     if (!invoice) throw new ApiError(404, "Invoice was not found.");
     if (invoice.status === "Paid") throw new ApiError(400, "This invoice is already paid.");
 
+    const amountPaid = paidAmount(invoice.payments);
+    const balance = remainingAmount(invoice.total, amountPaid);
+    if (toCents(amount) > toCents(balance)) throw new ApiError(400, "Payment amount cannot exceed the remaining balance.");
+    const nextStatus = paymentStatus(invoice.total, amountPaid + amount);
+
     await prisma.$transaction([
       prisma.payment.create({ data: { invoiceId: invoice.id, paymentDate: dateValue(body, "paymentDate"), amount: decimal(amount) } }),
-      prisma.invoice.update({ where: { id: invoice.id }, data: { status: "Paid" } }),
+      prisma.invoice.update({ where: { id: invoice.id }, data: { status: nextStatus } }),
     ]);
     res.status(204).send();
   } catch (error) { next(error); }

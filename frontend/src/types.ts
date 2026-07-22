@@ -106,6 +106,8 @@ export type Invoice = {
   discountAmount: number;
   taxTotal: number;
   total: number;
+  paidAmount: number;
+  remainingBalance: number;
   lines: InvoiceLine[];
 };
 
@@ -113,5 +115,5 @@ export type Bill = {
   id: string; sequence: number; billNumber: string; vendorId: string;
   vendor: { id: string; displayName: string }; billDate: string; terms: string; dueDate: string;
   status: string; notes: string | null; subtotal: number; discountPercent: number;
-  discountAmount: number; taxTotal: number; total: number; lines: InvoiceLine[];
+  discountAmount: number; taxTotal: number; total: number; paidAmount: number; remainingBalance: number; lines: InvoiceLine[];
 };

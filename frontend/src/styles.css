@@ -1690,6 +1690,7 @@ th {
 .invoice-status { display: inline-flex; border-radius: 999px; padding: 0.32rem 0.62rem; font-size: 0.75rem; font-weight: 900; }
 .invoice-status.is-unpaid { color: #991b1b; background: #fee2e2; }
 .invoice-status.is-paid { color: #166534; background: #dcfce7; }
+.invoice-status.is-partially-paid { color: #9a3412; background: #ffedd5; }
 .record-actions-heading,
 .record-actions-cell { width: 1%; white-space: nowrap; }
 .record-actions-cell { text-align: end; }

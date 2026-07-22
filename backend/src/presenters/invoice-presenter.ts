@@ -1,4 +1,5 @@
 import type { Prisma } from "../../generated/prisma/client.js";
+import { paidAmount, remainingAmount } from "../services/payment-status.js";
 
 type InvoiceRecord = {
   id: string;
@@ -15,6 +16,7 @@ type InvoiceRecord = {
   taxTotal: Prisma.Decimal;
   total: Prisma.Decimal;
   customer: { id: string; displayName: string };
+  payments: Array<{ amount: Prisma.Decimal }>;
   lines: Array<{
     id: string;
     itemId: string | null;
@@ -27,13 +29,18 @@ type InvoiceRecord = {
   }>;
 };
 
-export const presentInvoice = (invoice: InvoiceRecord) => ({
-  ...invoice,
+export const presentInvoice = (invoice: InvoiceRecord) => {
+  const { payments, ...record } = invoice;
+  const amountPaid = paidAmount(payments);
+  return ({
+  ...record,
   subtotal: Number(invoice.subtotal),
   discountPercent: Number(invoice.discountPercent),
   discountAmount: Number(invoice.discountAmount),
   taxTotal: Number(invoice.taxTotal),
   total: Number(invoice.total),
+  paidAmount: amountPaid,
+  remainingBalance: remainingAmount(invoice.total, amountPaid),
   lines: invoice.lines.map((line) => ({
     ...line,
     quantity: Number(line.quantity),
@@ -41,4 +48,5 @@ export const presentInvoice = (invoice: InvoiceRecord) => ({
     taxRate: Number(line.taxRate),
     amount: Number(line.amount),
   })),
-});
+  });
+};
