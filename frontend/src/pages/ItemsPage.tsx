@@ -355,6 +355,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                           icon: appIcons.actions.remove,
                           tone: "danger",
                           onSelect: () => {
+                            if (!window.confirm("Are you sure you want to remove this image?")) return;
                             setIsImagePreviewOpen(false);
                             set("imageUrl", "");
                           },
