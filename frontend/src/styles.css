@@ -1092,7 +1092,6 @@ textarea:focus {
 .x-tooltip-left::after { top: calc(50% - 4px); right: -5px; border-bottom: 0; border-left: 0; }
 .x-tooltip-top::after { bottom: -5px; left: calc(50% - 4px); border-top: 0; border-left: 0; }
 .x-tooltip-bottom::after { top: -5px; left: calc(50% - 4px); border-right: 0; border-bottom: 0; }
-.x-tooltip.is-visible { animation: x-tooltip-enter 145ms ease-out both; }
 .x-tooltip.is-closing { display: none; }
 
 .x-nav-flyout {
@@ -1149,16 +1148,6 @@ textarea:focus {
 
 .is-rtl .x-nav-flyout-title,
 .is-rtl .x-nav-flyout-items a { text-align: right; }
-
-@keyframes x-tooltip-enter {
-  from { opacity: 0; transform: translate(var(--tooltip-shift-x), var(--tooltip-shift-y)) scale(0.98); }
-  to { opacity: 1; transform: translate(0, 0) scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .x-tooltip.is-visible,
-  .record-actions-menu.is-open { animation-duration: 1ms; }
-}
 
 .select-menu summary[aria-disabled="true"] {
   color: var(--muted);
@@ -2011,7 +2000,6 @@ th {
 .is-rtl .record-actions-menu-above { transform-origin: bottom left; }
 .record-actions-menu.record-actions-menu-align-right { transform-origin: top right; }
 .record-actions-menu.record-actions-menu-align-right.record-actions-menu-above { transform-origin: bottom right; }
-.record-actions-menu.is-open { animation: record-actions-menu-enter 170ms ease-out both; }
 .record-actions-menu.is-closing { display: none; }
 .record-actions-menu-item {
   display: flex;
@@ -2043,11 +2031,6 @@ th {
 .record-actions-menu-item-icon { width: 16px; height: 16px; flex: 0 0 auto; }
 .record-actions-menu-item-label { min-width: 0; overflow-wrap: anywhere; }
 .is-rtl .record-actions-menu-item { text-align: right; }
-
-@keyframes record-actions-menu-enter {
-  from { opacity: 0; transform: translateY(var(--record-actions-menu-shift)) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
 
 .modal-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.42); backdrop-filter: blur(4px); }
 .payment-modal { display: grid; gap: 1rem; width: min(430px, 100%); background: var(--popup-light); box-shadow: 0 30px 80px rgba(20, 33, 61, 0.24); }
