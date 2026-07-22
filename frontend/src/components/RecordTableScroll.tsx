@@ -33,6 +33,8 @@ const emptyMetrics: ScrollbarMetrics = {
   visible: false,
 };
 
+const scrollbarBottomInset = 8;
+
 export const RecordTableScroll = ({ children, className, columns }: RecordTableScrollProps) => {
   const { language } = useLanguage();
   const horizontalRef = useRef<HTMLDivElement>(null);
@@ -58,12 +60,13 @@ export const RecordTableScroll = ({ children, className, columns }: RecordTableS
     const updateScrollbar = () => {
       const horizontalRect = horizontalContainer.getBoundingClientRect();
       const rowsRect = rowsContainer.getBoundingClientRect();
-      const trackHeight = rowsContainer.clientHeight;
-      const maxScroll = Math.max(0, rowsContainer.scrollHeight - trackHeight);
+      const viewportHeight = rowsContainer.clientHeight;
+      const trackHeight = Math.max(0, viewportHeight - scrollbarBottomInset);
+      const maxScroll = Math.max(0, rowsContainer.scrollHeight - viewportHeight);
       const visible = maxScroll > 1 && trackHeight > 0;
       if (!visible && rowsContainer.scrollTop !== 0) rowsContainer.scrollTop = 0;
       const thumbHeight = visible
-        ? Math.min(trackHeight, Math.max(28, Math.round(trackHeight * trackHeight / rowsContainer.scrollHeight)))
+        ? Math.min(trackHeight, Math.max(28, Math.round(trackHeight * viewportHeight / rowsContainer.scrollHeight)))
         : 0;
       const thumbRange = Math.max(0, trackHeight - thumbHeight);
       const thumbTop = maxScroll > 0 ? rowsContainer.scrollTop / maxScroll * thumbRange : 0;
