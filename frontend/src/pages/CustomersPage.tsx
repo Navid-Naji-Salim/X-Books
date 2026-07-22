@@ -278,7 +278,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
             <div><h2>Customer list</h2><p>{countLabel}</p></div>
             <RecordListSearch label="Search customers" placeholder="Search customers by any detail…" value={query} onChange={setQuery} />
           </div>
-          <RecordTableScroll className="customer-table-wrap">
+          <RecordTableScroll className="customer-table-wrap" columns={6}>
             <table>
               <thead><tr><th>Name</th><th>Contact</th><th>Location</th><th>Tax</th><th>Terms</th><th className="record-actions-heading">Actions</th></tr></thead>
               <tbody>

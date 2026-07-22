@@ -1631,19 +1631,54 @@ th {
   z-index: 3000;
   right: auto;
 }
-.record-table-wrap {
-  max-block-size: 27rem;
-  overflow: auto;
-  overscroll-behavior: auto;
+.record-table-shell {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(20, 33, 61, 0.1);
+  border-radius: 15px;
   direction: ltr;
-  scrollbar-gutter: auto;
+}
+.record-table-wrap {
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: auto;
+  direction: ltr;
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
   -webkit-overflow-scrolling: touch;
 }
+.record-table-wrap > table {
+  display: grid;
+  grid-template-columns: repeat(var(--record-data-columns), minmax(min-content, 1fr)) max-content;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
 .is-rtl .record-table-wrap > table { direction: rtl; }
+.record-table-wrap :is(thead, tbody, tr) {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+.record-table-wrap thead {
+  background: rgba(248, 250, 252, 0.98);
+}
+.record-table-wrap tbody {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.record-table-wrap tbody::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.record-table-wrap td[colspan] { grid-column: 1 / -1; }
+.record-table-wrap :is(.record-actions-heading, .record-actions-cell) { width: auto; }
 .record-table-wrap::-webkit-scrollbar {
-  width: 8px;
   height: 8px;
 }
 .record-table-wrap::-webkit-scrollbar-track {
@@ -1659,12 +1694,30 @@ th {
   background: rgba(71, 85, 105, 0.58);
   background-clip: padding-box;
 }
-.record-table-wrap {
-  border: 1px solid rgba(20, 33, 61, 0.1);
-  border-radius: 15px;
+.record-body-scrollbar-track {
+  position: absolute;
+  z-index: 4;
+  inset-inline-end: 2px;
+  width: 8px;
+  pointer-events: none;
 }
-.record-table-wrap thead { background: rgba(248, 250, 252, 0.98); }
-.record-table-wrap th { position: sticky; inset-block-start: 0; z-index: 2; background: rgba(248, 250, 252, 0.98); }
+.record-body-scrollbar-thumb {
+  width: 6px;
+  margin-inline-start: auto;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.46);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.38);
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+}
+.record-body-scrollbar-thumb:hover,
+.record-body-scrollbar-thumb:focus-visible {
+  outline: none;
+  background: rgba(71, 85, 105, 0.66);
+}
+.record-body-scrollbar-thumb:active { cursor: grabbing; }
+.record-table-wrap th { background: rgba(248, 250, 252, 0.98); }
 .record-table-wrap th:first-child { border-top-left-radius: 14px; }
 .record-table-wrap th:last-child { border-top-right-radius: 14px; }
 .record-table-wrap tbody tr:last-child td { border-bottom: 0; }
@@ -1797,7 +1850,7 @@ th {
   flex: 0 0 auto;
 }
 
-.record-list-panel > .record-table-wrap {
+.record-list-panel > .record-table-shell {
   flex: 1 1 auto;
   min-block-size: 0;
   max-block-size: none;

@@ -408,7 +408,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
             </div>
             <RecordListSearch label="Search items" placeholder="Search items by any detail…" value={query} onChange={setQuery} />
           </div>
-          <RecordTableScroll>
+          <RecordTableScroll columns={6}>
             <table>
               <thead>
                 <tr>
