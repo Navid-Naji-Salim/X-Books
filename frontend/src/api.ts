@@ -90,6 +90,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  updateItem: (token: string, id: string, payload: Record<string, FormDataEntryValue>) =>
+    request<Item>(`/api/items/${id}`, token, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
   deleteItem: (token: string, id: string) =>
     request<null>(`/api/items/${id}`, token, {
       method: "DELETE",

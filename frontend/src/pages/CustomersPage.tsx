@@ -33,7 +33,7 @@ type CustomerDraft = {
   notes: string;
 };
 
-type CustomerMode = "new" | "details" | "edit";
+type CustomerMode = "new" | "view";
 
 const emptyDraft: CustomerDraft = {
   customerType: "business",
@@ -119,8 +119,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
     });
   }, [contacts, query]);
 
-  const isReadOnly = mode === "details";
-  const hasUnsavedChanges = mode === "edit"
+  const hasUnsavedChanges = mode === "view"
     ? !draftsMatch(draft, baseline)
     : mode === "new" && !draftsMatch(draft, emptyDraft);
 
@@ -149,16 +148,15 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
 
   const scrollToForm = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const openCustomer = (customer: Contact, nextMode: Extract<CustomerMode, "details" | "edit">) => {
+  const openCustomer = (customer: Contact) => {
     if (isSaving || deletingId !== null) return;
-    if (selectedCustomerId && selectedCustomerId !== customer.id) return;
     if (hasUnsavedChanges && !window.confirm(t("Discard unsaved changes?"))) return;
 
     const customerDraft = customerToDraft(customer);
     setSelectedCustomerId(customer.id);
     setDraft(customerDraft);
     setBaseline(customerDraft);
-    setMode(nextMode);
+    setMode("view");
     setMessage("");
     setOpenDropdown(null);
     scrollToForm();
@@ -179,7 +177,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
     }
   };
 
-  const title = mode === "new" ? "New customer" : mode === "details" ? "Customer details" : "Edit customer";
+  const title = mode === "new" ? "New customer" : "Customer details";
   const countLabel = query.trim()
     ? `${filteredContacts.length} of ${contacts.length} customers`
     : `${contacts.length} customer${contacts.length === 1 ? "" : "s"}`;
@@ -189,20 +187,19 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
       {dataError ? <div className="panel page-alert">{dataError}</div> : null}
       <section className="items-workspace customer-workspace">
         <form
-          className={`panel item-form compact-item-form customer-form ${isReadOnly ? "is-read-only" : ""}`}
+          className="panel item-form compact-item-form customer-form"
           onSubmit={async (event) => {
             event.preventDefault();
-            if (mode === "details" || isSaving) return;
+            if (isSaving) return;
             setMessage("");
             setIsSaving(true);
             try {
               const payload = Object.fromEntries(new FormData(event.currentTarget));
-              if (mode === "edit" && selectedCustomerId) {
+              if (mode === "view" && selectedCustomerId) {
                 const updated = await api.updateCustomer(token, selectedCustomerId, payload);
                 const updatedDraft = customerToDraft(updated);
                 setDraft(updatedDraft);
                 setBaseline(updatedDraft);
-                setMode("details");
                 setOpenDropdown(null);
                 await onRefresh();
               } else {
@@ -220,20 +217,13 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
           <div className="item-form-head">
             <div><h2>{title}</h2><p>Contact and billing details</p></div>
             <div className="invoice-form-actions">
-              {mode === "details" ? (
-                <>
-                  <button className="ghost-button" type="button" onClick={resetToNew}>Close</button>
-                  <button className="button" type="button" onClick={() => setMode("edit")}>Edit customer</button>
-                </>
-              ) : mode === "edit" ? (
+              {mode === "view" ? (
                 <>
                   <button className="ghost-button" disabled={isSaving} type="button" onClick={() => {
-                    setDraft(baseline);
-                    setMode("details");
-                    setMessage("");
-                    setOpenDropdown(null);
-                  }}>Cancel</button>
-                  <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Update customer"}</button>
+                    if (hasUnsavedChanges && !window.confirm(t("Discard unsaved changes?"))) return;
+                    resetToNew();
+                  }}>Close</button>
+                  <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit customer"}</button>
                 </>
               ) : (
                 <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save customer"}</button>
@@ -246,36 +236,36 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
               <h3 className="customer-section-title">Customer details</h3>
               <div className="radio-field">
                 <span>Type</span>
-                <label className="radio-option"><input checked={draft.customerType === "business"} disabled={isReadOnly} type="radio" name="customerType" value="business" onChange={() => setDraft((current) => ({ ...current, customerType: "business" }))} /><span className="option-text">Business</span></label>
-                <label className="radio-option"><input checked={draft.customerType === "individual"} disabled={isReadOnly} type="radio" name="customerType" value="individual" onChange={() => setDraft((current) => ({ ...current, customerType: "individual" }))} /><span className="option-text">Individual</span></label>
+                <label className="radio-option"><input checked={draft.customerType === "business"} type="radio" name="customerType" value="business" onChange={() => setDraft((current) => ({ ...current, customerType: "business" }))} /><span className="option-text">Business</span></label>
+                <label className="radio-option"><input checked={draft.customerType === "individual"} type="radio" name="customerType" value="individual" onChange={() => setDraft((current) => ({ ...current, customerType: "individual" }))} /><span className="option-text">Individual</span></label>
               </div>
               {draft.customerType === "business" ? (
-                <Field label="Company name" name="companyName" placeholder="Acme Trading" readOnly={isReadOnly} required value={draft.companyName} onChange={(event) => set("companyName", event.currentTarget.value)} />
+                <Field label="Company name" name="companyName" placeholder="Acme Trading" required value={draft.companyName} onChange={(event) => set("companyName", event.currentTarget.value)} />
               ) : (
-                <div className="split"><Field label="First name" name="firstName" readOnly={isReadOnly} required value={draft.firstName} onChange={(event) => set("firstName", event.currentTarget.value)} /><Field label="Last name" name="lastName" readOnly={isReadOnly} required value={draft.lastName} onChange={(event) => set("lastName", event.currentTarget.value)} /></div>
+                <div className="split"><Field label="First name" name="firstName" required value={draft.firstName} onChange={(event) => set("firstName", event.currentTarget.value)} /><Field label="Last name" name="lastName" required value={draft.lastName} onChange={(event) => set("lastName", event.currentTarget.value)} /></div>
               )}
-              <Field label="Email address" name="email" readOnly={isReadOnly} type="email" value={draft.email} onChange={(event) => set("email", event.currentTarget.value)} />
-              <Field label="Phone" name="phone" readOnly={isReadOnly} value={draft.phone} onChange={(event) => set("phone", event.currentTarget.value)} />
+              <Field label="Email address" name="email" type="email" value={draft.email} onChange={(event) => set("email", event.currentTarget.value)} />
+              <Field label="Phone" name="phone" value={draft.phone} onChange={(event) => set("phone", event.currentTarget.value)} />
             </section>
 
             <section className="item-info-section customer-info-section">
               <h3 className="check-title customer-section-title">Billing address</h3>
               <div className="item-info-fields">
-                <Field label="Address line 1" name="addressLine1" placeholder="Street and building" readOnly={isReadOnly} value={draft.addressLine1} onChange={(event) => set("addressLine1", event.currentTarget.value)} />
-                <Field label="Address line 2" name="addressLine2" placeholder="Suite, floor, or landmark" readOnly={isReadOnly} value={draft.addressLine2} onChange={(event) => set("addressLine2", event.currentTarget.value)} />
-                <Field label="City" name="city" readOnly={isReadOnly} value={draft.city} onChange={(event) => set("city", event.currentTarget.value)} />
-                <Field label="State / province" name="state" readOnly={isReadOnly} value={draft.state} onChange={(event) => set("state", event.currentTarget.value)} />
-                <Field label="Postal code" name="postalCode" readOnly={isReadOnly} value={draft.postalCode} onChange={(event) => set("postalCode", event.currentTarget.value)} />
-                <Field label="Country" name="country" readOnly={isReadOnly} value={draft.country} onChange={(event) => set("country", event.currentTarget.value)} />
+                <Field label="Address line 1" name="addressLine1" placeholder="Street and building" value={draft.addressLine1} onChange={(event) => set("addressLine1", event.currentTarget.value)} />
+                <Field label="Address line 2" name="addressLine2" placeholder="Suite, floor, or landmark" value={draft.addressLine2} onChange={(event) => set("addressLine2", event.currentTarget.value)} />
+                <Field label="City" name="city" value={draft.city} onChange={(event) => set("city", event.currentTarget.value)} />
+                <Field label="State / province" name="state" value={draft.state} onChange={(event) => set("state", event.currentTarget.value)} />
+                <Field label="Postal code" name="postalCode" value={draft.postalCode} onChange={(event) => set("postalCode", event.currentTarget.value)} />
+                <Field label="Country" name="country" value={draft.country} onChange={(event) => set("country", event.currentTarget.value)} />
               </div>
             </section>
 
             <section className="item-info-section customer-info-section">
               <h3 className="check-title customer-section-title">Sales settings</h3>
               <div className="item-info-fields">
-                <DropdownField disabled={isReadOnly} label="Tax" name="taxRate" options={TAX_OPTIONS} placeholder="Select a tax" openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.taxRate} onChange={(value) => set("taxRate", value)} />
-                <DropdownField disabled={isReadOnly} label="Payment terms" name="paymentTerms" options={paymentTerms} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.paymentTerms} onChange={(value) => set("paymentTerms", value)} />
-                <div className="field item-description-field customer-notes"><label htmlFor="customer-notes">Notes</label><textarea id="customer-notes" name="notes" placeholder="Internal context about this customer" readOnly={isReadOnly} value={draft.notes} onChange={(event) => set("notes", event.currentTarget.value)} /></div>
+                <DropdownField label="Tax" name="taxRate" options={TAX_OPTIONS} placeholder="Select a tax" openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.taxRate} onChange={(value) => set("taxRate", value)} />
+                <DropdownField label="Payment terms" name="paymentTerms" options={paymentTerms} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.paymentTerms} onChange={(value) => set("paymentTerms", value)} />
+                <div className="field item-description-field customer-notes"><label htmlFor="customer-notes">Notes</label><textarea id="customer-notes" name="notes" placeholder="Internal context about this customer" value={draft.notes} onChange={(event) => set("notes", event.currentTarget.value)} /></div>
               </div>
             </section>
           </div>
@@ -292,8 +282,6 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
               <thead><tr><th>Name</th><th>Contact</th><th>Location</th><th>Tax</th><th>Terms</th><th className="record-actions-heading">Actions</th></tr></thead>
               <tbody>
                 {filteredContacts.length === 0 ? <tr><td colSpan={6} className="muted">{query ? "No customers match your search." : "No customers yet."}</td></tr> : filteredContacts.map((contact) => {
-                  const conflictingCustomer = selectedCustomerId !== null && selectedCustomerId !== contact.id;
-                  const editingThisCustomer = mode === "edit" && selectedCustomerId === contact.id;
                   return (
                     <tr key={contact.id}>
                       <td><strong>{contact.displayName}</strong><br /><span className="muted">{contact.customerType === "individual" ? "Individual" : "Business"}</span></td>
@@ -304,8 +292,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
                         <RecordActionsMenu
                           recordLabel={contact.displayName}
                           actions={[
-                            { label: "View", icon: appIcons.actions.view, disabled: conflictingCustomer || editingThisCustomer || isSaving || deletingId !== null, onSelect: () => openCustomer(contact, "details") },
-                            { label: "Edit", icon: appIcons.actions.edit, disabled: conflictingCustomer || editingThisCustomer || isSaving || deletingId !== null, onSelect: () => openCustomer(contact, "edit") },
+                            { label: "View", icon: appIcons.actions.view, disabled: isSaving || deletingId !== null, onSelect: () => openCustomer(contact) },
                             { label: deletingId === contact.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId !== null || isSaving, onSelect: () => void deleteCustomer(contact) },
                           ]}
                         />

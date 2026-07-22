@@ -17,7 +17,7 @@ type Props = {
   onRefresh: () => Promise<void>;
 };
 
-type LineDraft = { id: number; itemId: string; quantity: number; rate: number; tax: string };
+type LineDraft = { id: number; itemId: string; itemName: string; quantity: number; rate: number; tax: string };
 const termsOptions = ["Due on Receipt", "Net 7", "Net 15", "Net 30", "Net 45", "Net 60"];
 const taxRates: Record<string, number> = { Exempt: 0, "Standard Tax": 10, "Reduced Tax": 5, "Out of Scope": 0 };
 const dateInputValue = (date = new Date()) => {
@@ -31,6 +31,14 @@ const dueDateFor = (invoiceDate: string, terms: string) => {
   return dateInputValue(date);
 };
 
+const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
+  const options = availableItems.map((item) => ({ label: item.name, value: item.id }));
+  if (line.itemName && !options.some((option) => option.value === line.itemId)) {
+    options.unshift({ label: line.itemName, value: line.itemId });
+  }
+  return options;
+};
+
 export const InvoicesPage = ({ customers, dataError, invoices, items, token, onRefresh }: Props) => {
   const AddIcon = appIcons.actions.add;
   const RemoveIcon = appIcons.actions.remove;
@@ -42,17 +50,21 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const [dueDate, setDueDate] = useState(today);
   const [discountPercent, setDiscountPercent] = useState(0);
   const [customerNotes, setCustomerNotes] = useState("Thanks for your business.");
-  const [lines, setLines] = useState<LineDraft[]>([{ id: 1, itemId: "", quantity: 1, rate: 0, tax: "" }]);
+  const [lines, setLines] = useState<LineDraft[]>([{ id: 1, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]);
   const [nextLineId, setNextLineId] = useState(2);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
   const [paymentDate, setPaymentDate] = useState(today);
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const selectedInvoice = selectedInvoiceId
+    ? invoices.find((invoice) => invoice.id === selectedInvoiceId) ?? null
+    : null;
+  const isViewingPaidInvoice = selectedInvoice?.status === "Paid";
   const sellableItems = items.filter((item) => item.salesEnabled);
   const filteredInvoices = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -89,22 +101,21 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     setLines((current) => current.map((line) => line.id === id ? { ...line, ...values } : line));
 
   const resetForm = (nextNumber = `INV-${String(invoices.length + 1).padStart(6, "0")}`) => {
-    setEditingId(null);
+    setSelectedInvoiceId(null);
     setCustomerId(""); setInvoiceNumber(nextNumber); setInvoiceDate(today);
     setTerms("Due on Receipt"); setDueDate(today); setDiscountPercent(0);
     setCustomerNotes("Thanks for your business."); setOpenDropdown(null);
-    setLines([{ id: nextLineId, itemId: "", quantity: 1, rate: 0, tax: "" }]);
+    setLines([{ id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]);
     setNextLineId((value) => value + 1);
   };
 
   const loadInvoice = (invoice: Invoice) => {
-    if (invoice.status === "Paid") return;
-    setEditingId(invoice.id);
+    setSelectedInvoiceId(invoice.id);
     setCustomerId(invoice.customerId); setInvoiceNumber(invoice.invoiceNumber);
     setInvoiceDate(invoice.invoiceDate.slice(0, 10)); setTerms(invoice.terms);
     setDueDate(invoice.dueDate.slice(0, 10)); setDiscountPercent(invoice.discountPercent);
     setCustomerNotes(invoice.customerNotes ?? ""); setOpenDropdown(null);
-    setLines(invoice.lines.map((line, index) => ({ id: nextLineId + index, itemId: line.itemId ?? "", quantity: line.quantity, rate: line.rate, tax: line.tax ?? "" })));
+    setLines(invoice.lines.map((line, index) => ({ id: nextLineId + index, itemId: line.itemId ?? "", itemName: line.itemName, quantity: line.quantity, rate: line.rate, tax: line.tax ?? "" })));
     setNextLineId((value) => value + invoice.lines.length + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -115,7 +126,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     setDeletingId(invoice.id);
     try {
       await api.deleteInvoice(token, invoice.id);
-      if (editingId === invoice.id) resetForm();
+      if (selectedInvoiceId === invoice.id) resetForm();
       await onRefresh();
     } catch (error) {
       setMessage(error instanceof ApiError ? error.message : "Unable to delete the invoice.");
@@ -127,34 +138,35 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   return (
     <>
       {dataError ? <div className="panel page-alert">{dataError}</div> : null}
-      <form className="invoice-workspace" onSubmit={async (event) => {
+      <form className={`invoice-workspace ${isViewingPaidInvoice ? "is-read-only" : ""}`} onSubmit={async (event) => {
         event.preventDefault();
+        if (isViewingPaidInvoice) return;
         setMessage("");
         try {
           const payload = {
             customerId, invoiceNumber, invoiceDate, terms, dueDate, discountPercent, customerNotes,
             lines: lines.filter((line) => line.itemId).map((line) => ({ ...line, taxRate: taxRates[line.tax] ?? 0 })),
           };
-          if (editingId) await api.updateInvoice(token, editingId, payload);
+          if (selectedInvoiceId) await api.updateInvoice(token, selectedInvoiceId, payload);
           else await api.createInvoice(token, payload);
           await onRefresh();
-          resetForm(`INV-${String(invoices.length + (editingId ? 1 : 2)).padStart(6, "0")}`);
+          resetForm(`INV-${String(invoices.length + (selectedInvoiceId ? 1 : 2)).padStart(6, "0")}`);
         } catch (error) {
           setMessage(error instanceof ApiError ? error.message : "Unable to save invoice.");
         }
       }}>
         <section className="panel item-form compact-item-form invoice-form-panel">
           <div className="item-form-head">
-            <div><h2>{editingId ? "Edit invoice" : "New invoice"}</h2><p>Customer and billing details</p></div>
+            <div><h2>{isViewingPaidInvoice ? "Invoice details" : selectedInvoiceId ? "Edit invoice" : "New invoice"}</h2><p>Customer and billing details</p></div>
             <div className="invoice-form-actions">
-              {editingId ? <button className="ghost-button" type="button" onClick={() => resetForm()}>Cancel</button> : null}
-              <button className="button" type="submit">{editingId ? "Update invoice" : "Save invoice"}</button>
+              {selectedInvoiceId ? <button className="ghost-button" type="button" onClick={() => resetForm()}>{isViewingPaidInvoice ? "Close" : "Cancel"}</button> : null}
+              {!isViewingPaidInvoice ? <button className="button" type="submit">{selectedInvoiceId ? "Edit invoice" : "Save invoice"}</button> : null}
             </div>
           </div>
           <div className="invoice-details-grid">
             <section className="invoice-detail-card">
               <h3>Customer</h3>
-              <DropdownField label="Customer" name="customerId" options={customers.map((customer) => ({ label: customer.displayName, value: customer.id }))} placeholder="Select a customer" required openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={customerId} onChange={(value) => {
+              <DropdownField label="Customer" name="customerId" options={customers.map((customer) => ({ label: customer.displayName, value: customer.id }))} placeholder="Select a customer" required disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={customerId} onChange={(value) => {
                 setCustomerId(value);
                 const customer = customers.find((entry) => entry.id === value);
                 const nextTerms = customer?.paymentTerms || "Due on Receipt";
@@ -163,13 +175,13 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             </section>
             <section className="invoice-detail-card">
               <h3>Invoice details</h3>
-              <div className="field"><label htmlFor="invoiceNumber">Invoice number</label><input id="invoiceNumber" value={invoiceNumber} required onChange={(event) => setInvoiceNumber(event.currentTarget.value)} /></div>
-              <div className="field"><label htmlFor="invoiceDate">Invoice date</label><input id="invoiceDate" type="date" value={invoiceDate} required onChange={(event) => { const value = event.currentTarget.value; setInvoiceDate(value); setDueDate(dueDateFor(value, terms)); }} /></div>
+              <div className="field"><label htmlFor="invoiceNumber">Invoice number</label><input id="invoiceNumber" value={invoiceNumber} required disabled={isViewingPaidInvoice} onChange={(event) => setInvoiceNumber(event.currentTarget.value)} /></div>
+              <div className="field"><label htmlFor="invoiceDate">Invoice date</label><input id="invoiceDate" type="date" value={invoiceDate} required disabled={isViewingPaidInvoice} onChange={(event) => { const value = event.currentTarget.value; setInvoiceDate(value); setDueDate(dueDateFor(value, terms)); }} /></div>
             </section>
             <section className="invoice-detail-card">
               <h3>Payment schedule</h3>
-              <DropdownField label="Terms" name="terms" options={termsOptions} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={terms} onChange={(value) => { setTerms(value); setDueDate(dueDateFor(invoiceDate, value)); }} />
-              <div className="field"><label htmlFor="dueDate">Due date</label><input id="dueDate" type="date" value={dueDate} required onChange={(event) => setDueDate(event.currentTarget.value)} /></div>
+              <DropdownField label="Terms" name="terms" options={termsOptions} disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={terms} onChange={(value) => { setTerms(value); setDueDate(dueDateFor(invoiceDate, value)); }} />
+              <div className="field"><label htmlFor="dueDate">Due date</label><input id="dueDate" type="date" value={dueDate} required disabled={isViewingPaidInvoice} onChange={(event) => setDueDate(event.currentTarget.value)} /></div>
             </section>
           </div>
         </section>
@@ -181,27 +193,27 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               <thead><tr><th>Item details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr></thead>
               <tbody>{lines.map((line) => (
                 <tr key={line.id}>
-                  <td className="invoice-item-cell"><DropdownField label="Item" name={`item-${line.id}`} options={sellableItems.map((item) => ({ label: item.name, value: item.id }))} placeholder="Select an item" openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.itemId} onChange={(value) => {
+                  <td className="invoice-item-cell"><DropdownField label="Item" name={`item-${line.id}`} options={itemOptionsFor(line, sellableItems)} placeholder="Select an item" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.itemId} onChange={(value) => {
                     const item = sellableItems.find((entry) => entry.id === value);
-                    updateLine(line.id, { itemId: value, rate: item?.salesPrice ?? 0, tax: item?.salesTax ?? "" });
+                    updateLine(line.id, { itemId: value, itemName: item?.name ?? line.itemName, rate: item?.salesPrice ?? 0, tax: item?.salesTax ?? "" });
                   }} /></td>
-                  <td><input aria-label="Quantity" type="number" min="0.01" step="0.01" value={line.quantity} onChange={(event) => updateLine(line.id, { quantity: Number(event.currentTarget.value) })} /></td>
-                  <td><input aria-label="Rate" type="number" min="0" step="0.01" value={line.rate} onChange={(event) => updateLine(line.id, { rate: Number(event.currentTarget.value) })} /></td>
-                  <td className="invoice-tax-cell"><DropdownField label="Tax" name={`tax-${line.id}`} options={TAX_OPTIONS} placeholder="Select a tax" openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.tax} onChange={(value) => updateLine(line.id, { tax: value })} /></td>
+                  <td><input aria-label="Quantity" type="number" min="0.01" step="0.01" value={line.quantity} disabled={isViewingPaidInvoice} onChange={(event) => updateLine(line.id, { quantity: Number(event.currentTarget.value) })} /></td>
+                  <td><input aria-label="Rate" type="number" min="0" step="0.01" value={line.rate} disabled={isViewingPaidInvoice} onChange={(event) => updateLine(line.id, { rate: Number(event.currentTarget.value) })} /></td>
+                  <td className="invoice-tax-cell"><DropdownField label="Tax" name={`tax-${line.id}`} options={TAX_OPTIONS} placeholder="Select a tax" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.tax} onChange={(value) => updateLine(line.id, { tax: value })} /></td>
                   <td className="invoice-amount">{currency.format(line.quantity * line.rate)}</td>
-                  <td><Tooltip content="Remove line" disabled={lines.length === 1} placement="top"><button aria-label="Remove line" className="invoice-remove-line" disabled={lines.length === 1} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><RemoveIcon /></button></Tooltip></td>
+                  <td><Tooltip content="Remove line" disabled={lines.length === 1 || isViewingPaidInvoice} placement="top"><button aria-label="Remove line" className="invoice-remove-line" disabled={lines.length === 1 || isViewingPaidInvoice} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><RemoveIcon /></button></Tooltip></td>
                 </tr>
               ))}</tbody>
             </table>
           </div>
-            <button className="ghost-button invoice-add-row" type="button" onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add new row</button>
+            <button className="ghost-button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add new row</button>
         </section>
 
         <section className="invoice-footer-grid">
-          <div className="panel invoice-notes-card"><div className="field"><label htmlFor="customerNotes">Customer notes</label><textarea id="customerNotes" value={customerNotes} onChange={(event) => setCustomerNotes(event.currentTarget.value)} /></div><span>Displayed on the invoice</span></div>
+          <div className="panel invoice-notes-card"><div className="field"><label htmlFor="customerNotes">Customer notes</label><textarea id="customerNotes" value={customerNotes} disabled={isViewingPaidInvoice} onChange={(event) => setCustomerNotes(event.currentTarget.value)} /></div><span>Displayed on the invoice</span></div>
           <div className="panel invoice-totals-card">
             <div><span>Subtotal</span><strong>{currency.format(totals.subtotal)}</strong></div>
-            <div><label htmlFor="discountPercent">Discount</label><span className="invoice-discount-input"><input id="discountPercent" type="number" min="0" max="100" step="0.01" value={discountPercent} onChange={(event) => setDiscountPercent(Number(event.currentTarget.value))} /><b>%</b></span><strong>-{currency.format(totals.discountAmount)}</strong></div>
+            <div><label htmlFor="discountPercent">Discount</label><span className="invoice-discount-input"><input id="discountPercent" type="number" min="0" max="100" step="0.01" value={discountPercent} disabled={isViewingPaidInvoice} onChange={(event) => setDiscountPercent(Number(event.currentTarget.value))} /><b>%</b></span><strong>-{currency.format(totals.discountAmount)}</strong></div>
             <div><span>Tax</span><strong>{currency.format(totals.taxTotal)}</strong></div>
             <div className="invoice-total-row"><span>Total</span><strong>{currency.format(totals.total)}</strong></div>
           </div>
@@ -227,6 +239,12 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                       disabled={deletingId !== null}
                       recordLabel={invoice.invoiceNumber}
                       actions={[
+                        {
+                          label: "View",
+                          icon: appIcons.actions.view,
+                          disabled: deletingId !== null,
+                          onSelect: () => loadInvoice(invoice),
+                        },
                         ...(invoice.status !== "Paid" ? [
                           {
                             label: "Record payment",
@@ -238,12 +256,6 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                               setPaymentDate(today);
                               setPaymentAmount(invoice.total);
                             },
-                          },
-                          {
-                            label: "Edit",
-                            icon: appIcons.actions.edit,
-                            disabled: deletingId !== null,
-                            onSelect: () => loadInvoice(invoice),
                           },
                         ] : []),
                         {
@@ -271,7 +283,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             try {
               await api.recordInvoicePayment(token, paymentInvoice.id, { paymentDate, amount: paymentAmount });
               await onRefresh();
-              if (editingId === paymentInvoice.id) resetForm();
+              if (selectedInvoiceId === paymentInvoice.id) resetForm();
               setPaymentInvoice(null);
             } catch (error) {
               setMessage(error instanceof ApiError ? error.message : "Unable to record the payment.");

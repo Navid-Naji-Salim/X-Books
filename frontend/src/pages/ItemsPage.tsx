@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
@@ -27,15 +27,74 @@ const salesAccounts = [
 const purchaseAccounts = ["Cost of Goods Sold", "Supplies Expense", "Inventory Asset", "Other Expense"];
 const unitOptions = ["box", "cm", "dz", "ft", "g", "in", "kg", "km", "lb", "mg", "ml", "m", "pcs"];
 
+type ItemDraft = {
+  name: string;
+  itemType: "goods" | "service";
+  unit: string;
+  salesEnabled: boolean;
+  salesPrice: string;
+  salesAccount: string;
+  salesTax: string;
+  salesDescription: string;
+  purchaseEnabled: boolean;
+  unitCost: string;
+  purchaseAccount: string;
+  purchaseTax: string;
+  preferredVendorId: string;
+  purchaseDescription: string;
+};
+
+type ItemMode = "new" | "edit";
+
+const emptyDraft: ItemDraft = {
+  name: "",
+  itemType: "goods",
+  unit: "",
+  salesEnabled: true,
+  salesPrice: "",
+  salesAccount: "general income",
+  salesTax: "",
+  salesDescription: "",
+  purchaseEnabled: true,
+  unitCost: "",
+  purchaseAccount: "Cost of Goods Sold",
+  purchaseTax: "",
+  preferredVendorId: "",
+  purchaseDescription: "",
+};
+
+const itemDraftKeys = Object.keys(emptyDraft) as Array<keyof ItemDraft>;
+
+const itemToDraft = (item: Item): ItemDraft => ({
+  name: item.name,
+  itemType: item.itemType === "service" ? "service" : "goods",
+  unit: item.unit ?? "",
+  salesEnabled: item.salesEnabled,
+  salesPrice: String(item.salesPrice),
+  salesAccount: item.salesAccount,
+  salesTax: item.salesTax ?? "",
+  salesDescription: item.salesDescription ?? "",
+  purchaseEnabled: item.purchaseEnabled,
+  unitCost: String(item.unitCost),
+  purchaseAccount: item.purchaseAccount,
+  purchaseTax: item.purchaseTax ?? "",
+  preferredVendorId: item.preferredVendorId ?? "",
+  purchaseDescription: item.purchaseDescription ?? "",
+});
+
+const draftsMatch = (left: ItemDraft, right: ItemDraft) =>
+  itemDraftKeys.every((key) => left[key] === right[key]);
+
 export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: ItemsPageProps) => {
   const ImageIcon = appIcons.media.image;
+  const [draft, setDraft] = useState<ItemDraft>(emptyDraft);
+  const [baseline, setBaseline] = useState<ItemDraft>(emptyDraft);
+  const [mode, setMode] = useState<ItemMode>("new");
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [salesEnabled, setSalesEnabled] = useState(true);
-  const [purchaseEnabled, setPurchaseEnabled] = useState(true);
-  const [unit, setUnit] = useState("");
-  const [resetVersion, setResetVersion] = useState(0);
   const [query, setQuery] = useState("");
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -64,6 +123,52 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
   const countLabel = query.trim()
     ? `${filteredItems.length} of ${items.length} items`
     : `${items.length} item${items.length === 1 ? "" : "s"}`;
+  const hasUnsavedChanges = mode === "edit"
+    ? !draftsMatch(draft, baseline)
+    : mode === "new" && !draftsMatch(draft, emptyDraft);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  const set = <Key extends keyof ItemDraft>(field: Key, value: ItemDraft[Key]) => {
+    setDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const resetToNew = () => {
+    setDraft(emptyDraft);
+    setBaseline(emptyDraft);
+    setMode("new");
+    setSelectedItemId(null);
+    setMessage("");
+    setOpenDropdown(null);
+  };
+
+  const openItem = (item: Item) => {
+    if (isSaving || deletingId !== null) return;
+    if (hasUnsavedChanges && !window.confirm("Discard unsaved changes?")) return;
+
+    const itemDraft = itemToDraft(item);
+    setSelectedItemId(item.id);
+    setDraft(itemDraft);
+    setBaseline(itemDraft);
+    setMode("edit");
+    setMessage("");
+    setOpenDropdown(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeItem = () => {
+    if (isSaving) return;
+    if (hasUnsavedChanges && !window.confirm("Discard unsaved changes?")) return;
+    resetToNew();
+  };
 
   const deleteItem = async (item: Item) => {
     const confirmed = window.confirm(`Delete ${item.name}?`);
@@ -75,6 +180,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
     setDeletingId(item.id);
     try {
       await api.deleteItem(token, item.id);
+      if (selectedItemId === item.id) resetToNew();
       await onRefresh();
     } catch (error) {
       setMessage(error instanceof ApiError ? error.message : "Unable to delete item.");
@@ -82,6 +188,8 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
       setDeletingId(null);
     }
   };
+
+  const title = mode === "new" ? "New item" : "Item details";
 
   return (
     <>
@@ -91,41 +199,59 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
           className="panel item-form compact-item-form"
           onSubmit={async (event) => {
             event.preventDefault();
+            if (isSaving) return;
             setMessage("");
             const form = event.currentTarget;
-
+            setIsSaving(true);
             try {
-              await api.createItem(token, Object.fromEntries(new FormData(form)));
-              form.reset();
-              setUnit("");
-              setSalesEnabled(true);
-              setPurchaseEnabled(true);
-              setResetVersion((current) => current + 1);
+              const payload = Object.fromEntries(new FormData(form));
+              if (mode === "edit" && selectedItemId) {
+                const updated = await api.updateItem(token, selectedItemId, payload);
+                const updatedDraft = itemToDraft(updated);
+                setDraft(updatedDraft);
+                setBaseline(updatedDraft);
+                setMessage("Item updated.");
+              } else {
+                await api.createItem(token, payload);
+                form.reset();
+                resetToNew();
+              }
               await onRefresh();
             } catch (error) {
               setMessage(error instanceof ApiError ? error.message : "Unable to save item.");
+            } finally {
+              setIsSaving(false);
             }
           }}
         >
           <div className="item-form-head">
             <div>
-              <h2>New item</h2>
+              <h2>{title}</h2>
               <p>Catalog details</p>
             </div>
-            <button className="button" type="submit">Save item</button>
+            <div className="invoice-form-actions">
+              {mode === "edit" ? (
+                <>
+                  <button className="ghost-button" disabled={isSaving} type="button" onClick={closeItem}>Close</button>
+                  <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit item"}</button>
+                </>
+              ) : (
+                <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save item"}</button>
+              )}
+            </div>
           </div>
 
           <div className="item-compact-grid">
             <section className="item-basics">
-              <Field label="Name" name="name" placeholder="Premium notebook" required />
+              <Field label="Name" name="name" placeholder="Premium notebook" required value={draft.name} onChange={(event) => set("name", event.currentTarget.value)} />
               <div className="radio-field">
                 <span>Type</span>
                 <span className="radio-option">
-                  <input aria-label="Goods" type="radio" name="itemType" value="goods" defaultChecked />
+                  <input aria-label="Goods" checked={draft.itemType === "goods"} type="radio" name="itemType" value="goods" onChange={() => set("itemType", "goods")} />
                   <span className="option-text">Goods</span>
                 </span>
                 <span className="radio-option">
-                  <input aria-label="Service" type="radio" name="itemType" value="service" />
+                  <input aria-label="Service" checked={draft.itemType === "service"} type="radio" name="itemType" value="service" onChange={() => set("itemType", "service")} />
                   <span className="option-text">Service</span>
                 </span>
               </div>
@@ -135,8 +261,8 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                 options={unitOptions}
                 placeholder="Select a unit"
                 setOpenDropdown={setOpenDropdown}
-                value={unit}
-                onChange={setUnit}
+                value={draft.unit}
+                onChange={(value) => set("unit", value)}
               />
               <label className="image-drop compact-image-drop">
                 <input type="file" accept="image/*" aria-label="Item image" />
@@ -149,44 +275,45 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
             </section>
 
             <ItemSection
-              checked={salesEnabled}
+              checked={draft.salesEnabled}
               checkboxName="salesEnabled"
-              onCheckedChange={setSalesEnabled}
+              onCheckedChange={(checked) => set("salesEnabled", checked)}
               title="Sales information"
               variant="sales"
             >
-              <MoneyField disabled={!salesEnabled} label="Selling price" name="salesPrice" required={salesEnabled} />
-              <DropdownField disabled={!salesEnabled} label="Account" name="salesAccount" openDropdown={openDropdown} options={salesAccounts} defaultValue="general income" required={salesEnabled} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
-              <DropdownField disabled={!salesEnabled} label="Tax" name="salesTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
+              <MoneyField disabled={!draft.salesEnabled} label="Selling price" name="salesPrice" required={draft.salesEnabled} value={draft.salesPrice} onChange={(value) => set("salesPrice", value)} />
+              <DropdownField disabled={!draft.salesEnabled} label="Account" name="salesAccount" openDropdown={openDropdown} options={salesAccounts} required={draft.salesEnabled} setOpenDropdown={setOpenDropdown} value={draft.salesAccount} onChange={(value) => set("salesAccount", value)} />
+              <DropdownField disabled={!draft.salesEnabled} label="Tax" name="salesTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} setOpenDropdown={setOpenDropdown} value={draft.salesTax} onChange={(value) => set("salesTax", value)} />
               <div className="field item-description-field">
                 <label htmlFor="salesDescription">Description</label>
-                <textarea disabled={!salesEnabled} id="salesDescription" name="salesDescription" placeholder="Customer-facing description" />
+                <textarea disabled={!draft.salesEnabled} id="salesDescription" name="salesDescription" placeholder="Customer-facing description" value={draft.salesDescription} onChange={(event) => set("salesDescription", event.currentTarget.value)} />
               </div>
             </ItemSection>
 
             <ItemSection
-              checked={purchaseEnabled}
+              checked={draft.purchaseEnabled}
               checkboxName="purchaseEnabled"
-              onCheckedChange={setPurchaseEnabled}
+              onCheckedChange={(checked) => set("purchaseEnabled", checked)}
               title="Purchase information"
               variant="purchase"
             >
-              <MoneyField disabled={!purchaseEnabled} label="Cost price" name="unitCost" required={purchaseEnabled} />
-              <DropdownField disabled={!purchaseEnabled} label="Account" name="purchaseAccount" openDropdown={openDropdown} options={purchaseAccounts} defaultValue="Cost of Goods Sold" required={purchaseEnabled} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
-              <DropdownField disabled={!purchaseEnabled} label="Tax" name="purchaseTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} resetVersion={resetVersion} setOpenDropdown={setOpenDropdown} />
+              <MoneyField disabled={!draft.purchaseEnabled} label="Cost price" name="unitCost" required={draft.purchaseEnabled} value={draft.unitCost} onChange={(value) => set("unitCost", value)} />
+              <DropdownField disabled={!draft.purchaseEnabled} label="Account" name="purchaseAccount" openDropdown={openDropdown} options={purchaseAccounts} required={draft.purchaseEnabled} setOpenDropdown={setOpenDropdown} value={draft.purchaseAccount} onChange={(value) => set("purchaseAccount", value)} />
+              <DropdownField disabled={!draft.purchaseEnabled} label="Tax" name="purchaseTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} setOpenDropdown={setOpenDropdown} value={draft.purchaseTax} onChange={(value) => set("purchaseTax", value)} />
               <DropdownField
-                disabled={!purchaseEnabled}
+                disabled={!draft.purchaseEnabled}
                 label="Preferred vendor"
                 name="preferredVendorId"
                 openDropdown={openDropdown}
                 placeholder="Select a vendor"
                 options={vendors.map((vendor) => ({ label: vendor.displayName, value: vendor.id }))}
-                resetVersion={resetVersion}
                 setOpenDropdown={setOpenDropdown}
+                value={draft.preferredVendorId}
+                onChange={(value) => set("preferredVendorId", value)}
               />
               <div className="field item-description-field">
                 <label htmlFor="purchaseDescription">Description</label>
-                <textarea disabled={!purchaseEnabled} id="purchaseDescription" name="purchaseDescription" placeholder="Vendor-facing description" />
+                <textarea disabled={!draft.purchaseEnabled} id="purchaseDescription" name="purchaseDescription" placeholder="Vendor-facing description" value={draft.purchaseDescription} onChange={(event) => set("purchaseDescription", event.currentTarget.value)} />
               </div>
             </ItemSection>
           </div>
@@ -242,13 +369,21 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                       <td className="record-actions-cell">
                         <RecordActionsMenu
                           recordLabel={item.name}
-                          actions={[{
-                            label: deletingId === item.id ? "Deleting" : "Delete",
-                            icon: appIcons.actions.delete,
-                            tone: "danger",
-                            disabled: deletingId === item.id,
-                            onSelect: () => void deleteItem(item),
-                          }]}
+                          actions={[
+                            {
+                              label: "View",
+                              icon: appIcons.actions.view,
+                              disabled: isSaving || deletingId !== null,
+                              onSelect: () => openItem(item),
+                            },
+                            {
+                              label: deletingId === item.id ? "Deleting" : "Delete",
+                              icon: appIcons.actions.delete,
+                              tone: "danger",
+                              disabled: deletingId !== null || isSaving,
+                              onSelect: () => void deleteItem(item),
+                            },
+                          ]}
                         />
                       </td>
                     </tr>
@@ -268,14 +403,16 @@ type MoneyFieldProps = {
   name: string;
   required?: boolean;
   disabled?: boolean;
+  value: string;
+  onChange: (value: string) => void;
 };
 
-const MoneyField = ({ label, name, required, disabled }: MoneyFieldProps) => (
+const MoneyField = ({ label, name, required, disabled, value, onChange }: MoneyFieldProps) => (
   <div className="field money-field">
     <label htmlFor={name}>{label}</label>
     <div>
       <span>USD</span>
-      <input disabled={disabled} id={name} name={name} type="number" min="0" step="0.01" required={required} />
+      <input disabled={disabled} id={name} name={name} type="number" min="0" step="0.01" required={required} value={value} onChange={(event) => onChange(event.currentTarget.value)} />
     </div>
   </div>
 );

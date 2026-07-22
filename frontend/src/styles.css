@@ -1539,10 +1539,16 @@ th {
   padding-inline-start: 2.45rem;
 }
 .customer-form.is-read-only input[readonly],
-.customer-form.is-read-only textarea[readonly] {
+.customer-form.is-read-only textarea[readonly],
+.invoice-workspace.is-read-only input[readonly],
+.invoice-workspace.is-read-only textarea[readonly],
+.invoice-workspace.is-read-only input:disabled,
+.invoice-workspace.is-read-only textarea:disabled {
   color: var(--ink);
   background: rgba(241, 245, 249, 0.72);
   cursor: default;
+  opacity: 1;
+  -webkit-text-fill-color: var(--ink);
 }
 .record-table-wrap {
   max-block-size: 27rem;
