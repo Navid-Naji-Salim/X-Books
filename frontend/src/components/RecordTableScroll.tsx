@@ -61,6 +61,7 @@ export const RecordTableScroll = ({ children, className, columns }: RecordTableS
       const trackHeight = rowsContainer.clientHeight;
       const maxScroll = Math.max(0, rowsContainer.scrollHeight - trackHeight);
       const visible = maxScroll > 1 && trackHeight > 0;
+      if (!visible && rowsContainer.scrollTop !== 0) rowsContainer.scrollTop = 0;
       const thumbHeight = visible
         ? Math.min(trackHeight, Math.max(28, Math.round(trackHeight * trackHeight / rowsContainer.scrollHeight)))
         : 0;
@@ -154,7 +155,11 @@ export const RecordTableScroll = ({ children, className, columns }: RecordTableS
   const tableStyle = { "--record-data-columns": columns - 1 } as CSSProperties;
 
   return (
-    <div className={["record-table-shell", className].filter(Boolean).join(" ")}>
+    <div className={[
+      "record-table-shell",
+      metrics.visible ? "has-scrollable-rows" : "rows-locked",
+      className,
+    ].filter(Boolean).join(" ")}>
       <div className="table-wrap record-table-wrap" ref={horizontalRef} style={tableStyle}>
         {children}
       </div>

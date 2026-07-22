@@ -1667,9 +1667,12 @@ th {
 .record-table-wrap tbody {
   min-height: 0;
   overflow-x: hidden;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.record-table-shell.has-scrollable-rows .record-table-wrap tbody {
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
 .record-table-wrap tbody::-webkit-scrollbar {
