@@ -25,6 +25,16 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     return;
   }
 
+  if (
+    typeof error === "object"
+    && error !== null
+    && "status" in error
+    && error.status === 413
+  ) {
+    res.status(413).json({ error: "The uploaded image is too large. Choose an image no larger than 2 MB." });
+    return;
+  }
+
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     const message =
       error.code === "P2025"

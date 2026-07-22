@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
@@ -29,6 +29,7 @@ const unitOptions = ["box", "cm", "dz", "ft", "g", "in", "kg", "km", "lb", "mg",
 
 type ItemDraft = {
   name: string;
+  imageUrl: string;
   itemType: "goods" | "service";
   unit: string;
   salesEnabled: boolean;
@@ -48,6 +49,7 @@ type ItemMode = "new" | "edit";
 
 const emptyDraft: ItemDraft = {
   name: "",
+  imageUrl: "",
   itemType: "goods",
   unit: "",
   salesEnabled: true,
@@ -67,6 +69,7 @@ const itemDraftKeys = Object.keys(emptyDraft) as Array<keyof ItemDraft>;
 
 const itemToDraft = (item: Item): ItemDraft => ({
   name: item.name,
+  imageUrl: item.imageUrl ?? "",
   itemType: item.itemType === "service" ? "service" : "goods",
   unit: item.unit ?? "",
   salesEnabled: item.salesEnabled,
@@ -85,6 +88,26 @@ const itemToDraft = (item: Item): ItemDraft => ({
 const draftsMatch = (left: ItemDraft, right: ItemDraft) =>
   itemDraftKeys.every((key) => left[key] === right[key]);
 
+const MAX_ITEM_IMAGE_BYTES = 2 * 1024 * 1024;
+
+const readImageFile = (file: File) => new Promise<string>((resolve, reject) => {
+  if (!file.type.startsWith("image/")) {
+    reject(new Error("Choose an image file."));
+    return;
+  }
+  if (file.size > MAX_ITEM_IMAGE_BYTES) {
+    reject(new Error("Item images must be 2 MB or smaller."));
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => typeof reader.result === "string"
+    ? resolve(reader.result)
+    : reject(new Error("Unable to read that image."));
+  reader.onerror = () => reject(new Error("Unable to read that image."));
+  reader.readAsDataURL(file);
+});
+
 export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: ItemsPageProps) => {
   const ImageIcon = appIcons.media.image;
   const [draft, setDraft] = useState<ItemDraft>(emptyDraft);
@@ -96,6 +119,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
   const [isSaving, setIsSaving] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
     if (!normalized) return items;
@@ -139,6 +163,16 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
 
   const set = <Key extends keyof ItemDraft>(field: Key, value: ItemDraft[Key]) => {
     setDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const selectImage = async (file?: File) => {
+    if (!file) return;
+    setMessage("");
+    try {
+      set("imageUrl", await readImageFile(file));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to read that image.");
+    }
   };
 
   const resetToNew = () => {
@@ -264,14 +298,58 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                 value={draft.unit}
                 onChange={(value) => set("unit", value)}
               />
-              <label className="image-drop compact-image-drop">
-                <input type="file" accept="image/*" aria-label="Item image" />
-                <span className="image-glyph" aria-hidden="true">
-                  <ImageIcon />
-                </span>
-                <strong>Item image</strong>
-                <span>Drop or browse</span>
-              </label>
+              <div
+                className={`image-drop compact-image-drop ${draft.imageUrl ? "has-image" : ""}`}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  void selectImage(event.dataTransfer.files[0]);
+                }}
+              >
+                <input
+                  id="itemImage"
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  aria-label="Item image"
+                  onChange={(event) => {
+                    void selectImage(event.currentTarget.files?.[0]);
+                    event.currentTarget.value = "";
+                  }}
+                />
+                <input type="hidden" name="imageUrl" value={draft.imageUrl} />
+                {draft.imageUrl ? (
+                  <>
+                    <img className="item-image-preview" src={draft.imageUrl} alt={draft.name ? `${draft.name} preview` : "Item image preview"} />
+                    <RecordActionsMenu
+                      className="item-image-actions"
+                      label="Image actions"
+                      recordLabel={draft.name || "Item image"}
+                      actions={[
+                        {
+                          label: "Choose another image",
+                          icon: appIcons.actions.edit,
+                          onSelect: () => imageInputRef.current?.click(),
+                        },
+                        {
+                          label: "Remove image",
+                          icon: appIcons.actions.remove,
+                          tone: "danger",
+                          onSelect: () => set("imageUrl", ""),
+                        },
+                      ]}
+                    />
+                  </>
+                ) : (
+                  <label className="item-image-picker" htmlFor="itemImage">
+                    <span className="image-glyph" aria-hidden="true">
+                      <ImageIcon />
+                    </span>
+                    <strong>Item image</strong>
+                    <span>Drop or browse</span>
+                  </label>
+                )}
+              </div>
             </section>
 
             <ItemSection
@@ -321,7 +399,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
           <div className="message">{message}</div>
         </form>
 
-        <div className="panel item-list-panel">
+        <div className="panel item-list-panel record-list-scroll-panel">
           <div className="item-form-head record-list-head">
             <div>
               <h2>Item list</h2>
@@ -329,7 +407,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
             </div>
             <RecordListSearch label="Search items" placeholder="Search items by any detail…" value={query} onChange={setQuery} />
           </div>
-          <div className="table-wrap record-table-wrap">
+          <div className="table-wrap record-table-frame">
             <table>
               <thead>
                 <tr>
