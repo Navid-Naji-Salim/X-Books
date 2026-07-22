@@ -604,16 +604,11 @@ textarea:focus {
 }
 
 .profile-menu.is-floating.is-open { animation: settings-flyout-enter 170ms ease-out both; }
-.profile-menu.is-floating.is-closing { pointer-events: none; animation: settings-flyout-exit 130ms ease-in both; }
+.profile-menu.is-floating.is-closing { display: none; }
 
 @keyframes settings-flyout-enter {
   from { opacity: 0; transform: translateY(4px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes settings-flyout-exit {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(4px) scale(0.98); }
 }
 
 .profile-menu-head {
@@ -1098,7 +1093,7 @@ textarea:focus {
 .x-tooltip-top::after { bottom: -5px; left: calc(50% - 4px); border-top: 0; border-left: 0; }
 .x-tooltip-bottom::after { top: -5px; left: calc(50% - 4px); border-right: 0; border-bottom: 0; }
 .x-tooltip.is-visible { animation: x-tooltip-enter 145ms ease-out both; }
-.x-tooltip.is-closing { animation: x-tooltip-exit 100ms ease-in both; }
+.x-tooltip.is-closing { display: none; }
 
 .x-nav-flyout {
   display: block;
@@ -1160,16 +1155,9 @@ textarea:focus {
   to { opacity: 1; transform: translate(0, 0) scale(1); }
 }
 
-@keyframes x-tooltip-exit {
-  from { opacity: 1; transform: translate(0, 0) scale(1); }
-  to { opacity: 0; transform: translate(var(--tooltip-shift-x), var(--tooltip-shift-y)) scale(0.98); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .x-tooltip.is-visible,
-  .x-tooltip.is-closing,
-  .record-actions-menu.is-open,
-  .record-actions-menu.is-closing { animation-duration: 1ms; }
+  .record-actions-menu.is-open { animation-duration: 1ms; }
 }
 
 .select-menu summary[aria-disabled="true"] {
@@ -2024,10 +2012,7 @@ th {
 .record-actions-menu.record-actions-menu-align-right { transform-origin: top right; }
 .record-actions-menu.record-actions-menu-align-right.record-actions-menu-above { transform-origin: bottom right; }
 .record-actions-menu.is-open { animation: record-actions-menu-enter 170ms ease-out both; }
-.record-actions-menu.is-closing {
-  pointer-events: none;
-  animation: record-actions-menu-exit 130ms ease-in both;
-}
+.record-actions-menu.is-closing { display: none; }
 .record-actions-menu-item {
   display: flex;
   min-height: 2.35rem;
@@ -2064,10 +2049,6 @@ th {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes record-actions-menu-exit {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(var(--record-actions-menu-shift)) scale(0.98); }
-}
 .modal-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.42); backdrop-filter: blur(4px); }
 .payment-modal { display: grid; gap: 1rem; width: min(430px, 100%); background: var(--popup-light); box-shadow: 0 30px 80px rgba(20, 33, 61, 0.24); }
 .payment-modal-actions { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 0.25rem; }

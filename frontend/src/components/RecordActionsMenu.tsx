@@ -40,7 +40,6 @@ type FocusTarget = "first" | "last";
 
 const EDGE = 8;
 const GAP = 6;
-const CLOSE_FALLBACK_MS = 180;
 const FOCUSABLE_SELECTOR = [
   "a[href]",
   "button:not([disabled])",
@@ -108,9 +107,7 @@ export const RecordActionsMenu = ({
     pendingFocus.current = null;
     isOpenRef.current = false;
     setIsOpen(false);
-    if (options.immediate) {
-      setIsRendered(false);
-    }
+    setIsRendered(false);
     if (options.restoreFocus) {
       requestAnimationFrame(() => triggerRef.current?.focus());
     }
@@ -140,14 +137,6 @@ export const RecordActionsMenu = ({
     const frame = requestAnimationFrame(() => focusEdgeItem(target));
     return () => cancelAnimationFrame(frame);
   }, [focusEdgeItem, isOpen, isRendered]);
-
-  useEffect(() => {
-    if (!isRendered || isOpen) return;
-    const timeout = window.setTimeout(() => {
-      setIsRendered(false);
-    }, CLOSE_FALLBACK_MS);
-    return () => window.clearTimeout(timeout);
-  }, [isOpen, isRendered]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -325,10 +314,6 @@ export const RecordActionsMenu = ({
           ref={menuRef}
           role="menu"
           style={menuStyle}
-          onAnimationEnd={(event) => {
-            if (event.target !== event.currentTarget || isOpenRef.current) return;
-            setIsRendered(false);
-          }}
           onBlur={closeIfFocusLeaves}
           onKeyDown={handleMenuKeyDown}
         >

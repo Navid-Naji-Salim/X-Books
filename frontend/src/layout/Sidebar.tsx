@@ -44,6 +44,10 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   const SalesIcon = icons.sales;
   const PurchasesIcon = icons.purchases;
   const languageOptions: Array<{ value: Language; label: string }> = [{ value: "en", label: "English" }, { value: "ku", label: "Kurdish" }, { value: "ar", label: "Arabic" }];
+  const closeSettings = () => {
+    setIsSettingsOpen(false);
+    setIsSettingsRendered(false);
+  };
 
   useContainedWheel(menuRef, isSettingsRendered);
 
@@ -51,10 +55,10 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
     if (!isSettingsOpen) return;
     const closeOnOutsideClick = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (!footerRef.current?.contains(target) && !menuRef.current?.contains(target)) setIsSettingsOpen(false);
+      if (!footerRef.current?.contains(target) && !menuRef.current?.contains(target)) closeSettings();
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsSettingsOpen(false);
+      if (event.key === "Escape") closeSettings();
     };
     document.addEventListener("mousedown", closeOnOutsideClick);
     document.addEventListener("keydown", closeOnEscape);
@@ -107,7 +111,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
 
   const toggleSettings = () => {
     if (isSettingsOpen) {
-      setIsSettingsOpen(false);
+      closeSettings();
       return;
     }
     setIsSettingsRendered(true);
@@ -118,14 +122,11 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
     <div
       aria-label={t("User settings")}
       aria-hidden={!isSettingsOpen}
-      className={`profile-menu is-floating ${isSettingsOpen ? "is-open" : "is-closing"}`}
+      className="profile-menu is-floating is-open"
       id="user-settings-menu"
       ref={menuRef}
       role="dialog"
       style={floatingMenuStyle}
-      onAnimationEnd={(event) => {
-        if (event.animationName === "settings-flyout-exit" && !isSettingsOpen) setIsSettingsRendered(false);
-      }}
     >
       <div className="profile-menu-head">
         <span>{t("Settings")}</span>

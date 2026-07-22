@@ -84,6 +84,7 @@ export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyou
     openTimer.current = null;
     const conceal = () => {
       setIsVisible(false);
+      setIsRendered(false);
       closeTimer.current = null;
     };
     if (immediate) conceal();
@@ -229,9 +230,6 @@ export const NavFlyout = ({ children, disabled = false, items, label }: NavFlyou
           role="menu"
           aria-label={t(label)}
           style={position}
-          onAnimationEnd={(event) => {
-            if (event.animationName === "x-tooltip-exit" && !isVisible) setIsRendered(false);
-          }}
         >
           <div className="x-nav-flyout-title">{t(label)}</div>
           <div className="x-nav-flyout-items">

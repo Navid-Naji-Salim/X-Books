@@ -75,7 +75,9 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
   const hide = () => {
     openRequest.current += 1;
     clearOpenTimer();
+    isRenderedRef.current = false;
     setIsVisible(false);
+    setIsRendered(false);
   };
 
   const dismiss = () => {
@@ -234,9 +236,6 @@ export const Tooltip = ({ children, content, disabled = false, placement = "top"
           ref={tooltipRef}
           role="tooltip"
           style={position}
-          onAnimationEnd={(event) => {
-            if (event.animationName === "x-tooltip-exit" && !isVisible) setIsRendered(false);
-          }}
         >
           {translatedContent}
         </span>,
