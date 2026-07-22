@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField } from "../components/FormControls";
 import { currency } from "../lib/format";
@@ -14,6 +14,7 @@ const reportDate = (value: string | Date) => typeof value === "string" && !value
 const generatedTime = (value: Date) => `${reportDate(value)}, ${value.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
 export const ReportsPage = ({ token }: Props) => {
+  const reportPagesRef = useRef<HTMLDivElement>(null);
   const today = new Date();
   const [id, setId] = useState<ReportId>("profit-loss");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -87,33 +88,33 @@ export const ReportsPage = ({ token }: Props) => {
     finally { setIsGenerating(false); }
   };
   const exportPdf = async () => {
-    if (!generated) return;
-    const { jsPDF } = await import("jspdf");
+    if (!generated || !reportPagesRef.current) return;
+    await document.fonts.ready;
+    const [{ jsPDF }, { default: html2canvas }] = await Promise.all([import("jspdf"), import("html2canvas")]);
     const pdf = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
-    const margin = 42; const pageWidth = pdf.internal.pageSize.getWidth(); const usable = pageWidth - margin * 2; const columnWidth = usable / Math.max(1, pdfHeaders.length);
-    const fit = (value: string, width: number) => { let result = value; while (result.length > 1 && pdf.getTextWidth(result) > width) result = `${result.slice(0, -2)}…`; return result; };
-    const drawDocumentHeader = (pageIndex: number) => {
-      let y = margin;
-      pdf.setTextColor(3, 105, 161); pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.text("X Books", margin, y);
-      y += 25; pdf.setTextColor(20, 33, 61); pdf.setFontSize(22); pdf.text(title, margin, y);
-      y += 20; pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(71, 85, 105);
-      pdf.text(`Report period: ${reportDate(generated.fromDate)} – ${reportDate(generated.toDate)}`, margin, y);
-      pdf.text(`Generated: ${generatedTime(generated.generatedAt)}`, pageWidth - margin, y, { align: "right" });
-      y += 14; pdf.setDrawColor(148, 163, 184); pdf.line(margin, y, pageWidth - margin, y); y += 20;
-      if (pageIndex === 0) pdfSummary.forEach(([label, value]) => { pdf.setFont("helvetica", "normal"); pdf.setTextColor(71, 85, 105); pdf.text(label, margin, y); pdf.setFont("helvetica", "bold"); pdf.setTextColor(20, 33, 61); pdf.text(value, pageWidth - margin, y, { align: "right" }); y += 18; });
-      y += 8; pdf.setFont("helvetica", "bold"); pdf.setFontSize(11); pdf.setTextColor(30, 41, 59); pdf.text(detailTitle, margin, y); y += 8; pdf.setDrawColor(148, 163, 184); pdf.line(margin, y, pageWidth - margin, y); y += 10;
-      pdf.setFillColor(241, 245, 249); pdf.rect(margin, y, usable, 22, "F"); pdf.setFontSize(8); pdfHeaders.forEach((header, index) => pdf.text(fit(header, columnWidth - 10), margin + index * columnWidth + 5, y + 14));
-      return y + 22;
-    };
-    paginatedRows.forEach((rows, pageIndex) => {
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const pages = Array.from(reportPagesRef.current.querySelectorAll<HTMLElement>(".report-document"));
+    for (const [pageIndex, page] of pages.entries()) {
+      const previousContentVisibility = page.style.contentVisibility;
+      page.style.contentVisibility = "visible";
+      let canvas: HTMLCanvasElement;
+      try {
+        canvas = await html2canvas(page, { backgroundColor: "#ffffff", logging: false, scale: 2, useCORS: true });
+      } finally {
+        page.style.contentVisibility = previousContentVisibility;
+      }
       if (pageIndex > 0) pdf.addPage();
-      let y = drawDocumentHeader(pageIndex); pdf.setFont("helvetica", "normal"); pdf.setFontSize(8);
-      rows.forEach((row) => { pdf.setDrawColor(226, 232, 240); pdf.line(margin, y + 22, pageWidth - margin, y + 22); pdf.setTextColor(30, 41, 59); row.forEach((cell, index) => pdf.text(fit(cell, columnWidth - 10), margin + index * columnWidth + 5, y + 14)); y += 22; });
-    });
+      pdf.addImage(canvas, "PNG", 0, 0, pageWidth, pageHeight, undefined, "FAST");
+    }
     pdf.save(`${id}-${generated.fromDate}-${generated.toDate}.pdf`);
+  };
+  const printReport = async () => {
+    await document.fonts.ready;
+    window.print();
   };
   return <div className="report-page"><header className="report-page-head report-screen-only"><h1>{title}</h1><p>{description}</p></header>
     <section className="report-toolbar report-screen-only"><DropdownField label="Report" name="reportType" openDropdown={openDropdown} options={reports.map((entry) => ({ label: entry.title, value: entry.id }))} setOpenDropdown={setOpenDropdown} value={id} onChange={(value) => { setId(value as ReportId); setError(""); }} /><div className="field"><label htmlFor="reportFrom">From</label><input id="reportFrom" type="date" value={fromDate} onChange={(event) => setFromDate(event.currentTarget.value)} /></div><div className="field"><label htmlFor="reportTo">To</label><input id="reportTo" type="date" value={toDate} onChange={(event) => setToDate(event.currentTarget.value)} /></div><button className="button" disabled={isGenerating} type="button" onClick={() => void generate()}>{isGenerating ? "Generating..." : "Generate report"}</button><div className="message">{error}</div></section>
-    <section className="report-viewer">{generated ? <div className="report-document-shell"><div className="report-document-actions report-screen-only"><span>{paginatedRows.length} page{paginatedRows.length === 1 ? "" : "s"}</span><div><button className="ghost-button" type="button" onClick={() => window.print()}>Print</button><button className="button" type="button" onClick={() => void exportPdf()}>Export PDF</button></div></div><div className="report-pages">{paginatedRows.map((rows, pageIndex) => <article className="report-document" key={pageIndex}><header className="report-document-head"><span>X Books</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(generated.fromDate)} – {reportDate(generated.toDate)}</span><span>Generated: {generatedTime(generated.generatedAt)}</span></div></header><div className="report-detail">{pageIndex === 0 ? <Summary entries={pdfSummary} /> : null}<section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cellIndex === row.length - 1 ? <strong>{cell}</strong> : cell}</td>)}</tr>) : <tr><td className="muted" colSpan={Math.max(1, pdfHeaders.length)}>No activity in this period.</td></tr>}</tbody></table></div></section></div></article>)}</div></div> : <div className="report-document-shell report-template-shell"><article className="report-document report-document-template"><header className="report-document-head"><span>X Books</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(fromDate)} – {reportDate(toDate)}</span><span>Generated: —</span></div></header><div className="report-detail"><div className="report-template-summary" aria-hidden="true">{pdfSummary.map(([label]) => <div key={label}><span>{label}</span><i /></div>)}</div><section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{templateRows.map((row, rowIndex) => <tr className="report-template-row" key={rowIndex}>{row.map((cell, column) => <td key={`${pdfHeaders[column]}-${column}`}>{cell || column === 0 && id === "profit-loss" ? cell : <i />}</td>)}</tr>)}</tbody></table></div><p className="report-template-message">Choose a date range and generate this report.</p></section></div></article></div>}</section>
+    <section className="report-viewer">{generated ? <div className="report-document-shell"><div className="report-document-actions report-screen-only"><span>{paginatedRows.length} page{paginatedRows.length === 1 ? "" : "s"}</span><div><button className="ghost-button" type="button" onClick={() => void printReport()}>Print</button><button className="button" type="button" onClick={() => void exportPdf()}>Export PDF</button></div></div><div className="report-pages" ref={reportPagesRef}>{paginatedRows.map((rows, pageIndex) => <article className="report-document" key={pageIndex}><header className="report-document-head"><span>X Books</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(generated.fromDate)} – {reportDate(generated.toDate)}</span><span>Generated: {generatedTime(generated.generatedAt)}</span></div></header><div className="report-detail">{pageIndex === 0 ? <Summary entries={pdfSummary} /> : null}<section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cellIndex === row.length - 1 ? <strong>{cell}</strong> : cell}</td>)}</tr>) : <tr><td className="muted" colSpan={Math.max(1, pdfHeaders.length)}>No activity in this period.</td></tr>}</tbody></table></div></section></div></article>)}</div></div> : <div className="report-document-shell report-template-shell"><article className="report-document report-document-template"><header className="report-document-head"><span>X Books</span><h1>{title}</h1><div className="report-document-meta"><span>Report period: {reportDate(fromDate)} – {reportDate(toDate)}</span><span>Generated: —</span></div></header><div className="report-detail"><div className="report-template-summary" aria-hidden="true">{pdfSummary.map(([label]) => <div key={label}><span>{label}</span><i /></div>)}</div><section className="report-section"><h2>{detailTitle}</h2><div className="table-wrap"><table><thead><tr>{pdfHeaders.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{templateRows.map((row, rowIndex) => <tr className="report-template-row" key={rowIndex}>{row.map((cell, column) => <td key={`${pdfHeaders[column]}-${column}`}>{cell || column === 0 && id === "profit-loss" ? cell : <i />}</td>)}</tr>)}</tbody></table></div><p className="report-template-message">Choose a date range and generate this report.</p></section></div></article></div>}</section>
   </div>;
 };
