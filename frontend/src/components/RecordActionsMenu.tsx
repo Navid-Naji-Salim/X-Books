@@ -8,6 +8,7 @@ import {
   type CSSProperties,
   type FocusEvent as ReactFocusEvent,
   type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { appIcons, type AppIcon } from "../icons";
@@ -26,6 +27,8 @@ export type RecordAction = {
 
 export type RecordActionsMenuProps = {
   actions: readonly RecordAction[];
+  align?: "directional" | "right";
+  boundaryRef?: RefObject<HTMLElement | null>;
   className?: string;
   disabled?: boolean;
   label?: string;
@@ -66,6 +69,8 @@ const isAnchorVisible = (element: HTMLElement) => {
 
 export const RecordActionsMenu = ({
   actions,
+  align = "directional",
+  boundaryRef,
   className,
   disabled = false,
   label = "Actions",
@@ -197,10 +202,18 @@ export const RecordActionsMenu = ({
       const spaceAbove = triggerRect.top - GAP - EDGE;
       const nextPlacement: Placement = fitsBelow || (!fitsAbove && spaceBelow >= spaceAbove) ? "below" : "above";
       const preferredTop = nextPlacement === "below" ? belowTop : aboveTop;
-      const preferredLeft = isRtl ? triggerRect.left : triggerRect.right - width;
-      const maxLeft = Math.max(EDGE, window.innerWidth - width - EDGE);
+      const preferredLeft = align === "right" || !isRtl ? triggerRect.right - width : triggerRect.left;
+      const boundaryRect = boundaryRef?.current?.getBoundingClientRect();
+      const viewportMaxLeft = Math.max(EDGE, window.innerWidth - width - EDGE);
+      const boundaryMinLeft = boundaryRect ? Math.max(EDGE, boundaryRect.left + 4) : EDGE;
+      const boundaryMaxLeft = boundaryRect
+        ? Math.min(viewportMaxLeft, boundaryRect.right - width - 4)
+        : viewportMaxLeft;
+      const boundaryCanContainMenu = boundaryMaxLeft >= boundaryMinLeft;
+      const minLeft = boundaryCanContainMenu ? boundaryMinLeft : EDGE;
+      const maxLeft = boundaryCanContainMenu ? boundaryMaxLeft : viewportMaxLeft;
       const maxTop = Math.max(EDGE, window.innerHeight - height - EDGE);
-      const left = Math.min(Math.max(EDGE, preferredLeft), maxLeft);
+      const left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
       const top = Math.min(Math.max(EDGE, preferredTop), maxTop);
 
       setPlacement((current) => current === nextPlacement ? current : nextPlacement);
@@ -215,6 +228,7 @@ export const RecordActionsMenu = ({
     const resizeObserver = new ResizeObserver(schedulePosition);
     resizeObserver.observe(trigger);
     resizeObserver.observe(menu);
+    if (boundaryRef?.current) resizeObserver.observe(boundaryRef.current);
     window.addEventListener("resize", schedulePosition);
     document.addEventListener("scroll", schedulePosition, true);
     return () => {
@@ -223,7 +237,7 @@ export const RecordActionsMenu = ({
       window.removeEventListener("resize", schedulePosition);
       document.removeEventListener("scroll", schedulePosition, true);
     };
-  }, [closeMenu, isRendered, language]);
+  }, [align, boundaryRef, closeMenu, isRendered, language]);
 
   const closeIfFocusLeaves = (event: ReactFocusEvent<HTMLElement>) => {
     const next = event.relatedTarget as Node | null;
@@ -306,7 +320,7 @@ export const RecordActionsMenu = ({
           aria-hidden={!isOpen}
           aria-label={accessibleLabel}
           aria-orientation="vertical"
-          className={`record-actions-menu record-actions-menu-${placement} ${isOpen ? "is-open" : "is-closing"}`}
+          className={`record-actions-menu record-actions-menu-${placement} record-actions-menu-align-${align} ${isOpen ? "is-open" : "is-closing"}`}
           id={menuId}
           ref={menuRef}
           role="menu"

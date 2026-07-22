@@ -1325,8 +1325,8 @@ textarea:focus {
 .item-image-actions.record-actions-menu-anchor {
   position: absolute;
   z-index: 2;
-  inset-block-start: 0.65rem;
-  inset-inline-end: 0.65rem;
+  top: 0.65rem;
+  right: 0.65rem;
   display: inline-flex;
   opacity: 0;
   transition: opacity 150ms ease;
@@ -1361,84 +1361,104 @@ textarea:focus {
   opacity: 1;
 }
 
-.item-image-viewer-backdrop {
+.image-lightbox-backdrop {
   position: fixed;
-  z-index: 400;
+  z-index: 4000;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.74);
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+.image-lightbox-layer {
+  position: fixed;
+  z-index: 4001;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: clamp(0.75rem, 3vw, 2rem);
-  background: rgba(2, 6, 23, 0.82);
-  backdrop-filter: blur(8px);
-}
-
-.item-image-viewer {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  width: min(92vw, 76rem);
-  height: min(90dvh, 58rem);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 20px;
-  background: #0f172a;
-  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
+  padding: 0.75rem;
+  opacity: 1;
+  filter: none;
+  mix-blend-mode: normal;
+  isolation: isolate;
+  overscroll-behavior: contain;
+  pointer-events: none;
+  touch-action: none;
 }
 
-.item-image-viewer-head {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 0.85rem 0.75rem 1.1rem;
-  color: #fff;
-  background: rgba(15, 23, 42, 0.96);
-}
-
-.item-image-viewer-head strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.item-image-viewer-close {
+.image-lightbox-viewer {
+  position: relative;
   display: grid;
-  flex: 0 0 auto;
-  width: 36px;
-  height: 36px;
+  max-width: 100%;
+  max-height: 100%;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 11px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background: #0b0f17;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.34);
+  opacity: 1;
+  filter: none;
+  mix-blend-mode: normal;
+  pointer-events: auto;
+}
+
+.image-lightbox-viewer img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(100vw - 1.5rem);
+  max-height: calc(100dvh - 1.5rem);
+  object-fit: contain;
+  opacity: 1;
+  filter: none;
+  mix-blend-mode: normal;
+}
+
+.image-lightbox-close {
+  position: fixed;
+  z-index: 1;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
   padding: 0;
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.item-image-viewer-close:hover {
-  background: rgba(255, 255, 255, 0.16);
+.image-lightbox-close:hover {
+  background: #1e293b;
 }
 
-.item-image-viewer-close svg {
+.image-lightbox-close:focus-visible {
+  outline: 2px solid rgba(125, 211, 252, 0.92);
+  outline-offset: 2px;
+}
+
+.image-lightbox-close svg {
   width: 19px;
   height: 19px;
 }
 
-.item-image-viewer-canvas {
-  display: grid;
-  min-width: 0;
-  min-height: 0;
-  place-items: center;
-  overflow: auto;
-  padding: clamp(0.75rem, 2vw, 1.5rem);
-  background:
-    radial-gradient(circle at center, rgba(51, 65, 85, 0.72), rgba(2, 6, 23, 0.92));
-}
-
-.item-image-viewer-canvas img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+@media (min-width: 640px) {
+  .image-lightbox-layer { padding: 2rem; }
+  .image-lightbox-viewer img {
+    max-width: calc(100vw - 4rem);
+    max-height: calc(100dvh - 4rem);
+  }
+  .image-lightbox-close {
+    top: max(1rem, env(safe-area-inset-top));
+    right: max(1rem, env(safe-area-inset-right));
+  }
 }
 
 .image-glyph {
@@ -2001,6 +2021,8 @@ th {
 .record-actions-menu-below { --record-actions-menu-shift: 4px; }
 .is-rtl .record-actions-menu { transform-origin: top left; }
 .is-rtl .record-actions-menu-above { transform-origin: bottom left; }
+.record-actions-menu.record-actions-menu-align-right { transform-origin: top right; }
+.record-actions-menu.record-actions-menu-align-right.record-actions-menu-above { transform-origin: bottom right; }
 .record-actions-menu.is-open { animation: record-actions-menu-enter 170ms ease-out both; }
 .record-actions-menu.is-closing {
   pointer-events: none;
