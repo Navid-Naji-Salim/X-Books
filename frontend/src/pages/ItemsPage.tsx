@@ -5,6 +5,7 @@ import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
+import { RecordTableScroll } from "../components/RecordTableScroll";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
 import type { Contact, Item } from "../types";
@@ -399,7 +400,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
           <div className="message">{message}</div>
         </form>
 
-        <div className="panel item-list-panel record-list-scroll-panel">
+        <div className="panel item-list-panel record-list-panel">
           <div className="item-form-head record-list-head">
             <div>
               <h2>Item list</h2>
@@ -407,7 +408,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
             </div>
             <RecordListSearch label="Search items" placeholder="Search items by any detail…" value={query} onChange={setQuery} />
           </div>
-          <div className="table-wrap record-table-frame">
+          <RecordTableScroll>
             <table>
               <thead>
                 <tr>
@@ -469,7 +470,7 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                 )}
               </tbody>
             </table>
-          </div>
+          </RecordTableScroll>
         </div>
       </section>
     </>

@@ -1631,31 +1631,43 @@ th {
   z-index: 3000;
   right: auto;
 }
-.record-list-scroll-panel {
-  max-block-size: 27rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: auto;
-  scrollbar-gutter: stable;
-  -webkit-overflow-scrolling: touch;
-}
 .record-table-wrap {
   max-block-size: 27rem;
   overflow: auto;
   overscroll-behavior: auto;
-  scrollbar-gutter: stable;
+  direction: ltr;
+  scrollbar-gutter: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
   -webkit-overflow-scrolling: touch;
 }
-.record-table-wrap,
-.record-table-frame {
+.is-rtl .record-table-wrap > table { direction: rtl; }
+.record-table-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.record-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+.record-table-wrap::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.42);
+  background-clip: padding-box;
+}
+.record-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.58);
+  background-clip: padding-box;
+}
+.record-table-wrap {
   border: 1px solid rgba(20, 33, 61, 0.1);
   border-radius: 15px;
 }
-:is(.record-table-wrap, .record-table-frame) thead { background: rgba(248, 250, 252, 0.98); }
-:is(.record-table-wrap, .record-table-frame) th { position: sticky; inset-block-start: 0; z-index: 2; background: rgba(248, 250, 252, 0.98); }
-:is(.record-table-wrap, .record-table-frame) th:first-child { border-top-left-radius: 14px; }
-:is(.record-table-wrap, .record-table-frame) th:last-child { border-top-right-radius: 14px; }
-:is(.record-table-wrap, .record-table-frame) tbody tr:last-child td { border-bottom: 0; }
+.record-table-wrap thead { background: rgba(248, 250, 252, 0.98); }
+.record-table-wrap th { position: sticky; inset-block-start: 0; z-index: 2; background: rgba(248, 250, 252, 0.98); }
+.record-table-wrap th:first-child { border-top-left-radius: 14px; }
+.record-table-wrap th:last-child { border-top-right-radius: 14px; }
+.record-table-wrap tbody tr:last-child td { border-bottom: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
 .invoice-workspace {
@@ -1775,9 +1787,20 @@ th {
   contain-intrinsic-block-size: auto 36rem;
 }
 
-.saved-invoices-panel.record-list-scroll-panel {
-  overflow-y: auto;
-  overflow-x: hidden;
+.record-list-panel {
+  display: flex;
+  flex-direction: column;
+  max-block-size: 27rem;
+}
+
+.record-list-panel > .record-list-head {
+  flex: 0 0 auto;
+}
+
+.record-list-panel > .record-table-wrap {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  max-block-size: none;
 }
 
 .saved-invoices-table thead { background: rgba(248, 250, 252, 0.98); }

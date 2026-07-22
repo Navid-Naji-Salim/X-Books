@@ -3,6 +3,7 @@ import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
+import { RecordTableScroll } from "../components/RecordTableScroll";
 import { Tooltip } from "../components/Tooltip";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
@@ -220,9 +221,9 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         </section>
         <div className="message">{message}</div>
       </form>
-      <section className="panel saved-invoices-panel record-list-scroll-panel">
+      <section className="panel saved-invoices-panel record-list-panel">
         <div className="item-form-head record-list-head"><div><h2>Saved invoices</h2><p>{countLabel}</p></div><RecordListSearch label="Search invoices" placeholder="Search invoices by any detail…" value={query} onChange={setQuery} /></div>
-        <div className="table-wrap saved-invoices-table-wrap record-table-frame">
+        <RecordTableScroll className="saved-invoices-table-wrap">
           <table className="saved-invoices-table">
             <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr></thead>
             <tbody>
@@ -272,7 +273,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               ))}
             </tbody>
           </table>
-        </div>
+        </RecordTableScroll>
       </section>
       {paymentInvoice ? (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => !isRecordingPayment && setPaymentInvoice(null)}>

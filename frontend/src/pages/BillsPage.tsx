@@ -3,6 +3,7 @@ import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
+import { RecordTableScroll } from "../components/RecordTableScroll";
 import { Tooltip } from "../components/Tooltip";
 import { appIcons } from "../icons";
 import { currency } from "../lib/format";
@@ -417,12 +418,12 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
         <div className="message" role={message ? "alert" : undefined}>{message}</div>
       </form>
 
-      <section className="panel saved-invoices-panel record-list-scroll-panel">
+      <section className="panel saved-invoices-panel record-list-panel">
         <div className="item-form-head record-list-head">
           <div><h2>Saved bills</h2><p>{countLabel}</p></div>
           <RecordListSearch label="Search bills" placeholder="Search bills by any detail…" value={query} onChange={setQuery} />
         </div>
-        <div className="table-wrap saved-invoices-table-wrap record-table-frame">
+        <RecordTableScroll className="saved-invoices-table-wrap">
           <table className="saved-invoices-table">
             <thead>
               <tr><th>Bill number</th><th>Vendor</th><th>Bill date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr>
@@ -474,7 +475,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
               ))}
             </tbody>
           </table>
-        </div>
+        </RecordTableScroll>
       </section>
 
       {paymentBill ? (
