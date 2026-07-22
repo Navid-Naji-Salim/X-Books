@@ -445,7 +445,9 @@ textarea:focus {
 
 .nav-submenu a {
   width: 100%;
-  padding: 0.72rem 0.9rem 0.72rem 3.7rem;
+  padding-block: 0.72rem;
+  padding-inline-start: calc(0.9rem + 20px + 0.8rem);
+  padding-inline-end: 0.9rem;
   border-radius: 16px;
   font-size: 0.82rem;
 }
@@ -704,7 +706,6 @@ textarea:focus {
 .is-rtl .nav-chevron { margin-right: auto; margin-left: 0; }
 .is-rtl .nav-group:not(.is-open) .nav-chevron { transform: rotate(90deg); }
 .is-rtl .nav-icon-directional { transform: scaleX(-1); }
-.is-rtl .nav-submenu a { padding-right: 3.7rem; padding-left: 0.9rem; }
 .is-rtl .profile-menu.is-floating { transform-origin: bottom right; }
 .is-rtl .profile-menu button { text-align: right; }
 .is-rtl .profile-menu-head small { direction: ltr; text-align: right; }
