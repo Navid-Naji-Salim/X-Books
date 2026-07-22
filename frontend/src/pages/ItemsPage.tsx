@@ -111,6 +111,7 @@ const readImageFile = (file: File) => new Promise<string>((resolve, reject) => {
 
 export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: ItemsPageProps) => {
   const ImageIcon = appIcons.media.image;
+  const RemoveIcon = appIcons.actions.remove;
   const [draft, setDraft] = useState<ItemDraft>(emptyDraft);
   const [baseline, setBaseline] = useState<ItemDraft>(emptyDraft);
   const [mode, setMode] = useState<ItemMode>("new");
@@ -118,9 +119,11 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
   const [message, setMessage] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const imagePreviewCloseRef = useRef<HTMLButtonElement>(null);
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
     if (!normalized) return items;
@@ -161,6 +164,27 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    if (!isImagePreviewOpen) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setIsImagePreviewOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+    const focusFrame = requestAnimationFrame(() => imagePreviewCloseRef.current?.focus());
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+      previouslyFocused?.focus();
+    };
+  }, [isImagePreviewOpen]);
 
   const set = <Key extends keyof ItemDraft>(field: Key, value: ItemDraft[Key]) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -321,22 +345,37 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
                 <input type="hidden" name="imageUrl" value={draft.imageUrl} />
                 {draft.imageUrl ? (
                   <>
-                    <img className="item-image-preview" src={draft.imageUrl} alt={draft.name ? `${draft.name} preview` : "Item image preview"} />
+                    <button
+                      aria-label="View image"
+                      className="item-image-open"
+                      type="button"
+                      onClick={() => setIsImagePreviewOpen(true)}
+                    >
+                      <img className="item-image-preview" src={draft.imageUrl} alt={draft.name ? `${draft.name} preview` : "Item image preview"} />
+                    </button>
                     <RecordActionsMenu
                       className="item-image-actions"
                       label="Image actions"
                       recordLabel={draft.name || "Item image"}
                       actions={[
                         {
+                          label: "View image",
+                          icon: appIcons.actions.view,
+                          onSelect: () => setIsImagePreviewOpen(true),
+                        },
+                        {
                           label: "Choose another image",
-                          icon: appIcons.actions.edit,
+                          icon: appIcons.media.image,
                           onSelect: () => imageInputRef.current?.click(),
                         },
                         {
                           label: "Remove image",
                           icon: appIcons.actions.remove,
                           tone: "danger",
-                          onSelect: () => set("imageUrl", ""),
+                          onSelect: () => {
+                            setIsImagePreviewOpen(false);
+                            set("imageUrl", "");
+                          },
                         },
                       ]}
                     />
@@ -473,6 +512,37 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
           </RecordTableScroll>
         </div>
       </section>
+      {isImagePreviewOpen && draft.imageUrl ? (
+        <div
+          className="item-image-viewer-backdrop"
+          role="presentation"
+          onMouseDown={() => setIsImagePreviewOpen(false)}
+        >
+          <section
+            aria-label={draft.name ? `${draft.name} image` : "Item image"}
+            aria-modal="true"
+            className="item-image-viewer"
+            role="dialog"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header className="item-image-viewer-head">
+              <strong>{draft.name || "Item image"}</strong>
+              <button
+                aria-label="Close image preview"
+                className="item-image-viewer-close"
+                ref={imagePreviewCloseRef}
+                type="button"
+                onClick={() => setIsImagePreviewOpen(false)}
+              >
+                <RemoveIcon />
+              </button>
+            </header>
+            <div className="item-image-viewer-canvas">
+              <img src={draft.imageUrl} alt={draft.name || "Item image"} />
+            </div>
+          </section>
+        </div>
+      ) : null}
     </>
   );
 };
