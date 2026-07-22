@@ -316,6 +316,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                     <td className="invoice-item-cell">
                       <DropdownField
                         disabled={isReadOnly}
+                        floatingOptions
                         label="Item"
                         name={`bill-item-${line.id}`}
                         options={itemOptionsFor(line, purchasableItems)}
@@ -344,6 +345,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                     <td className="invoice-tax-cell">
                       <DropdownField
                         disabled={isReadOnly}
+                        floatingOptions
                         label="Tax"
                         name={`bill-tax-${line.id}`}
                         options={TAX_OPTIONS}
@@ -415,12 +417,12 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
         <div className="message" role={message ? "alert" : undefined}>{message}</div>
       </form>
 
-      <section className="panel saved-invoices-panel">
+      <section className="panel saved-invoices-panel record-list-scroll-panel">
         <div className="item-form-head record-list-head">
           <div><h2>Saved bills</h2><p>{countLabel}</p></div>
           <RecordListSearch label="Search bills" placeholder="Search bills by any detail…" value={query} onChange={setQuery} />
         </div>
-        <div className="table-wrap saved-invoices-table-wrap record-table-wrap">
+        <div className="table-wrap saved-invoices-table-wrap record-table-frame">
           <table className="saved-invoices-table">
             <thead>
               <tr><th>Bill number</th><th>Vendor</th><th>Bill date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr>

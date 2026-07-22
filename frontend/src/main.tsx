@@ -8,6 +8,6 @@ import { LanguageProvider } from "./i18n";
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <LanguageProvider><BrowserRouter><App /></BrowserRouter></LanguageProvider>
+    <LanguageProvider><BrowserRouter><App /><div id="floating-options-root" /></BrowserRouter></LanguageProvider>
   </StrictMode>,
 );

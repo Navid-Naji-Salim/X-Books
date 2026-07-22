@@ -272,12 +272,12 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
           <div className="message" role={message ? "alert" : undefined}>{message}</div>
         </form>
 
-        <div className="panel item-list-panel customer-list-panel">
+        <div className="panel item-list-panel customer-list-panel record-list-scroll-panel">
           <div className="item-form-head record-list-head">
             <div><h2>Customer list</h2><p>{countLabel}</p></div>
             <RecordListSearch label="Search customers" placeholder="Search customers by any detail…" value={query} onChange={setQuery} />
           </div>
-          <div className="table-wrap customer-table-wrap record-table-wrap">
+          <div className="table-wrap customer-table-wrap record-table-frame">
             <table>
               <thead><tr><th>Name</th><th>Contact</th><th>Location</th><th>Tax</th><th>Terms</th><th className="record-actions-heading">Actions</th></tr></thead>
               <tbody>

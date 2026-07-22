@@ -193,13 +193,13 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               <thead><tr><th>Item details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr></thead>
               <tbody>{lines.map((line) => (
                 <tr key={line.id}>
-                  <td className="invoice-item-cell"><DropdownField label="Item" name={`item-${line.id}`} options={itemOptionsFor(line, sellableItems)} placeholder="Select an item" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.itemId} onChange={(value) => {
+                  <td className="invoice-item-cell"><DropdownField floatingOptions label="Item" name={`item-${line.id}`} options={itemOptionsFor(line, sellableItems)} placeholder="Select an item" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.itemId} onChange={(value) => {
                     const item = sellableItems.find((entry) => entry.id === value);
                     updateLine(line.id, { itemId: value, itemName: item?.name ?? line.itemName, rate: item?.salesPrice ?? 0, tax: item?.salesTax ?? "" });
                   }} /></td>
                   <td><input aria-label="Quantity" type="number" min="0.01" step="0.01" value={line.quantity} disabled={isViewingPaidInvoice} onChange={(event) => updateLine(line.id, { quantity: Number(event.currentTarget.value) })} /></td>
                   <td><input aria-label="Rate" type="number" min="0" step="0.01" value={line.rate} disabled={isViewingPaidInvoice} onChange={(event) => updateLine(line.id, { rate: Number(event.currentTarget.value) })} /></td>
-                  <td className="invoice-tax-cell"><DropdownField label="Tax" name={`tax-${line.id}`} options={TAX_OPTIONS} placeholder="Select a tax" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.tax} onChange={(value) => updateLine(line.id, { tax: value })} /></td>
+                  <td className="invoice-tax-cell"><DropdownField floatingOptions label="Tax" name={`tax-${line.id}`} options={TAX_OPTIONS} placeholder="Select a tax" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.tax} onChange={(value) => updateLine(line.id, { tax: value })} /></td>
                   <td className="invoice-amount">{currency.format(line.quantity * line.rate)}</td>
                   <td><Tooltip content="Remove line" disabled={lines.length === 1 || isViewingPaidInvoice} placement="top"><button aria-label="Remove line" className="invoice-remove-line" disabled={lines.length === 1 || isViewingPaidInvoice} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><RemoveIcon /></button></Tooltip></td>
                 </tr>
@@ -220,9 +220,9 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         </section>
         <div className="message">{message}</div>
       </form>
-      <section className="panel saved-invoices-panel">
+      <section className="panel saved-invoices-panel record-list-scroll-panel">
         <div className="item-form-head record-list-head"><div><h2>Saved invoices</h2><p>{countLabel}</p></div><RecordListSearch label="Search invoices" placeholder="Search invoices by any detail…" value={query} onChange={setQuery} /></div>
-        <div className="table-wrap saved-invoices-table-wrap record-table-wrap">
+        <div className="table-wrap saved-invoices-table-wrap record-table-frame">
           <table className="saved-invoices-table">
             <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr></thead>
             <tbody>

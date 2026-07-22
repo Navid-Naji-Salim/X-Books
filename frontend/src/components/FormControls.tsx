@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 
 export const TAX_OPTIONS = ["Exempt", "Standard Tax", "Reduced Tax", "Out of Scope"];
 
@@ -17,15 +18,18 @@ type DropdownFieldProps = {
   setOpenDropdown: (name: string | null) => void;
   value?: string;
   onChange?: (value: string) => void;
+  floatingOptions?: boolean;
 };
 
 export const DropdownField = ({
   label = "Unit", name, options, defaultValue = "", placeholder = "Select an option",
   required, disabled, resetVersion, openDropdown, setOpenDropdown,
-  value: controlledValue, onChange,
+  value: controlledValue, onChange, floatingOptions = false,
 }: DropdownFieldProps) => {
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
   const [internalValue, setInternalValue] = useState(defaultValue);
+  const [floatingStyle, setFloatingStyle] = useState<CSSProperties>();
   const selectedValue = controlledValue ?? internalValue;
 
   useEffect(() => {
@@ -38,14 +42,61 @@ export const DropdownField = ({
   const selectedLabel = typeof selectedOption === "string" ? selectedOption : selectedOption?.label;
   const isOpen = openDropdown === name;
 
+  const positionFloatingOptions = useCallback(() => {
+    const summary = detailsRef.current?.querySelector("summary");
+    if (!summary) return;
+    const rect = summary.getBoundingClientRect();
+    const menuGap = 6;
+    const menuHeight = 152;
+    const openAbove = window.innerHeight - rect.bottom < menuHeight + menuGap && rect.top > menuHeight;
+    setFloatingStyle({
+      left: rect.left,
+      width: rect.width,
+      ...(openAbove
+        ? { bottom: window.innerHeight - rect.top + menuGap, top: "auto" }
+        : { top: rect.bottom + menuGap, bottom: "auto" }),
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!isOpen || !floatingOptions) {
+      setFloatingStyle(undefined);
+      return;
+    }
+    positionFloatingOptions();
+    window.addEventListener("resize", positionFloatingOptions);
+    document.addEventListener("scroll", positionFloatingOptions, true);
+    return () => {
+      window.removeEventListener("resize", positionFloatingOptions);
+      document.removeEventListener("scroll", positionFloatingOptions, true);
+    };
+  }, [floatingOptions, isOpen, positionFloatingOptions]);
+
   useEffect(() => {
     if (!isOpen) return;
     const closeOnOutsideClick = (event: MouseEvent) => {
-      if (!detailsRef.current?.contains(event.target as Node)) setOpenDropdown(null);
+      const target = event.target as Node;
+      if (!detailsRef.current?.contains(target) && !optionsRef.current?.contains(target)) setOpenDropdown(null);
     };
     document.addEventListener("mousedown", closeOnOutsideClick);
     return () => document.removeEventListener("mousedown", closeOnOutsideClick);
   }, [isOpen, setOpenDropdown]);
+
+  const optionsMenu = isOpen ? <div
+    className={`select-options ${floatingOptions ? "is-floating" : ""}`}
+    ref={optionsRef}
+    style={floatingOptions ? floatingStyle : undefined}
+  >
+    {options.map((option) => {
+      const optionValue = typeof option === "string" ? option : option.value;
+      const optionLabel = typeof option === "string" ? option : option.label;
+      return <button className={optionValue === selectedValue ? "is-selected" : ""} disabled={disabled} key={optionValue} type="button" onClick={() => {
+        if (controlledValue === undefined) setInternalValue(optionValue);
+        onChange?.(optionValue);
+        setOpenDropdown(null);
+      }}>{optionLabel}</button>;
+    })}
+  </div> : null;
 
   return (
     <div className="field dropdown-field">
@@ -56,18 +107,11 @@ export const DropdownField = ({
           event.preventDefault();
           if (!disabled) setOpenDropdown(isOpen ? null : name);
         }}>{selectedLabel || placeholder}</summary>
-        {isOpen ? <div className="select-options">
-          {options.map((option) => {
-            const optionValue = typeof option === "string" ? option : option.value;
-            const optionLabel = typeof option === "string" ? option : option.label;
-            return <button className={optionValue === selectedValue ? "is-selected" : ""} disabled={disabled} key={optionValue} type="button" onClick={() => {
-              if (controlledValue === undefined) setInternalValue(optionValue);
-              onChange?.(optionValue);
-              setOpenDropdown(null);
-            }}>{optionLabel}</button>;
-          })}
-        </div> : null}
+        {!floatingOptions ? optionsMenu : null}
       </details>
+      {floatingOptions && optionsMenu && floatingStyle
+        ? createPortal(optionsMenu, document.getElementById("floating-options-root") ?? document.body)
+        : null}
     </div>
   );
 };
