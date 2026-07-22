@@ -273,7 +273,11 @@ export const RecordActionsMenu = ({
     items[nextIndex]?.focus();
   };
 
-  const triggerClassName = ["record-actions-menu-anchor", className].filter(Boolean).join(" ");
+  const triggerClassName = [
+    "record-actions-menu-anchor",
+    isOpen ? "is-menu-open" : "",
+    className,
+  ].filter(Boolean).join(" ");
   const menuStyle: CSSProperties = {
     position: "fixed",
     left: position.left,

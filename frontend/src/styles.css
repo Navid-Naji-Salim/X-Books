@@ -1334,7 +1334,8 @@ textarea:focus {
 }
 
 .compact-image-drop.has-image:hover .item-image-actions,
-.item-image-actions:focus-within {
+.item-image-actions.is-menu-open,
+.item-image-actions:has(.record-actions-menu-trigger:focus-visible) {
   opacity: 1;
 }
 
