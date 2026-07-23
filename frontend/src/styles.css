@@ -551,11 +551,6 @@ textarea:focus {
   display: none;
 }
 
-.sidebar.is-collapsed .settings-button {
-  width: 44px;
-  height: 38px;
-}
-
 .profile-card > .x-tooltip-anchor { flex: 0 0 auto; }
 
 .settings-button {
