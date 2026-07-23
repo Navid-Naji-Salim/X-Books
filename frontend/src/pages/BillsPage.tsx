@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
+import { DateField } from "../components/DateField";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
@@ -256,21 +257,17 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                 <label htmlFor="billNumber">Bill number</label>
                 <input id="billNumber" readOnly value={selectedBill?.billNumber ?? nextBillNumber} />
               </div>
-              <div className="field">
-                <label htmlFor="billDate">Bill date</label>
-                <input
-                  id="billDate"
-                  type="date"
-                  readOnly={isReadOnly}
-                  required
-                  value={billDate}
-                  onChange={(event) => {
-                    const value = event.currentTarget.value;
-                    setBillDate(value);
-                    setDueDate(dueDateFor(value, terms));
-                  }}
-                />
-              </div>
+              <DateField
+                id="billDate"
+                label="Bill date"
+                readOnly={isReadOnly}
+                required
+                value={billDate}
+                onChange={(value) => {
+                  setBillDate(value);
+                  setDueDate(dueDateFor(value, terms));
+                }}
+              />
             </section>
             <section className="invoice-detail-card">
               <h3>Payment schedule</h3>
@@ -287,17 +284,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                   setDueDate(dueDateFor(billDate, value));
                 }}
               />
-              <div className="field">
-                <label htmlFor="billDueDate">Due date</label>
-                <input
-                  id="billDueDate"
-                  type="date"
-                  readOnly={isReadOnly}
-                  required
-                  value={dueDate}
-                  onChange={(event) => setDueDate(event.currentTarget.value)}
-                />
-              </div>
+              <DateField id="billDueDate" label="Due date" readOnly={isReadOnly} required value={dueDate} onChange={setDueDate} />
             </section>
           </div>
         </section>
@@ -505,10 +492,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
             <div className="item-form-head">
               <div><h2 id="bill-payment-title">Pay bill</h2><p>{paymentBill.billNumber} · {paymentBill.vendor.displayName}</p></div>
             </div>
-            <div className="field">
-              <label htmlFor="billPaymentDate">Payment date</label>
-              <input id="billPaymentDate" type="date" required value={paymentDate} onChange={(event) => setPaymentDate(event.currentTarget.value)} />
-            </div>
+            <DateField id="billPaymentDate" label="Payment date" required value={paymentDate} onChange={setPaymentDate} />
             <div className="field">
               <label htmlFor="billPaymentAmount">Amount</label>
               <input id="billPaymentAmount" type="number" min="0.01" max={paymentBill.remainingBalance} step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} />

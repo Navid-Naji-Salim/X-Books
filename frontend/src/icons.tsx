@@ -3,7 +3,10 @@ import {
   ArrowLeft,
   ArrowRight,
   ChartNoAxesCombined,
+  CalendarDays,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleDollarSign,
   Ellipsis,
   Eye,
@@ -68,6 +71,13 @@ export const appIcons = {
   },
   disclosure: {
     down: createAppIcon(ChevronDown),
+  },
+  date: {
+    next: createAppIcon(ChevronRight),
+    previous: createAppIcon(ChevronLeft),
+  },
+  form: {
+    calendar: createAppIcon(CalendarDays),
   },
   media: {
     image: createAppIcon(ImageIcon),
