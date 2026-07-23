@@ -567,6 +567,9 @@ textarea:focus {
   border-radius: 12px;
   color: rgba(255, 255, 255, 0.72);
   background: transparent;
+  transition:
+    background-color 420ms ease,
+    color 420ms ease;
 }
 
 .settings-button:hover,
@@ -1093,6 +1096,7 @@ textarea:focus {
 .x-tooltip-left::after { top: calc(50% - 4px); right: -5px; border-bottom: 0; border-left: 0; }
 .x-tooltip-top::after { bottom: -5px; left: calc(50% - 4px); border-top: 0; border-left: 0; }
 .x-tooltip-bottom::after { top: -5px; left: calc(50% - 4px); border-right: 0; border-bottom: 0; }
+.x-tooltip.is-visible { animation: x-tooltip-enter 145ms ease-out both; }
 .x-tooltip.is-closing { display: none; }
 
 .x-nav-flyout {
@@ -1149,6 +1153,15 @@ textarea:focus {
 
 .is-rtl .x-nav-flyout-title,
 .is-rtl .x-nav-flyout-items a { text-align: right; }
+
+@keyframes x-tooltip-enter {
+  from { opacity: 0; transform: translate(var(--tooltip-shift-x), var(--tooltip-shift-y)) scale(0.98); }
+  to { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .x-tooltip.is-visible { animation-duration: 1ms; }
+}
 
 .select-menu summary[aria-disabled="true"] {
   color: var(--muted);
