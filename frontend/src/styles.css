@@ -604,11 +604,16 @@ textarea:focus {
 }
 
 .profile-menu.is-floating.is-open { animation: settings-flyout-enter 170ms ease-out both; }
-.profile-menu.is-floating.is-closing { display: none; }
+.profile-menu.is-floating.is-closing { pointer-events: none; animation: settings-flyout-exit 130ms ease-in both; }
 
 @keyframes settings-flyout-enter {
   from { opacity: 0; transform: translateY(4px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes settings-flyout-exit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(4px) scale(0.98); }
 }
 
 .profile-menu-head {

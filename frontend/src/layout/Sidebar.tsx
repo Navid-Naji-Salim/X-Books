@@ -46,7 +46,6 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
   const languageOptions: Array<{ value: Language; label: string }> = [{ value: "en", label: "English" }, { value: "ku", label: "Kurdish" }, { value: "ar", label: "Arabic" }];
   const closeSettings = () => {
     setIsSettingsOpen(false);
-    setIsSettingsRendered(false);
   };
 
   useContainedWheel(menuRef, isSettingsRendered);
@@ -122,11 +121,14 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
     <div
       aria-label={t("User settings")}
       aria-hidden={!isSettingsOpen}
-      className="profile-menu is-floating is-open"
+      className={`profile-menu is-floating ${isSettingsOpen ? "is-open" : "is-closing"}`}
       id="user-settings-menu"
       ref={menuRef}
       role="dialog"
       style={floatingMenuStyle}
+      onAnimationEnd={(event) => {
+        if (event.animationName === "settings-flyout-exit" && !isSettingsOpen) setIsSettingsRendered(false);
+      }}
     >
       <div className="profile-menu-head">
         <span>{t("Settings")}</span>
