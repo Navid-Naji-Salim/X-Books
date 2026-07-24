@@ -152,7 +152,7 @@ select {
 
 textarea {
   min-height: 5.75rem;
-  resize: vertical;
+  resize: none;
 }
 
 input:focus,
