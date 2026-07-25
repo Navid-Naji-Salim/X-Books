@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
+import { AppLoadingScreen } from "./components/AppLoadingScreen";
 import { Sidebar } from "./layout/Sidebar";
 import { LoginPage } from "./pages/LoginPage";
 import type { Bill, Contact, Invoice, Item, Summary, User } from "./types";
@@ -115,17 +116,18 @@ export const App = () => {
   }, [token]);
 
   if (booting) {
-    return null;
+    return <AppLoadingScreen />;
   }
 
   return (
-    <Routes>
+    <Suspense fallback={<AppLoadingScreen />}>
+      <Routes>
       <Route
         path="/login"
         element={
           <LoginRoute
             user={user}
-            loadData={loadData}
+            setBooting={setBooting}
             setUser={setUser}
             setToken={setToken}
             token={token}
@@ -194,20 +196,21 @@ export const App = () => {
         />
         <Route path="reports" element={<ReportsPage token={token ?? ""} />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 };
 
 type LoginRouteProps = {
   user: User | null;
-  loadData: (activeToken: string) => Promise<void>;
+  setBooting: (booting: boolean) => void;
   setUser: (user: User) => void;
   setToken: (token: string) => void;
   token: string | null;
 };
 
-const LoginRoute = ({ user, loadData, setUser, setToken, token }: LoginRouteProps) => {
+const LoginRoute = ({ user, setBooting, setUser, setToken, token }: LoginRouteProps) => {
   if (token && user) {
     return <Navigate to="/" replace />;
   }
@@ -217,12 +220,9 @@ const LoginRoute = ({ user, loadData, setUser, setToken, token }: LoginRouteProp
       onLogin={async (email, password) => {
         const response = await api.login(email, password);
         localStorage.setItem("userToken", response.token);
+        setBooting(true);
         setToken(response.token);
         setUser(response.user);
-        void loadData(response.token).catch(() => {
-          // The user is authenticated; keep them in the app even if a secondary
-          // workspace request needs another try.
-        });
       }}
     />
   );
@@ -277,9 +277,7 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
         }}
       />
       <main className="content" ref={contentRef}>
-        <Suspense fallback={null}>
-          <Outlet />
-        </Suspense>
+        <Outlet />
       </main>
     </div>
   );
