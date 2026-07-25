@@ -81,10 +81,10 @@ export const RecordActionsMenu = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<FocusTarget | null>(null);
   const isOpenRef = useRef(false);
+  const placementRef = useRef<Placement>("below");
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const [placement, setPlacement] = useState<Placement>("below");
-  const [position, setPosition] = useState({ left: EDGE, top: EDGE });
   const MoreIcon = appIcons.actions.more;
   const isTriggerDisabled = disabled || actions.length === 0;
   const accessibleLabel = recordLabel ? `${t(label)}: ${recordLabel}` : t(label);
@@ -171,12 +171,10 @@ export const RecordActionsMenu = ({
     const menu = menuRef.current;
     if (!trigger || !menu) return;
 
-    let frame = 0;
     const updatePosition = () => {
-      frame = 0;
       if (!isAnchorVisible(trigger)) {
         closeMenu({ immediate: true });
-        return;
+        return false;
       }
 
       const triggerRect = trigger.getBoundingClientRect();
@@ -205,26 +203,25 @@ export const RecordActionsMenu = ({
       const left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
       const top = Math.min(Math.max(EDGE, preferredTop), maxTop);
 
-      setPlacement((current) => current === nextPlacement ? current : nextPlacement);
-      setPosition((current) => current.left === left && current.top === top ? current : { left, top });
+      if (placementRef.current !== nextPlacement) {
+        placementRef.current = nextPlacement;
+        setPlacement(nextPlacement);
+      }
+      const nextLeft = `${left + window.scrollX}px`;
+      const nextTop = `${top + window.scrollY}px`;
+      if (menu.style.left !== nextLeft) menu.style.left = nextLeft;
+      if (menu.style.top !== nextTop) menu.style.top = nextTop;
+      return true;
     };
-    const schedulePosition = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(updatePosition);
+    let frame = 0;
+    const trackPosition = () => {
+      if (!updatePosition() || !isOpenRef.current) return;
+      frame = requestAnimationFrame(trackPosition);
     };
 
-    updatePosition();
-    const resizeObserver = new ResizeObserver(schedulePosition);
-    resizeObserver.observe(trigger);
-    resizeObserver.observe(menu);
-    if (boundaryRef?.current) resizeObserver.observe(boundaryRef.current);
-    window.addEventListener("resize", schedulePosition);
-    document.addEventListener("scroll", schedulePosition, true);
+    trackPosition();
     return () => {
       if (frame) cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", schedulePosition);
-      document.removeEventListener("scroll", schedulePosition, true);
     };
   }, [align, boundaryRef, closeMenu, isRendered, language]);
 
@@ -279,9 +276,7 @@ export const RecordActionsMenu = ({
     className,
   ].filter(Boolean).join(" ");
   const menuStyle: CSSProperties = {
-    position: "fixed",
-    left: position.left,
-    top: position.top,
+    position: "absolute",
     maxHeight: "calc(100dvh - 16px)",
     overflowY: "auto",
     overscrollBehavior: "contain",
