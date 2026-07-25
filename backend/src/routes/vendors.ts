@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { presentContact } from "../presenters/contact-presenter.js";
+import { parseVendorInput } from "../services/vendor-input.js";
 import { parseBody } from "../utils/request.js";
-import { optionalString, requiredString } from "../utils/validation.js";
 
 export const vendorsRouter = Router();
 
@@ -19,20 +19,7 @@ vendorsRouter.post("/", async (req, res, next) => {
   try {
     const body = parseBody(req);
     const vendor = await prisma.vendor.create({
-      data: {
-        displayName: requiredString(body, "displayName"),
-        email: optionalString(body, "email"),
-        phone: optionalString(body, "phone"),
-        addressLine1: optionalString(body, "addressLine1"),
-        addressLine2: optionalString(body, "addressLine2"),
-        city: optionalString(body, "city"),
-        state: optionalString(body, "state"),
-        postalCode: optionalString(body, "postalCode"),
-        country: optionalString(body, "country"),
-        taxRate: optionalString(body, "taxRate"),
-        paymentTerms: optionalString(body, "paymentTerms") ?? "Due on Receipt",
-        notes: optionalString(body, "notes"),
-      },
+      data: parseVendorInput(body),
     });
 
     res.status(201).json(presentContact(vendor));
@@ -46,20 +33,7 @@ vendorsRouter.patch("/:id", async (req, res, next) => {
     const body = parseBody(req);
     const vendor = await prisma.vendor.update({
       where: { id: req.params.id },
-      data: {
-        displayName: requiredString(body, "displayName"),
-        email: optionalString(body, "email"),
-        phone: optionalString(body, "phone"),
-        addressLine1: optionalString(body, "addressLine1"),
-        addressLine2: optionalString(body, "addressLine2"),
-        city: optionalString(body, "city"),
-        state: optionalString(body, "state"),
-        postalCode: optionalString(body, "postalCode"),
-        country: optionalString(body, "country"),
-        taxRate: optionalString(body, "taxRate"),
-        paymentTerms: optionalString(body, "paymentTerms") ?? "Due on Receipt",
-        notes: optionalString(body, "notes"),
-      },
+      data: parseVendorInput(body),
     });
     res.json(presentContact(vendor));
   } catch (error) { next(error); }

@@ -104,6 +104,9 @@ model InvoiceLine {
 
 model Vendor {
   id          String   @id @default(cuid())
+  vendorType  String   @default("business")
+  firstName   String?
+  lastName    String?
   displayName String
   companyName String?
   email       String?

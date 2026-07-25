@@ -2,6 +2,7 @@ type ContactRecord = {
   id: string;
   displayName: string;
   customerType?: string;
+  vendorType?: string;
   firstName?: string | null;
   lastName?: string | null;
   companyName: string | null;

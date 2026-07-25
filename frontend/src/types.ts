@@ -58,6 +58,7 @@ export type CustomerType = "business" | "individual";
 export type Contact = {
   id: string;
   customerType?: CustomerType;
+  vendorType?: CustomerType;
   firstName?: string | null;
   lastName?: string | null;
   displayName: string;

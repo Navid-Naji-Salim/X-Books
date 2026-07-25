@@ -5,6 +5,7 @@ import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
+import { CONTACT_PLACEHOLDERS } from "../contactPlaceholders";
 import { appIcons } from "../icons";
 import { useLanguage } from "../i18n";
 import type { Contact, CustomerType } from "../types";
@@ -236,11 +237,11 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
                 <label className="radio-option"><input checked={draft.customerType === "individual"} type="radio" name="customerType" value="individual" onChange={() => setDraft((current) => ({ ...current, customerType: "individual" }))} /><span className="option-text">Individual</span></label>
               </div>
               {draft.customerType === "business" ? (
-                <Field label="Company name" name="companyName" placeholder="Acme Trading" required value={draft.companyName} onChange={(event) => set("companyName", event.currentTarget.value)} />
+                <Field label="Company name" name="companyName" placeholder={CONTACT_PLACEHOLDERS.businessName} required value={draft.companyName} onChange={(event) => set("companyName", event.currentTarget.value)} />
               ) : (
-                <div className="split"><Field label="First name" name="firstName" required value={draft.firstName} onChange={(event) => set("firstName", event.currentTarget.value)} /><Field label="Last name" name="lastName" required value={draft.lastName} onChange={(event) => set("lastName", event.currentTarget.value)} /></div>
+                <div className="split"><Field label="First name" name="firstName" placeholder={CONTACT_PLACEHOLDERS.firstName} required value={draft.firstName} onChange={(event) => set("firstName", event.currentTarget.value)} /><Field label="Last name" name="lastName" placeholder={CONTACT_PLACEHOLDERS.lastName} required value={draft.lastName} onChange={(event) => set("lastName", event.currentTarget.value)} /></div>
               )}
-              <Field label="Email address" name="email" type="email" value={draft.email} onChange={(event) => set("email", event.currentTarget.value)} />
+              <Field label="Email address" name="email" placeholder={CONTACT_PLACEHOLDERS.email} type="email" value={draft.email} onChange={(event) => set("email", event.currentTarget.value)} />
               <Field label="Phone" name="phone" value={draft.phone} onChange={(event) => set("phone", event.currentTarget.value)} />
             </section>
 
@@ -249,10 +250,10 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
               <div className="item-info-fields">
                 <Field label="Address line 1" name="addressLine1" placeholder="Street and building" value={draft.addressLine1} onChange={(event) => set("addressLine1", event.currentTarget.value)} />
                 <Field label="Address line 2" name="addressLine2" placeholder="Suite, floor, or landmark" value={draft.addressLine2} onChange={(event) => set("addressLine2", event.currentTarget.value)} />
-                <Field label="City" name="city" value={draft.city} onChange={(event) => set("city", event.currentTarget.value)} />
-                <Field label="State / province" name="state" value={draft.state} onChange={(event) => set("state", event.currentTarget.value)} />
-                <Field label="Postal code" name="postalCode" value={draft.postalCode} onChange={(event) => set("postalCode", event.currentTarget.value)} />
-                <Field label="Country" name="country" value={draft.country} onChange={(event) => set("country", event.currentTarget.value)} />
+                <Field label="City" name="city" placeholder={CONTACT_PLACEHOLDERS.city} value={draft.city} onChange={(event) => set("city", event.currentTarget.value)} />
+                <Field label="State / province" name="state" placeholder={CONTACT_PLACEHOLDERS.state} value={draft.state} onChange={(event) => set("state", event.currentTarget.value)} />
+                <Field label="Postal code" name="postalCode" placeholder={CONTACT_PLACEHOLDERS.postalCode} value={draft.postalCode} onChange={(event) => set("postalCode", event.currentTarget.value)} />
+                <Field label="Country" name="country" placeholder={CONTACT_PLACEHOLDERS.country} value={draft.country} onChange={(event) => set("country", event.currentTarget.value)} />
               </div>
             </section>
 
