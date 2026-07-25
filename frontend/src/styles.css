@@ -1807,7 +1807,7 @@ th {
   border-radius: 999px;
   background: rgba(100, 116, 139, 0.46);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.38);
-  cursor: grab;
+  cursor: default;
   pointer-events: auto;
   touch-action: none;
 }
@@ -1816,7 +1816,7 @@ th {
   outline: none;
   background: rgba(71, 85, 105, 0.66);
 }
-.record-body-scrollbar-thumb:active { cursor: grabbing; }
+.record-body-scrollbar-thumb:active { cursor: default; }
 .record-table-wrap th { background: rgba(248, 250, 252, 0.98); }
 .record-table-wrap th:first-child { border-top-left-radius: 14px; }
 .record-table-wrap th:last-child { border-top-right-radius: 14px; }
