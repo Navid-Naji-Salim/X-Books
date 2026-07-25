@@ -1513,8 +1513,7 @@ textarea:focus {
     "price"
     "account"
     "tax"
-    "description"
-    "vendor";
+    "description";
 }
 
 .compact-item-form .item-info-section.is-purchase .item-info-fields {
@@ -1522,14 +1521,7 @@ textarea:focus {
     "price"
     "account"
     "tax"
-    "vendor"
     "description";
-}
-
-.compact-item-form .item-info-section.is-sales .item-info-fields::before {
-  content: "";
-  grid-area: vendor;
-  min-height: 4.12rem;
 }
 
 .compact-item-form .item-info-section.is-sales .item-info-fields > :nth-child(1),
@@ -1547,13 +1539,13 @@ textarea:focus {
   grid-area: tax;
 }
 
+.compact-item-form .item-info-section.is-sales .item-info-fields > :nth-child(4),
 .compact-item-form .item-info-section.is-purchase .item-info-fields > :nth-child(4) {
-  grid-area: vendor;
+  grid-area: description;
 }
 
-.compact-item-form .item-info-section.is-sales .item-info-fields > :nth-child(4),
-.compact-item-form .item-info-section.is-purchase .item-info-fields > :nth-child(5) {
-  grid-area: description;
+.compact-item-form .item-info-section:is(.is-sales, .is-purchase) .item-description-field textarea {
+  min-height: 7.62rem;
 }
 
 .compact-item-form input,

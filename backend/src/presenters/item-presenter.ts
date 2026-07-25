@@ -18,15 +18,10 @@ type ItemRecord = {
   purchaseAccount: string;
   purchaseTax: string | null;
   purchaseDescription: string | null;
-  preferredVendorId: string | null;
   quantity: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  preferredVendor?: {
-    id: string;
-    displayName: string;
-  } | null;
 };
 
 export const presentItem = (item: ItemRecord) => ({

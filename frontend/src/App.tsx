@@ -149,7 +149,6 @@ export const App = () => {
               dataError={dataError}
               items={data.items}
               token={token ?? ""}
-              vendors={data.vendors}
               onRefresh={() => (token ? loadData(token) : Promise.resolve())}
             />
           }

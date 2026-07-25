@@ -46,27 +46,9 @@ const optionalChoice = (
   return value;
 };
 
-const ensureVendorExists = async (preferredVendorId: string | null) => {
-  if (!preferredVendorId) {
-    return null;
-  }
-
-  const vendor = await prisma.vendor.findUnique({
-    where: { id: preferredVendorId },
-    select: { id: true },
-  });
-
-  if (!vendor) {
-    throw new ApiError(400, "Preferred vendor was not found.");
-  }
-
-  return preferredVendorId;
-};
-
 itemsRouter.get("/", async (_req, res, next) => {
   try {
     const items = await prisma.item.findMany({
-      include: { preferredVendor: { select: { id: true, displayName: true } } },
       orderBy: { createdAt: "desc" },
     });
     res.json(items.map(presentItem));
@@ -78,7 +60,6 @@ itemsRouter.get("/", async (_req, res, next) => {
 itemsRouter.post("/", async (req, res, next) => {
   try {
     const body = parseBody(req);
-    const preferredVendorId = await ensureVendorExists(optionalString(body, "preferredVendorId"));
     const item = await prisma.item.create({
       data: {
         name: requiredString(body, "name"),
@@ -97,10 +78,8 @@ itemsRouter.post("/", async (req, res, next) => {
         purchaseAccount: optionalString(body, "purchaseAccount") ?? "Cost of Goods Sold",
         purchaseTax: optionalString(body, "purchaseTax"),
         purchaseDescription: optionalString(body, "purchaseDescription"),
-        preferredVendorId,
         quantity: quantity(body),
       },
-      include: { preferredVendor: { select: { id: true, displayName: true } } },
     });
 
     res.status(201).json(presentItem(item));
@@ -112,7 +91,6 @@ itemsRouter.post("/", async (req, res, next) => {
 itemsRouter.patch("/:id", async (req, res, next) => {
   try {
     const body = parseBody(req);
-    const preferredVendorId = await ensureVendorExists(optionalString(body, "preferredVendorId"));
     const item = await prisma.item.update({
       where: { id: req.params.id },
       data: {
@@ -146,11 +124,9 @@ itemsRouter.patch("/:id", async (req, res, next) => {
         ...(body.purchaseDescription !== undefined
           ? { purchaseDescription: optionalString(body, "purchaseDescription") }
           : {}),
-        ...(body.preferredVendorId !== undefined ? { preferredVendorId } : {}),
         ...(body.quantity !== undefined ? { quantity: quantity(body) } : {}),
         ...(body.isActive !== undefined ? { isActive: Boolean(body.isActive) } : {}),
       },
-      include: { preferredVendor: { select: { id: true, displayName: true } } },
     });
 
     res.json(presentItem(item));

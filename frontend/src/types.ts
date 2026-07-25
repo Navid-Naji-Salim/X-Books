@@ -49,11 +49,6 @@ export type Item = {
   purchaseAccount: string;
   purchaseTax: string | null;
   purchaseDescription: string | null;
-  preferredVendorId: string | null;
-  preferredVendor?: {
-    id: string;
-    displayName: string;
-  } | null;
   quantity: number;
   inventoryValue: number;
 };
