@@ -8,13 +8,10 @@ export const AppLoadingScreen = () => (
     role="status"
   >
     <div className="app-loading-content">
-      <img
-        alt=""
-        aria-hidden="true"
-        className="app-loading-logo"
-        draggable={false}
-        src={brandLogo}
-      />
+      <span aria-hidden="true" className="app-loading-logo">
+        <img className="app-loading-logo-mark" draggable={false} src={brandLogo} />
+        <img className="app-loading-logo-bookmark" draggable={false} src={brandLogo} />
+      </span>
       <p>Preparing your books workspace...</p>
     </div>
   </div>

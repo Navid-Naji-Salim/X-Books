@@ -69,12 +69,30 @@ button:disabled {
 }
 
 .app-loading-logo {
+  position: relative;
   display: block;
-  width: auto;
+  width: clamp(59px, 7.36vw, 78px);
   height: clamp(72px, 9vw, 96px);
-  object-fit: contain;
   user-select: none;
+}
+
+.app-loading-logo img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.app-loading-logo-mark {
   filter: brightness(0) saturate(100%) invert(12%) sepia(20%) saturate(2147%) hue-rotate(174deg) brightness(91%) contrast(96%);
+}
+
+.app-loading-logo-bookmark {
+  clip-path: polygon(15.5% 82.4%, 30.7% 82.4%, 30.7% 96%, 23.1% 99.4%, 15.5% 96%);
 }
 
 .app-loading-content p {
