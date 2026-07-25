@@ -35,7 +35,6 @@ export type RecordActionsMenuProps = {
   recordLabel?: string;
 };
 
-type Placement = "above" | "below";
 type FocusTarget = "first" | "last";
 
 const EDGE = 8;
@@ -56,16 +55,6 @@ const isVisibleFocusable = (element: HTMLElement) => (
   && !element.closest("[aria-hidden='true'], [inert]")
 );
 
-const isAnchorVisible = (element: HTMLElement) => {
-  const rect = element.getBoundingClientRect();
-  return rect.width > 0
-    && rect.height > 0
-    && rect.bottom > 0
-    && rect.right > 0
-    && rect.top < window.innerHeight
-    && rect.left < window.innerWidth;
-};
-
 export const RecordActionsMenu = ({
   actions,
   align = "directional",
@@ -81,10 +70,9 @@ export const RecordActionsMenu = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<FocusTarget | null>(null);
   const isOpenRef = useRef(false);
-  const placementRef = useRef<Placement>("below");
+  const verticalOffsetRef = useRef(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
-  const [placement, setPlacement] = useState<Placement>("below");
   const MoreIcon = appIcons.actions.more;
   const isTriggerDisabled = disabled || actions.length === 0;
   const accessibleLabel = recordLabel ? `${t(label)}: ${recordLabel}` : t(label);
@@ -172,23 +160,11 @@ export const RecordActionsMenu = ({
     if (!trigger || !menu) return;
 
     const updatePosition = () => {
-      if (!isAnchorVisible(trigger)) {
-        closeMenu({ immediate: true });
-        return false;
-      }
-
       const triggerRect = trigger.getBoundingClientRect();
       const width = menu.offsetWidth;
       const height = menu.offsetHeight;
       const isRtl = document.documentElement.dir === "rtl";
       const belowTop = triggerRect.bottom + GAP;
-      const aboveTop = triggerRect.top - height - GAP;
-      const fitsBelow = belowTop + height <= window.innerHeight - EDGE;
-      const fitsAbove = aboveTop >= EDGE;
-      const spaceBelow = window.innerHeight - triggerRect.bottom - GAP - EDGE;
-      const spaceAbove = triggerRect.top - GAP - EDGE;
-      const nextPlacement: Placement = fitsBelow || (!fitsAbove && spaceBelow >= spaceAbove) ? "below" : "above";
-      const preferredTop = nextPlacement === "below" ? belowTop : aboveTop;
       const preferredLeft = align === "right" || !isRtl ? triggerRect.right - width : triggerRect.left;
       const boundaryRect = boundaryRef?.current?.getBoundingClientRect();
       const viewportMaxLeft = Math.max(EDGE, window.innerWidth - width - EDGE);
@@ -201,21 +177,22 @@ export const RecordActionsMenu = ({
       const maxLeft = boundaryCanContainMenu ? boundaryMaxLeft : viewportMaxLeft;
       const maxTop = Math.max(EDGE, window.innerHeight - height - EDGE);
       const left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
-      const top = Math.min(Math.max(EDGE, preferredTop), maxTop);
-
-      if (placementRef.current !== nextPlacement) {
-        placementRef.current = nextPlacement;
-        setPlacement(nextPlacement);
+      const isTriggerVerticallyVisible = triggerRect.bottom > 0 && triggerRect.top < window.innerHeight;
+      let top = belowTop + verticalOffsetRef.current;
+      // Preserve the last viewport nudge while offscreen so the menu keeps moving with its trigger.
+      if (isTriggerVerticallyVisible) {
+        top = Math.min(Math.max(EDGE, belowTop), maxTop);
+        verticalOffsetRef.current = top - belowTop;
       }
       const nextLeft = `${left + window.scrollX}px`;
       const nextTop = `${top + window.scrollY}px`;
       if (menu.style.left !== nextLeft) menu.style.left = nextLeft;
       if (menu.style.top !== nextTop) menu.style.top = nextTop;
-      return true;
     };
     let frame = 0;
     const trackPosition = () => {
-      if (!updatePosition() || !isOpenRef.current) return;
+      updatePosition();
+      if (!isOpenRef.current) return;
       frame = requestAnimationFrame(trackPosition);
     };
 
@@ -223,7 +200,7 @@ export const RecordActionsMenu = ({
     return () => {
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [align, boundaryRef, closeMenu, isRendered, language]);
+  }, [align, boundaryRef, isRendered, language]);
 
   const closeIfFocusLeaves = (event: ReactFocusEvent<HTMLElement>) => {
     const next = event.relatedTarget as Node | null;
@@ -308,7 +285,7 @@ export const RecordActionsMenu = ({
           aria-hidden={!isOpen}
           aria-label={accessibleLabel}
           aria-orientation="vertical"
-          className={`record-actions-menu record-actions-menu-${placement} record-actions-menu-align-${align} ${isOpen ? "is-open" : "is-closing"}`}
+          className={`record-actions-menu record-actions-menu-below record-actions-menu-align-${align} ${isOpen ? "is-open" : "is-closing"}`}
           id={menuId}
           ref={menuRef}
           role="menu"
