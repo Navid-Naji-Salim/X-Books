@@ -77,10 +77,34 @@ export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) =>
         </div><div className="message">{message}</div>
       </form>
       <div className="panel item-list-panel customer-list-panel record-list-panel">
-        <div className="item-form-head record-list-head"><div><h2>Vendor list</h2><p>{countLabel}</p></div><RecordListSearch label="Search vendors" placeholder="Search vendors by any detail…" value={query} onChange={setQuery} /></div>
-        <RecordTableScroll className="customer-table-wrap" columns={6}><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Location</th><th>Notes</th><th className="record-actions-heading">Actions</th></tr></thead><tbody>
-          {filtered.length === 0 ? <tr><td colSpan={6} className="muted">{query ? "No vendors match your search." : "No vendors yet."}</td></tr> : filtered.map((vendor) => <tr key={vendor.id}><td><strong>{vendor.displayName}</strong></td><td>{vendor.email || "-"}</td><td>{vendor.phone || "-"}</td><td>{[vendor.addressLine1, vendor.addressLine2, vendor.city, vendor.state, vendor.postalCode, vendor.country].filter(Boolean).join(", ") || "-"}</td><td>{vendor.notes || "-"}</td><td className="record-actions-cell"><RecordActionsMenu recordLabel={vendor.displayName} actions={[{ label: "View", icon: appIcons.actions.view, onSelect: () => { setEditingId(vendor.id); setDraft(vendorToDraft(vendor)); window.scrollTo({ top: 0, behavior: "smooth" }); } }, { label: deletingId === vendor.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId === vendor.id, onSelect: async () => { if (!window.confirm(`Delete ${vendor.displayName}?`)) return; setDeletingId(vendor.id); setMessage(""); try { await api.deleteVendor(token, vendor.id); if (editingId === vendor.id) reset(); await onRefresh(); } catch (error) { setMessage(error instanceof ApiError ? error.message : "Unable to delete vendor."); } finally { setDeletingId(null); } } }]} /></td></tr>)}
-        </tbody></table></RecordTableScroll>
+        <div className="item-form-head record-list-head">
+          <div><h2>Vendor list</h2><p>{countLabel}</p></div>
+          <RecordListSearch label="Search vendors" placeholder="Search vendors by any detail…" value={query} onChange={setQuery} />
+        </div>
+        <RecordTableScroll className="customer-table-wrap" columns={6}>
+          <table>
+            <thead><tr><th>Name</th><th>Contact</th><th>Location</th><th>Tax</th><th>Terms</th><th className="record-actions-heading">Actions</th></tr></thead>
+            <tbody>
+              {filtered.length === 0 ? <tr><td colSpan={6} className="muted">{query ? "No vendors match your search." : "No vendors yet."}</td></tr> : filtered.map((vendor) => (
+                <tr key={vendor.id}>
+                  <td><strong>{vendor.displayName}</strong><br /><span className="muted">{vendor.vendorType === "individual" ? "Individual" : "Business"}</span></td>
+                  <td>{vendor.email || "-"}<br /><span className="muted">{vendor.phone || "No phone"}</span></td>
+                  <td>{[vendor.city, vendor.country].filter(Boolean).join(", ") || "-"}</td>
+                  <td>{vendor.taxRate || "-"}</td><td>{vendor.paymentTerms || "Due on Receipt"}</td>
+                  <td className="record-actions-cell">
+                    <RecordActionsMenu
+                      recordLabel={vendor.displayName}
+                      actions={[
+                        { label: "View", icon: appIcons.actions.view, onSelect: () => { setEditingId(vendor.id); setDraft(vendorToDraft(vendor)); window.scrollTo({ top: 0, behavior: "smooth" }); } },
+                        { label: deletingId === vendor.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId === vendor.id, onSelect: async () => { if (!window.confirm(`Delete ${vendor.displayName}?`)) return; setDeletingId(vendor.id); setMessage(""); try { await api.deleteVendor(token, vendor.id); if (editingId === vendor.id) reset(); await onRefresh(); } catch (error) { setMessage(error instanceof ApiError ? error.message : "Unable to delete vendor."); } finally { setDeletingId(null); } } },
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </RecordTableScroll>
       </div>
     </section>
   </>;
