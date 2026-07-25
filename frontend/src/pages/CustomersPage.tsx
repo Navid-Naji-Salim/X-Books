@@ -220,10 +220,10 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
                     if (hasUnsavedChanges && !window.confirm(t("Discard unsaved changes?"))) return;
                     resetToNew();
                   }}>Close</button>
-                  <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit customer"}</button>
+                  <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit customer"}</button>
                 </>
               ) : (
-                <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save customer"}</button>
+                <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save customer"}</button>
               )}
             </div>
           </div>

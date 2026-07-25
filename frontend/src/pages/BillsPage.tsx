@@ -221,7 +221,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                 </button>
               ) : null}
               {!isReadOnly ? (
-                <button className="button" disabled={isSaving} type="submit">
+                <button className="button form-primary-action" disabled={isSaving} type="submit">
                   {isSaving ? "Saving..." : selectedBillId ? "Edit bill" : "Save bill"}
                 </button>
               ) : null}

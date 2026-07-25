@@ -1969,7 +1969,31 @@ th {
 .invoice-totals-card .invoice-total-row { min-height: 4.25rem; border-bottom: 0; font-size: 1.15rem; }
 .invoice-total-row span, .invoice-total-row strong { font-weight: 900; }
 
-.invoice-form-actions { display: flex; gap: 0.65rem; align-items: center; }
+.invoice-form-actions {
+  --form-primary-action-width: 9.5rem;
+  --form-primary-action-height: 3.35rem;
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.form-primary-action {
+  display: inline-flex;
+  width: var(--form-primary-action-width);
+  min-width: var(--form-primary-action-width);
+  height: var(--form-primary-action-height);
+  min-height: var(--form-primary-action-height);
+  flex: 0 0 var(--form-primary-action-width);
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  padding: 0.9rem 1.1rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+}
 
 .saved-invoices-panel {
   display: grid;

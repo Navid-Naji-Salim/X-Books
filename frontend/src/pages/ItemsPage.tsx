@@ -262,10 +262,10 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
               {mode === "edit" ? (
                 <>
                   <button className="ghost-button" disabled={isSaving} type="button" onClick={closeItem}>Close</button>
-                  <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit item"}</button>
+                  <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit item"}</button>
                 </>
               ) : (
-                <button className="button" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save item"}</button>
+                <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save item"}</button>
               )}
             </div>
           </div>

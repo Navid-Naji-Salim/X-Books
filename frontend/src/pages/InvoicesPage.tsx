@@ -161,7 +161,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             <div><h2>{isViewingPaidInvoice ? "Invoice details" : selectedInvoiceId ? "Edit invoice" : "New invoice"}</h2><p>Customer and billing details</p></div>
             <div className="invoice-form-actions">
               {selectedInvoiceId ? <button className="ghost-button" type="button" onClick={() => resetForm()}>{isViewingPaidInvoice ? "Close" : "Cancel"}</button> : null}
-              {!isViewingPaidInvoice ? <button className="button" type="submit">{selectedInvoiceId ? "Edit invoice" : "Save invoice"}</button> : null}
+              {!isViewingPaidInvoice ? <button className="button form-primary-action" type="submit">{selectedInvoiceId ? "Edit invoice" : "Save invoice"}</button> : null}
             </div>
           </div>
           <div className="invoice-details-grid">
