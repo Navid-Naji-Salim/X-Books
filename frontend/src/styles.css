@@ -1902,9 +1902,9 @@ th {
   align-items: stretch;
 }
 
-.invoice-notes-card { display: grid; align-content: start; }
-.invoice-notes-card textarea { min-height: 8.5rem; }
-.invoice-notes-card > span { margin-top: 0.45rem; color: var(--muted); font-size: 0.8rem; font-weight: 700; }
+.invoice-notes-card { display: grid; }
+.invoice-notes-card .field { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+.invoice-notes-card textarea { height: 100%; min-height: 11.5rem; }
 
 .invoice-totals-card {
   display: grid;

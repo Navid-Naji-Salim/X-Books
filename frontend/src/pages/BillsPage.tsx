@@ -396,10 +396,9 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
         <section className="invoice-footer-grid">
           <div className="panel invoice-notes-card">
             <div className="field">
-              <label htmlFor="billNotes">Vendor notes / internal notes</label>
-              <textarea id="billNotes" readOnly={isReadOnly} value={notes} onChange={(event) => setNotes(event.currentTarget.value)} />
+              <label htmlFor="billNotes">Vendor notes</label>
+              <textarea id="billNotes" placeholder="Internal context about this vendor" readOnly={isReadOnly} value={notes} onChange={(event) => setNotes(event.currentTarget.value)} />
             </div>
-            <span>Internal purchasing context</span>
           </div>
           <div className="panel invoice-totals-card">
             <div><span>Subtotal</span><strong>{currency.format(totals.subtotal)}</strong></div>

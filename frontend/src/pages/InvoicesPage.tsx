@@ -50,7 +50,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const [terms, setTerms] = useState("Due on Receipt");
   const [dueDate, setDueDate] = useState(today);
   const [discountPercent, setDiscountPercent] = useState(0);
-  const [customerNotes, setCustomerNotes] = useState("Thanks for your business.");
+  const [customerNotes, setCustomerNotes] = useState("");
   const [lines, setLines] = useState<LineDraft[]>([{ id: 1, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]);
   const [nextLineId, setNextLineId] = useState(2);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -105,7 +105,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     setSelectedInvoiceId(null);
     setCustomerId(""); setInvoiceNumber(nextNumber); setInvoiceDate(today);
     setTerms("Due on Receipt"); setDueDate(today); setDiscountPercent(0);
-    setCustomerNotes("Thanks for your business."); setOpenDropdown(null);
+    setCustomerNotes(""); setOpenDropdown(null);
     setLines([{ id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]);
     setNextLineId((value) => value + 1);
   };
@@ -211,7 +211,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         </section>
 
         <section className="invoice-footer-grid">
-          <div className="panel invoice-notes-card"><div className="field"><label htmlFor="customerNotes">Customer notes</label><textarea id="customerNotes" value={customerNotes} disabled={isViewingPaidInvoice} onChange={(event) => setCustomerNotes(event.currentTarget.value)} /></div><span>Displayed on the invoice</span></div>
+          <div className="panel invoice-notes-card"><div className="field"><label htmlFor="customerNotes">Customer notes</label><textarea id="customerNotes" placeholder="Internal context about this customer" value={customerNotes} disabled={isViewingPaidInvoice} onChange={(event) => setCustomerNotes(event.currentTarget.value)} /></div></div>
           <div className="panel invoice-totals-card">
             <div><span>Subtotal</span><strong>{currency.format(totals.subtotal)}</strong></div>
             <div><label htmlFor="discountPercent">Discount</label><span className="invoice-discount-input"><input id="discountPercent" type="number" min="0" max="100" step="0.01" value={discountPercent} disabled={isViewingPaidInvoice} onChange={(event) => setDiscountPercent(Number(event.currentTarget.value))} /><b>%</b></span><strong>-{currency.format(totals.discountAmount)}</strong></div>
