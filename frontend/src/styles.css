@@ -1679,7 +1679,7 @@ th {
   margin: 0;
 }
 
-.customer-notes textarea { min-height: 9rem; }
+.customer-notes textarea { min-height: 17.5rem; }
 
 .record-list-head { gap: 1rem; }
 .record-list-search {
