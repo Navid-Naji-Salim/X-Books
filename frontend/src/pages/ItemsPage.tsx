@@ -244,17 +244,13 @@ export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: Items
             try {
               const payload = Object.fromEntries(new FormData(form));
               if (mode === "edit" && selectedItemId) {
-                const updated = await api.updateItem(token, selectedItemId, payload);
-                const updatedDraft = itemToDraft(updated);
-                setDraft(updatedDraft);
-                setBaseline(updatedDraft);
-                setMessage("Item updated.");
+                await api.updateItem(token, selectedItemId, payload);
               } else {
                 await api.createItem(token, payload);
-                form.reset();
-                resetToNew();
               }
               await onRefresh();
+              form.reset();
+              resetToNew();
             } catch (error) {
               setMessage(error instanceof ApiError ? error.message : "Unable to save item.");
             } finally {

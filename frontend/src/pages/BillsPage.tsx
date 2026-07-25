@@ -396,7 +396,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
         <section className="invoice-footer-grid">
           <div className="panel invoice-notes-card">
             <h2 id="billNotesLabel">Notes</h2>
-            <textarea aria-labelledby="billNotesLabel" id="billNotes" placeholder="Notes for internal use..." readOnly={isReadOnly} value={notes} onChange={(event) => setNotes(event.currentTarget.value)} />
+            <textarea aria-labelledby="billNotesLabel" id="billNotes" placeholder="Notes for internal use" readOnly={isReadOnly} value={notes} onChange={(event) => setNotes(event.currentTarget.value)} />
           </div>
           <div className="panel invoice-totals-card">
             <div><span>Subtotal</span><strong>{currency.format(totals.subtotal)}</strong></div>

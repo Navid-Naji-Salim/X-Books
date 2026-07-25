@@ -197,17 +197,12 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
             try {
               const payload = Object.fromEntries(new FormData(event.currentTarget));
               if (mode === "view" && selectedCustomerId) {
-                const updated = await api.updateCustomer(token, selectedCustomerId, payload);
-                const updatedDraft = customerToDraft(updated);
-                setDraft(updatedDraft);
-                setBaseline(updatedDraft);
-                setOpenDropdown(null);
-                await onRefresh();
+                await api.updateCustomer(token, selectedCustomerId, payload);
               } else {
                 await api.createContact(token, "customers", payload);
-                resetToNew();
-                await onRefresh();
               }
+              await onRefresh();
+              resetToNew();
             } catch (error) {
               setMessage(error instanceof ApiError ? error.message : "Unable to save customer.");
             } finally {
@@ -266,7 +261,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
               <div className="item-info-fields">
                 <DropdownField label="Tax" name="taxRate" options={TAX_OPTIONS} placeholder="Select a tax" openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.taxRate} onChange={(value) => set("taxRate", value)} />
                 <DropdownField label="Payment terms" name="paymentTerms" options={paymentTerms} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.paymentTerms} onChange={(value) => set("paymentTerms", value)} />
-                <div className="field item-description-field customer-notes"><label htmlFor="customer-notes">Notes</label><textarea id="customer-notes" name="notes" placeholder="Internal context about this customer" value={draft.notes} onChange={(event) => set("notes", event.currentTarget.value)} /></div>
+                <div className="field item-description-field customer-notes"><label htmlFor="customer-notes">Notes</label><textarea id="customer-notes" name="notes" placeholder="Notes for internal use" value={draft.notes} onChange={(event) => set("notes", event.currentTarget.value)} /></div>
               </div>
             </section>
           </div>

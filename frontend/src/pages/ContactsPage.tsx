@@ -62,7 +62,7 @@ export const ContactsPage = ({ contacts, kind, summary, token, onRefresh }: Cont
             <textarea
               id={`${kind}-notes`}
               name="notes"
-              placeholder="Payment terms, contact preferences, or internal context"
+              placeholder="Notes for internal use"
             />
           </div>
           <button className="button" type="submit">

@@ -211,7 +211,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         </section>
 
         <section className="invoice-footer-grid">
-          <div className="panel invoice-notes-card"><h2 id="customerNotesLabel">Notes</h2><textarea aria-labelledby="customerNotesLabel" id="customerNotes" placeholder="Notes for internal use..." value={customerNotes} disabled={isViewingPaidInvoice} onChange={(event) => setCustomerNotes(event.currentTarget.value)} /></div>
+          <div className="panel invoice-notes-card"><h2 id="customerNotesLabel">Notes</h2><textarea aria-labelledby="customerNotesLabel" id="customerNotes" placeholder="Notes for internal use" value={customerNotes} disabled={isViewingPaidInvoice} onChange={(event) => setCustomerNotes(event.currentTarget.value)} /></div>
           <div className="panel invoice-totals-card">
             <div><span>Subtotal</span><strong>{currency.format(totals.subtotal)}</strong></div>
             <div><label htmlFor="discountPercent">Discount</label><span className="invoice-discount-input"><input id="discountPercent" type="number" min="0" max="100" step="0.01" value={discountPercent} disabled={isViewingPaidInvoice} onChange={(event) => setDiscountPercent(Number(event.currentTarget.value))} /><b>%</b></span><strong>-{currency.format(totals.discountAmount)}</strong></div>
