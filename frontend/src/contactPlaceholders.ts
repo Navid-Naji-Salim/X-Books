@@ -1,5 +1,5 @@
 export const CONTACT_PLACEHOLDERS = {
-  businessName: "Google",
+  businessName: "AsiaCell",
   firstName: "Dilan",
   lastName: "Karim",
   email: "dilan.karim@example.com",
