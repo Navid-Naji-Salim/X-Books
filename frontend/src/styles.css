@@ -1902,8 +1902,7 @@ th {
   align-items: stretch;
 }
 
-.invoice-notes-card { display: grid; }
-.invoice-notes-card .field { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+.invoice-notes-card { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0.95rem; }
 .invoice-notes-card textarea { height: 100%; min-height: 11.5rem; }
 
 .invoice-totals-card {
