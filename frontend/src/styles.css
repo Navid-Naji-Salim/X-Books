@@ -47,17 +47,11 @@ button:disabled {
   opacity: 0.7;
 }
 
-.loading-screen,
 .login-shell {
   display: grid;
   min-height: 100vh;
   place-items: center;
   padding: 2rem;
-}
-
-.loading-screen {
-  color: var(--muted);
-  font-weight: 800;
 }
 
 .login-card {

@@ -115,7 +115,7 @@ export const App = () => {
   }, [token]);
 
   if (booting) {
-    return <div className="loading-screen">Preparing your books workspace...</div>;
+    return null;
   }
 
   return (
@@ -277,7 +277,7 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
         }}
       />
       <main className="content" ref={contentRef}>
-        <Suspense fallback={<div className="loading-screen">Preparing your books workspace...</div>}>
+        <Suspense fallback={null}>
           <Outlet />
         </Suspense>
       </main>
