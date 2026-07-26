@@ -768,7 +768,7 @@ textarea:focus {
 .is-rtl .select-menu summary::after { margin-right: 0.85rem; margin-left: 0; }
 .is-rtl .invoice-discount-input input { border-radius: 0 12px 12px 0; text-align: left; }
 .is-rtl .invoice-discount-input b { border-right: 0; border-left: 1px solid var(--line); border-radius: 12px 0 0 12px; }
-.is-rtl :where(.home-card-head strong, .home-aging-split strong, .home-due-row strong, .home-activity-summary strong, .invoice-amount, .invoice-totals-card strong) { direction: ltr; unicode-bidi: isolate; }
+.is-rtl :where(.home-card-head strong, .home-aging-split strong, .home-activity-summary strong, .invoice-amount, .invoice-totals-card strong) { direction: ltr; unicode-bidi: isolate; }
 .is-rtl .recharts-wrapper { direction: ltr; }
 .is-rtl .recharts-default-legend { direction: rtl; }
 .is-rtl th,
@@ -812,28 +812,19 @@ textarea:focus {
 .home-hero h1 { font-family: "Newsreader", serif; font-size: clamp(2.35rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.025em; }
 .home-hero > p { max-width: 42rem; margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.5; }
 .home-aging-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.home-aging-card { display: grid; gap: 1rem; min-width: 0; box-shadow: 0 16px 48px rgba(30, 41, 59, 0.1); }
+.home-aging-card { display: grid; align-content: start; gap: 1rem; min-width: 0; box-shadow: 0 16px 48px rgba(30, 41, 59, 0.1); }
 .home-card-head { display: flex; gap: 1rem; align-items: flex-start; justify-content: space-between; }
 .home-card-head > div { display: grid; gap: 0.22rem; }
 .home-card-head > div > span { color: #334155; font-size: 0.84rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.055em; }
 .home-card-head > div > strong { margin-top: 0.15rem; font-size: clamp(1.7rem, 3vw, 2.25rem); line-height: 1.1; }
 .home-card-head small { color: var(--muted); font-weight: 700; }
-.home-card-head > a { display: inline-flex; gap: 0.28rem; align-items: center; color: #0369a1; font-size: 0.84rem; font-weight: 900; text-decoration: none; white-space: nowrap; }
+.home-card-head > a.home-aging-action { display: inline-flex; min-height: 2.5rem; align-items: center; justify-content: center; border-radius: 14px; padding: 0.65rem 0.9rem; color: var(--ink); font-size: 0.84rem; font-weight: 800; line-height: 1; text-decoration: none; white-space: nowrap; }
 .home-aging-split { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: rgba(248, 250, 252, 0.8); }
 .home-aging-split > div { display: grid; gap: 0.25rem; padding: 0.85rem 1rem; }
 .home-aging-split > div + div { border-left: 1px solid var(--line); }
 .home-aging-split span { color: var(--muted); font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
 .home-aging-split strong { font-size: 1.08rem; }
-.home-aging-split .is-overdue strong, .home-due-row span.is-overdue { color: var(--red); }
-.home-due-list { display: grid; min-height: 5.3rem; border-top: 1px solid var(--line); }
-.home-due-row { display: flex; gap: 1rem; align-items: center; justify-content: space-between; padding: 0.72rem 0.15rem; color: inherit; text-decoration: none; }
-.home-due-row + .home-due-row { border-top: 1px solid rgba(20, 33, 61, 0.08); }
-.home-due-row:hover strong:first-child { color: #0369a1; }
-.home-due-row > div { display: grid; gap: 0.15rem; min-width: 0; }
-.home-due-row > div:last-child { justify-items: end; flex: 0 0 auto; }
-.home-due-row strong { overflow: hidden; font-size: 0.86rem; text-overflow: ellipsis; white-space: nowrap; }
-.home-due-row span { overflow: hidden; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.home-empty { align-self: center; margin: 1rem 0; color: var(--muted); font-size: 0.88rem; }
+.home-aging-split .is-overdue strong { color: var(--red); }
 .home-chart-card { display: grid; gap: 0.65rem; min-width: 0; padding: clamp(1rem, 2vw, 1.35rem); box-shadow: 0 16px 48px rgba(30, 41, 59, 0.1); }
 .home-chart-head { display: flex; gap: 1.5rem; align-items: flex-start; justify-content: space-between; }
 .home-chart-head h2 { font-size: 1.15rem; }

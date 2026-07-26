@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useLanguage } from "../i18n";
 import { currency } from "../lib/format";
 import type { AccountAging, Summary, User } from "../types";
-import { useLanguage } from "../i18n";
-import { appIcons } from "../icons";
 
 const compactAxisMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
 const standardAxisMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -17,17 +16,12 @@ const greeting = () => {
   return "Good evening";
 };
 
-const AgingCard = ({ title, data, to }: { title: string; data: AccountAging; to: string }) => {
-  const { language } = useLanguage();
-  const ForwardIcon = language === "en" ? appIcons.direction.forward : appIcons.direction.back;
-  return <section className="panel home-aging-card">
-    <div className="home-card-head"><div><span>{title}</span><strong>{fullMoney(data.outstanding)}</strong><small>Total outstanding</small></div><Link to={to}>View all <ForwardIcon className="inline-direction-icon" /></Link></div>
+const AgingCard = ({ title, subtitle, data, to }: { title: string; subtitle: string; data: AccountAging; to: string }) => (
+  <section className="panel home-aging-card">
+    <div className="home-card-head"><div><span>{title}</span><strong>{fullMoney(data.outstanding)}</strong><small>{subtitle}</small></div><Link className="ghost-button home-aging-action" to={to}>View all</Link></div>
     <div className="home-aging-split"><div><span>Current</span><strong>{fullMoney(data.current)}</strong></div><div className={data.overdue > 0 ? "is-overdue" : ""}><span>Overdue</span><strong>{fullMoney(data.overdue)}</strong></div></div>
-    <div className="home-due-list">
-      {data.entries.length === 0 ? <p className="home-empty">Nothing outstanding.</p> : data.entries.map((entry) => <Link className="home-due-row" key={entry.id} to={to}><div><strong>{entry.number}</strong><span>{entry.name}</span></div><div><strong>{fullMoney(entry.amount)}</strong><span className={entry.overdue ? "is-overdue" : ""}>{entry.overdue ? "Overdue" : "Due"} {new Date(entry.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span></div></Link>)}
-    </div>
-  </section>;
-};
+  </section>
+);
 
 const ChartTooltip = ({ active, payload, label }: any) => active && payload?.length ? <div className="home-chart-tooltip"><strong>{label}</strong>{payload.map((item: any) => <span key={item.dataKey}><i style={{ background: item.color }} />{item.name}: {fullMoney(Number(item.value))}</span>)}</div> : null;
 
@@ -58,7 +52,7 @@ export const HomePage = ({ user, dataError, summary }: { user: User; dataError: 
   <div className="home-page">
     <header className="home-hero"><h1>{greeting()}, {user.name || "Nawid"}</h1><p>Your financial overview, clearly presented.</p></header>
     {dataError ? <div className="panel page-alert">{dataError}</div> : null}
-    <div className="home-aging-grid"><AgingCard title="Receivables" data={summary.receivables} to="/sales/invoices" /><AgingCard title="Payables" data={summary.payables} to="/purchases/bills" /></div>
+    <div className="home-aging-grid"><AgingCard title="Receivables" subtitle="Total unpaid invoices" data={summary.receivables} to="/sales/invoices" /><AgingCard title="Payables" subtitle="Total unpaid bills" data={summary.payables} to="/purchases/bills" /></div>
     <FinancialChart title="Cash flow" description={`Cash received and paid by month · ${summary.year}`} data={summary.months} series={[{ key: "cashReceived", label: "Incoming cash", color: "#15803d" }, { key: "cashPaid", label: "Outgoing cash", color: "#dc2626" }]} />
     <FinancialChart title="Income vs expenses" description={`Invoices and bills recorded by month · ${summary.year}`} data={summary.months} summary={summary.activity} series={[{ key: "income", label: "Invoice income", color: "#15803d" }, { key: "expenses", label: "Recorded expenses", color: "#dc2626" }]} />
   </div>

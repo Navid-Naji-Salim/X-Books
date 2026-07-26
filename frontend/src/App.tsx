@@ -26,8 +26,8 @@ type AppData = {
 
 const emptySummary: Summary = {
   year: new Date().getFullYear(),
-  receivables: { outstanding: 0, current: 0, overdue: 0, entries: [] },
-  payables: { outstanding: 0, current: 0, overdue: 0, entries: [] },
+  receivables: { outstanding: 0, current: 0, overdue: 0 },
+  payables: { outstanding: 0, current: 0, overdue: 0 },
   months: Array.from({ length: 12 }, (_, monthIndex) => ({ month: new Date(2000, monthIndex, 1).toLocaleString("en-US", { month: "short" }), monthIndex, cashReceived: 0, cashPaid: 0, income: 0, expenses: 0 })),
   activity: { totalIncome: 0, totalExpenses: 0, netActivity: 0 },
 };

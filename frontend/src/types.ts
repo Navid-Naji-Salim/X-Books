@@ -19,7 +19,6 @@ export type AccountAging = {
   outstanding: number;
   current: number;
   overdue: number;
-  entries: Array<{ id: string; number: string; name: string; dueDate: string; amount: number; overdue: boolean }>;
 };
 
 export type MonthlyFinancials = {
