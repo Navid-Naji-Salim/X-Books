@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
+import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { CONTACT_PLACEHOLDERS } from "../contactPlaceholders";
 import { appIcons } from "../icons";
 import { useLanguage } from "../i18n";
@@ -124,16 +125,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
   const hasUnsavedChanges = mode === "view"
     ? !draftsMatch(draft, baseline)
     : mode === "new" && !draftsMatch(draft, emptyDraft);
-
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", warnBeforeUnload);
-    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
-  }, [hasUnsavedChanges]);
+  const confirmDiscardChanges = useUnsavedChangesGuard(hasUnsavedChanges);
 
   const set = (field: Exclude<keyof CustomerDraft, "customerType">, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -152,7 +144,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
 
   const openCustomer = (customer: Contact) => {
     if (isSaving || deletingId !== null) return;
-    if (hasUnsavedChanges && !window.confirm(t("Discard unsaved changes?"))) return;
+    if (!confirmDiscardChanges()) return;
 
     const customerDraft = customerToDraft(customer);
     setSelectedCustomerId(customer.id);
@@ -217,7 +209,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
               {mode === "view" ? (
                 <>
                   <button className="ghost-button" disabled={isSaving} type="button" onClick={() => {
-                    if (hasUnsavedChanges && !window.confirm(t("Discard unsaved changes?"))) return;
+                    if (!confirmDiscardChanges()) return;
                     resetToNew();
                   }}>Close</button>
                   <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit customer"}</button>

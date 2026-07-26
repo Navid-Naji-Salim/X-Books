@@ -5,6 +5,7 @@ import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
 import { Tooltip } from "../components/Tooltip";
+import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { appIcons } from "../icons";
 import { currency } from "../lib/format";
 import type { Bill, Contact, Item } from "../types";
@@ -27,6 +28,21 @@ type LineDraft = {
   rate: number;
   tax: string;
 };
+
+type BillDraftValues = {
+  vendorId: string;
+  billDate: string;
+  terms: string;
+  dueDate: string;
+  discountPercent: number;
+  notes: string;
+  lines: readonly LineDraft[];
+};
+
+const billDraftFingerprint = (values: BillDraftValues) => JSON.stringify({
+  ...values,
+  lines: values.lines.map(({ itemId, itemName, quantity, rate, tax }) => ({ itemId, itemName, quantity, rate, tax })),
+});
 
 const termsOptions = ["Due on Receipt", "Net 7", "Net 15", "Net 30", "Net 45", "Net 60"];
 const taxRates: Record<string, number> = {
@@ -69,6 +85,15 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
   const [lines, setLines] = useState<LineDraft[]>([
     { id: 1, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" },
   ]);
+  const [baseline, setBaseline] = useState(() => billDraftFingerprint({
+    vendorId: "",
+    billDate: today,
+    terms: "Due on Receipt",
+    dueDate: today,
+    discountPercent: 0,
+    notes: "",
+    lines: [{ id: 1, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }],
+  }));
   const [nextLineId, setNextLineId] = useState(2);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -108,6 +133,17 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
   const countLabel = query.trim()
     ? `${filteredBills.length} of ${bills.length} bills`
     : `${bills.length} bill${bills.length === 1 ? "" : "s"}`;
+  const currentDraftFingerprint = useMemo(() => billDraftFingerprint({
+    vendorId,
+    billDate,
+    terms,
+    dueDate,
+    discountPercent,
+    notes,
+    lines,
+  }), [billDate, discountPercent, dueDate, lines, notes, terms, vendorId]);
+  const hasUnsavedChanges = currentDraftFingerprint !== baseline;
+  const confirmDiscardChanges = useUnsavedChangesGuard(hasUnsavedChanges);
 
   const totals = useMemo(() => {
     const subtotal = lines.reduce((sum, line) => sum + line.quantity * line.rate, 0);
@@ -125,6 +161,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
   };
 
   const resetForm = () => {
+    const nextLines = [{ id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }];
     setSelectedBillId(null);
     setVendorId("");
     setBillDate(today);
@@ -134,30 +171,58 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
     setNotes("");
     setOpenDropdown(null);
     setMessage("");
-    setLines([{ id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]);
+    setLines(nextLines);
+    setBaseline(billDraftFingerprint({
+      vendorId: "",
+      billDate: today,
+      terms: "Due on Receipt",
+      dueDate: today,
+      discountPercent: 0,
+      notes: "",
+      lines: nextLines,
+    }));
     setNextLineId((value) => value + 1);
   };
 
   const loadBill = (bill: Bill) => {
-    setSelectedBillId(bill.id);
-    setVendorId(bill.vendorId);
-    setBillDate(bill.billDate.slice(0, 10));
-    setTerms(bill.terms);
-    setDueDate(bill.dueDate.slice(0, 10));
-    setDiscountPercent(bill.discountPercent);
-    setNotes(bill.notes ?? "");
-    setLines(bill.lines.map((line, index) => ({
+    if (!confirmDiscardChanges()) return;
+    const nextBillDate = bill.billDate.slice(0, 10);
+    const nextDueDate = bill.dueDate.slice(0, 10);
+    const nextNotes = bill.notes ?? "";
+    const nextLines = bill.lines.map((line, index) => ({
       id: nextLineId + index,
       itemId: line.itemId ?? "",
       itemName: line.itemName,
       quantity: line.quantity,
       rate: line.rate,
       tax: line.tax ?? "",
-    })));
+    }));
+    setSelectedBillId(bill.id);
+    setVendorId(bill.vendorId);
+    setBillDate(nextBillDate);
+    setTerms(bill.terms);
+    setDueDate(nextDueDate);
+    setDiscountPercent(bill.discountPercent);
+    setNotes(nextNotes);
+    setLines(nextLines);
+    setBaseline(billDraftFingerprint({
+      vendorId: bill.vendorId,
+      billDate: nextBillDate,
+      terms: bill.terms,
+      dueDate: nextDueDate,
+      discountPercent: bill.discountPercent,
+      notes: nextNotes,
+      lines: nextLines,
+    }));
     setNextLineId((value) => value + bill.lines.length + 1);
     setOpenDropdown(null);
     setMessage("");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeBill = () => {
+    if (!confirmDiscardChanges()) return;
+    resetForm();
   };
 
   const deleteBill = async (bill: Bill) => {
@@ -211,13 +276,13 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
         <section className="panel item-form compact-item-form invoice-form-panel">
           <div className="item-form-head">
             <div>
-              <h2>{selectedBillId ? (isReadOnly ? "Bill details" : "Edit bill") : "New bill"}</h2>
+              <h2>{selectedBillId ? "Bill details" : "New bill"}</h2>
               <p>Vendor and billing details</p>
             </div>
             <div className="invoice-form-actions">
               {selectedBillId ? (
-                <button className="ghost-button" disabled={isSaving} type="button" onClick={resetForm}>
-                  {isReadOnly ? "Close" : "Cancel"}
+                <button className="ghost-button" disabled={isSaving} type="button" onClick={closeBill}>
+                  Close
                 </button>
               ) : null}
               {!isReadOnly ? (

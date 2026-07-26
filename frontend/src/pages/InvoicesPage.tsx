@@ -5,6 +5,7 @@ import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
 import { Tooltip } from "../components/Tooltip";
+import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
 import type { Contact, Invoice, Item } from "../types";
@@ -19,6 +20,22 @@ type Props = {
 };
 
 type LineDraft = { id: number; itemId: string; itemName: string; quantity: number; rate: number; tax: string };
+type InvoiceDraftValues = {
+  customerId: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  terms: string;
+  dueDate: string;
+  discountPercent: number;
+  customerNotes: string;
+  lines: readonly LineDraft[];
+};
+
+const invoiceDraftFingerprint = (values: InvoiceDraftValues) => JSON.stringify({
+  ...values,
+  lines: values.lines.map(({ itemId, itemName, quantity, rate, tax }) => ({ itemId, itemName, quantity, rate, tax })),
+});
+
 const termsOptions = ["Due on Receipt", "Net 7", "Net 15", "Net 30", "Net 45", "Net 60"];
 const taxRates: Record<string, number> = { Exempt: 0, "Standard Tax": 10, "Reduced Tax": 5, "Out of Scope": 0 };
 const dateInputValue = (date = new Date()) => {
@@ -52,6 +69,16 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const [discountPercent, setDiscountPercent] = useState(0);
   const [customerNotes, setCustomerNotes] = useState("");
   const [lines, setLines] = useState<LineDraft[]>([{ id: 1, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]);
+  const [baseline, setBaseline] = useState(() => invoiceDraftFingerprint({
+    customerId: "",
+    invoiceNumber: `INV-${String(invoices.length + 1).padStart(6, "0")}`,
+    invoiceDate: today,
+    terms: "Due on Receipt",
+    dueDate: today,
+    discountPercent: 0,
+    customerNotes: "",
+    lines: [{ id: 1, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }],
+  }));
   const [nextLineId, setNextLineId] = useState(2);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -89,6 +116,18 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const countLabel = query.trim()
     ? `${filteredInvoices.length} of ${invoices.length} invoices`
     : `${invoices.length} invoice${invoices.length === 1 ? "" : "s"}`;
+  const currentDraftFingerprint = useMemo(() => invoiceDraftFingerprint({
+    customerId,
+    invoiceNumber,
+    invoiceDate,
+    terms,
+    dueDate,
+    discountPercent,
+    customerNotes,
+    lines,
+  }), [customerId, customerNotes, discountPercent, dueDate, invoiceDate, invoiceNumber, lines, terms]);
+  const hasUnsavedChanges = currentDraftFingerprint !== baseline;
+  const confirmDiscardChanges = useUnsavedChangesGuard(hasUnsavedChanges);
 
   const totals = useMemo(() => {
     const subtotal = lines.reduce((sum, line) => sum + line.quantity * line.rate, 0);
@@ -102,23 +141,54 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     setLines((current) => current.map((line) => line.id === id ? { ...line, ...values } : line));
 
   const resetForm = (nextNumber = `INV-${String(invoices.length + 1).padStart(6, "0")}`) => {
+    const nextLines = [{ id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }];
     setSelectedInvoiceId(null);
     setCustomerId(""); setInvoiceNumber(nextNumber); setInvoiceDate(today);
     setTerms("Due on Receipt"); setDueDate(today); setDiscountPercent(0);
     setCustomerNotes(""); setOpenDropdown(null);
-    setLines([{ id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]);
+    setLines(nextLines);
+    setBaseline(invoiceDraftFingerprint({
+      customerId: "",
+      invoiceNumber: nextNumber,
+      invoiceDate: today,
+      terms: "Due on Receipt",
+      dueDate: today,
+      discountPercent: 0,
+      customerNotes: "",
+      lines: nextLines,
+    }));
     setNextLineId((value) => value + 1);
   };
 
   const loadInvoice = (invoice: Invoice) => {
+    if (!confirmDiscardChanges()) return;
+    const nextInvoiceDate = invoice.invoiceDate.slice(0, 10);
+    const nextDueDate = invoice.dueDate.slice(0, 10);
+    const nextCustomerNotes = invoice.customerNotes ?? "";
+    const nextLines = invoice.lines.map((line, index) => ({ id: nextLineId + index, itemId: line.itemId ?? "", itemName: line.itemName, quantity: line.quantity, rate: line.rate, tax: line.tax ?? "" }));
     setSelectedInvoiceId(invoice.id);
     setCustomerId(invoice.customerId); setInvoiceNumber(invoice.invoiceNumber);
-    setInvoiceDate(invoice.invoiceDate.slice(0, 10)); setTerms(invoice.terms);
-    setDueDate(invoice.dueDate.slice(0, 10)); setDiscountPercent(invoice.discountPercent);
-    setCustomerNotes(invoice.customerNotes ?? ""); setOpenDropdown(null);
-    setLines(invoice.lines.map((line, index) => ({ id: nextLineId + index, itemId: line.itemId ?? "", itemName: line.itemName, quantity: line.quantity, rate: line.rate, tax: line.tax ?? "" })));
+    setInvoiceDate(nextInvoiceDate); setTerms(invoice.terms);
+    setDueDate(nextDueDate); setDiscountPercent(invoice.discountPercent);
+    setCustomerNotes(nextCustomerNotes); setOpenDropdown(null);
+    setLines(nextLines);
+    setBaseline(invoiceDraftFingerprint({
+      customerId: invoice.customerId,
+      invoiceNumber: invoice.invoiceNumber,
+      invoiceDate: nextInvoiceDate,
+      terms: invoice.terms,
+      dueDate: nextDueDate,
+      discountPercent: invoice.discountPercent,
+      customerNotes: nextCustomerNotes,
+      lines: nextLines,
+    }));
     setNextLineId((value) => value + invoice.lines.length + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeInvoice = () => {
+    if (!confirmDiscardChanges()) return;
+    resetForm();
   };
 
   const deleteInvoice = async (invoice: Invoice) => {
@@ -158,9 +228,9 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
       }}>
         <section className="panel item-form compact-item-form invoice-form-panel">
           <div className="item-form-head">
-            <div><h2>{isViewingPaidInvoice ? "Invoice details" : selectedInvoiceId ? "Edit invoice" : "New invoice"}</h2><p>Customer and billing details</p></div>
+            <div><h2>{selectedInvoiceId ? "Invoice details" : "New invoice"}</h2><p>Customer and billing details</p></div>
             <div className="invoice-form-actions">
-              {selectedInvoiceId ? <button className="ghost-button" type="button" onClick={() => resetForm()}>{isViewingPaidInvoice ? "Close" : "Cancel"}</button> : null}
+              {selectedInvoiceId ? <button className="ghost-button" type="button" onClick={closeInvoice}>Close</button> : null}
               {!isViewingPaidInvoice ? <button className="button form-primary-action" type="submit">{selectedInvoiceId ? "Edit invoice" : "Save invoice"}</button> : null}
             </div>
           </div>

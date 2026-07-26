@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
@@ -7,6 +7,7 @@ import { ImageLightbox } from "../components/ImageLightbox";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
+import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
 import type { Item } from "../types";
@@ -149,16 +150,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
   const hasUnsavedChanges = mode === "edit"
     ? !draftsMatch(draft, baseline)
     : mode === "new" && !draftsMatch(draft, emptyDraft);
-
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", warnBeforeUnload);
-    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
-  }, [hasUnsavedChanges]);
+  const confirmDiscardChanges = useUnsavedChangesGuard(hasUnsavedChanges);
 
   const set = <Key extends keyof ItemDraft>(field: Key, value: ItemDraft[Key]) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -185,7 +177,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
 
   const openItem = (item: Item) => {
     if (isSaving || deletingId !== null) return;
-    if (hasUnsavedChanges && !window.confirm("Discard unsaved changes?")) return;
+    if (!confirmDiscardChanges()) return;
 
     const itemDraft = itemToDraft(item);
     setSelectedItemId(item.id);
@@ -199,7 +191,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
 
   const closeItem = () => {
     if (isSaving) return;
-    if (hasUnsavedChanges && !window.confirm("Discard unsaved changes?")) return;
+    if (!confirmDiscardChanges()) return;
     resetToNew();
   };
 
