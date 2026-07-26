@@ -70,7 +70,7 @@ export const RecordActionsMenu = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<FocusTarget | null>(null);
   const isOpenRef = useRef(false);
-  const verticalOffsetRef = useRef(0);
+  const verticalOffsetRef = useRef<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const MoreIcon = appIcons.actions.more;
@@ -94,6 +94,7 @@ export const RecordActionsMenu = ({
   const closeMenu = useCallback((options: { immediate?: boolean; restoreFocus?: boolean } = {}) => {
     pendingFocus.current = null;
     isOpenRef.current = false;
+    verticalOffsetRef.current = null;
     setIsOpen(false);
     setIsRendered(false);
     if (options.restoreFocus) {
@@ -109,6 +110,7 @@ export const RecordActionsMenu = ({
       return;
     }
     isOpenRef.current = true;
+    verticalOffsetRef.current = null;
     setIsRendered(true);
     setIsOpen(true);
   }, [focusEdgeItem, isTriggerDisabled]);
@@ -177,13 +179,14 @@ export const RecordActionsMenu = ({
       const maxLeft = boundaryCanContainMenu ? boundaryMaxLeft : viewportMaxLeft;
       const maxTop = Math.max(EDGE, window.innerHeight - height - EDGE);
       const left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
-      const isTriggerVerticallyVisible = triggerRect.bottom > 0 && triggerRect.top < window.innerHeight;
-      let top = belowTop + verticalOffsetRef.current;
-      // Preserve the last viewport nudge while offscreen so the menu keeps moving with its trigger.
-      if (isTriggerVerticallyVisible) {
-        top = Math.min(Math.max(EDGE, belowTop), maxTop);
-        verticalOffsetRef.current = top - belowTop;
+      let verticalOffset = verticalOffsetRef.current;
+      if (verticalOffset === null) {
+        const initialTop = Math.min(Math.max(EDGE, belowTop), maxTop);
+        verticalOffset = initialTop - belowTop;
+        verticalOffsetRef.current = verticalOffset;
       }
+      // Keep the opening nudge fixed so scrolling moves the menu exactly with its trigger.
+      const top = belowTop + verticalOffset;
       const nextLeft = `${left + window.scrollX}px`;
       const nextTop = `${top + window.scrollY}px`;
       if (menu.style.left !== nextLeft) menu.style.left = nextLeft;
