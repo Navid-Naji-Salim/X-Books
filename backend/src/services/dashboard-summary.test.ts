@@ -24,6 +24,7 @@ test("all Home accounting concepts remain distinct and complete", () => {
   assert.equal(result.months[3]?.expenses, 40);
   assert.equal(result.months[4]?.expenses, 60);
   assert.equal(result.months[5]?.expenses, 150);
+  assert.deepEqual(result.cashActivity, { totalIncoming: 275, totalOutgoing: 140, netActivity: 135 });
   assert.deepEqual(result.activity, { totalIncome: 500, totalExpenses: 250, netActivity: 250 });
 });
 
@@ -32,6 +33,7 @@ test("zero values and all twelve chronological months are preserved", () => {
   assert.equal(result.months.length, 12);
   assert.deepEqual(result.months.map((month) => month.month), ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]);
   assert.ok(result.months.every((month) => month.cashReceived === 0 && month.cashPaid === 0 && month.income === 0 && month.expenses === 0));
+  assert.deepEqual(result.cashActivity, { totalIncoming: 0, totalOutgoing: 0, netActivity: 0 });
 });
 
 test("partially paid documents contribute only their remaining balances", () => {

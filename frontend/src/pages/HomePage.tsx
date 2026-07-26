@@ -25,13 +25,21 @@ const AgingCard = ({ title, subtitle, data, to }: { title: string; subtitle: str
 
 const ChartTooltip = ({ active, payload, label }: any) => active && payload?.length ? <div className="home-chart-tooltip"><strong>{label}</strong>{payload.map((item: any) => <span key={item.dataKey}><i style={{ background: item.color }} />{item.name}: {fullMoney(Number(item.value))}</span>)}</div> : null;
 
-const FinancialChart = ({ title, description, data, series, summary }: { title: string; description: string; data: Summary["months"]; series: Array<{ key: keyof Summary["months"][number]; label: string; color: string }>; summary?: Summary["activity"] }) => {
+type ActivitySummaryEntry = { label: string; value: number };
+
+const ActivitySummary = ({ entries }: { entries: ActivitySummaryEntry[] }) => (
+  <div className="home-activity-summary">
+    {entries.map((entry) => <div key={entry.label}><span>{entry.label}</span><strong className={entry.value < 0 ? "is-negative" : ""}>{fullMoney(entry.value)}</strong></div>)}
+  </div>
+);
+
+const FinancialChart = ({ title, description, data, series, summary }: { title: string; description: string; data: Summary["months"]; series: Array<{ key: keyof Summary["months"][number]; label: string; color: string }>; summary?: ActivitySummaryEntry[] }) => {
   const { language } = useLanguage();
   const isRtl = language !== "en";
   const maximum = Math.max(0, ...data.flatMap((month) => series.map((item) => Number(month[item.key]))));
   return (
   <section className="panel home-chart-card" aria-label={title}>
-    <div className="home-chart-head"><div><h2>{title}</h2><p>{description}</p></div>{summary ? <div className="home-activity-summary"><div><span>Income</span><strong>{fullMoney(summary.totalIncome)}</strong></div><div><span>Expenses</span><strong>{fullMoney(summary.totalExpenses)}</strong></div><div><span>Net activity</span><strong className={summary.netActivity < 0 ? "is-negative" : ""}>{fullMoney(summary.netActivity)}</strong></div></div> : null}</div>
+    <div className="home-chart-head"><div><h2>{title}</h2><p>{description}</p></div>{summary ? <ActivitySummary entries={summary} /> : null}</div>
     <div className="home-chart-wrap">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 18, right: 12, left: 10, bottom: 0 }} barGap={3} accessibilityLayer>
@@ -53,7 +61,7 @@ export const HomePage = ({ user, dataError, summary }: { user: User; dataError: 
     <header className="home-hero"><h1>{greeting()}, {user.name || "Nawid"}</h1><p>Your financial overview, clearly presented.</p></header>
     {dataError ? <div className="panel page-alert">{dataError}</div> : null}
     <div className="home-aging-grid"><AgingCard title="Receivables" subtitle="Total unpaid invoices" data={summary.receivables} to="/sales/invoices" /><AgingCard title="Payables" subtitle="Total unpaid bills" data={summary.payables} to="/purchases/bills" /></div>
-    <FinancialChart title="Cash flow" description={`Cash received and paid by month · ${summary.year}`} data={summary.months} series={[{ key: "cashReceived", label: "Incoming cash", color: "#15803d" }, { key: "cashPaid", label: "Outgoing cash", color: "#dc2626" }]} />
-    <FinancialChart title="Income vs expenses" description={`Invoices and bills recorded by month · ${summary.year}`} data={summary.months} summary={summary.activity} series={[{ key: "income", label: "Invoice income", color: "#15803d" }, { key: "expenses", label: "Recorded expenses", color: "#dc2626" }]} />
+    <FinancialChart title="Cash flow" description={`Cash received and paid by month · ${summary.year}`} data={summary.months} summary={[{ label: "Incoming", value: summary.cashActivity.totalIncoming }, { label: "Outgoing", value: summary.cashActivity.totalOutgoing }, { label: "Net activity", value: summary.cashActivity.netActivity }]} series={[{ key: "cashReceived", label: "Incoming cash", color: "#15803d" }, { key: "cashPaid", label: "Outgoing cash", color: "#dc2626" }]} />
+    <FinancialChart title="Income vs expenses" description={`Invoices and bills recorded by month · ${summary.year}`} data={summary.months} summary={[{ label: "Income", value: summary.activity.totalIncome }, { label: "Expenses", value: summary.activity.totalExpenses }, { label: "Net activity", value: summary.activity.netActivity }]} series={[{ key: "income", label: "Invoice income", color: "#15803d" }, { key: "expenses", label: "Recorded expenses", color: "#dc2626" }]} />
   </div>
 );

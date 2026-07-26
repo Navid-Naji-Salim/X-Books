@@ -40,12 +40,15 @@ export const buildDashboardSummary = ({ invoices, bills, payments, billPayments,
   bills.forEach((bill) => add(bill.billDate, "expenses", bill.total));
   const totalIncome = months.reduce((sum, month) => sum + month.income, 0);
   const totalExpenses = months.reduce((sum, month) => sum + month.expenses, 0);
+  const totalIncoming = months.reduce((sum, month) => sum + month.cashReceived, 0);
+  const totalOutgoing = months.reduce((sum, month) => sum + month.cashPaid, 0);
 
   return {
     year,
     receivables: aging(unpaidInvoices),
     payables: aging(unpaidBills),
     months,
+    cashActivity: { totalIncoming, totalOutgoing, netActivity: totalIncoming - totalOutgoing },
     activity: { totalIncome, totalExpenses, netActivity: totalIncome - totalExpenses },
   };
 };

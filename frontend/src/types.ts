@@ -12,6 +12,7 @@ export type Summary = {
   receivables: AccountAging;
   payables: AccountAging;
   months: MonthlyFinancials[];
+  cashActivity: { totalIncoming: number; totalOutgoing: number; netActivity: number };
   activity: { totalIncome: number; totalExpenses: number; netActivity: number };
 };
 

@@ -29,6 +29,7 @@ const emptySummary: Summary = {
   receivables: { outstanding: 0, current: 0, overdue: 0 },
   payables: { outstanding: 0, current: 0, overdue: 0 },
   months: Array.from({ length: 12 }, (_, monthIndex) => ({ month: new Date(2000, monthIndex, 1).toLocaleString("en-US", { month: "short" }), monthIndex, cashReceived: 0, cashPaid: 0, income: 0, expenses: 0 })),
+  cashActivity: { totalIncoming: 0, totalOutgoing: 0, netActivity: 0 },
   activity: { totalIncome: 0, totalExpenses: 0, netActivity: 0 },
 };
 
@@ -47,6 +48,7 @@ const normalizedSummary = (summary: Summary): Summary => ({
   receivables: summary.receivables ?? emptySummary.receivables,
   payables: summary.payables ?? emptySummary.payables,
   months: Array.isArray(summary.months) && summary.months.length === 12 ? summary.months : emptySummary.months,
+  cashActivity: summary.cashActivity ?? emptySummary.cashActivity,
   activity: summary.activity ?? emptySummary.activity,
 });
 
