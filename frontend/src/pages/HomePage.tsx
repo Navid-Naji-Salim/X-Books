@@ -33,6 +33,12 @@ const ActivitySummary = ({ entries }: { entries: ActivitySummaryEntry[] }) => (
   </div>
 );
 
+const summarizeCashFlow = (months: Summary["months"]) => {
+  const incoming = months.reduce((total, month) => total + month.cashReceived, 0);
+  const outgoing = months.reduce((total, month) => total + month.cashPaid, 0);
+  return { incoming, outgoing, netActivity: incoming - outgoing };
+};
+
 const FinancialChart = ({ title, description, data, series, summary }: { title: string; description: string; data: Summary["months"]; series: Array<{ key: keyof Summary["months"][number]; label: string; color: string }>; summary?: ActivitySummaryEntry[] }) => {
   const { language } = useLanguage();
   const isRtl = language !== "en";
@@ -56,12 +62,15 @@ const FinancialChart = ({ title, description, data, series, summary }: { title: 
   );
 };
 
-export const HomePage = ({ user, dataError, summary }: { user: User; dataError: string; summary: Summary }) => (
-  <div className="home-page">
-    <header className="home-hero"><h1>{greeting()}, {user.name || "Nawid"}</h1><p>Your financial overview, clearly presented.</p></header>
-    {dataError ? <div className="panel page-alert">{dataError}</div> : null}
-    <div className="home-aging-grid"><AgingCard title="Receivables" subtitle="Total unpaid invoices" data={summary.receivables} to="/sales/invoices" /><AgingCard title="Payables" subtitle="Total unpaid bills" data={summary.payables} to="/purchases/bills" /></div>
-    <FinancialChart title="Cash flow" description={`Cash received and paid by month · ${summary.year}`} data={summary.months} summary={[{ label: "Incoming", value: summary.cashActivity.totalIncoming }, { label: "Outgoing", value: summary.cashActivity.totalOutgoing }, { label: "Net activity", value: summary.cashActivity.netActivity }]} series={[{ key: "cashReceived", label: "Incoming cash", color: "#15803d" }, { key: "cashPaid", label: "Outgoing cash", color: "#dc2626" }]} />
-    <FinancialChart title="Income vs expenses" description={`Invoices and bills recorded by month · ${summary.year}`} data={summary.months} summary={[{ label: "Income", value: summary.activity.totalIncome }, { label: "Expenses", value: summary.activity.totalExpenses }, { label: "Net activity", value: summary.activity.netActivity }]} series={[{ key: "income", label: "Invoice income", color: "#15803d" }, { key: "expenses", label: "Recorded expenses", color: "#dc2626" }]} />
-  </div>
-);
+export const HomePage = ({ user, dataError, summary }: { user: User; dataError: string; summary: Summary }) => {
+  const cashFlow = summarizeCashFlow(summary.months);
+  return (
+    <div className="home-page">
+      <header className="home-hero"><h1>{greeting()}, {user.name || "Nawid"}</h1><p>Your financial overview, clearly presented.</p></header>
+      {dataError ? <div className="panel page-alert">{dataError}</div> : null}
+      <div className="home-aging-grid"><AgingCard title="Receivables" subtitle="Total unpaid invoices" data={summary.receivables} to="/sales/invoices" /><AgingCard title="Payables" subtitle="Total unpaid bills" data={summary.payables} to="/purchases/bills" /></div>
+      <FinancialChart title="Cash flow" description={`Cash received and paid by month · ${summary.year}`} data={summary.months} summary={[{ label: "Incoming", value: cashFlow.incoming }, { label: "Outgoing", value: cashFlow.outgoing }, { label: "Net activity", value: cashFlow.netActivity }]} series={[{ key: "cashReceived", label: "Incoming cash", color: "#15803d" }, { key: "cashPaid", label: "Outgoing cash", color: "#dc2626" }]} />
+      <FinancialChart title="Income vs expenses" description={`Invoices and bills recorded by month · ${summary.year}`} data={summary.months} summary={[{ label: "Income", value: summary.activity.totalIncome }, { label: "Expenses", value: summary.activity.totalExpenses }, { label: "Net activity", value: summary.activity.netActivity }]} series={[{ key: "income", label: "Invoice income", color: "#15803d" }, { key: "expenses", label: "Recorded expenses", color: "#dc2626" }]} />
+    </div>
+  );
+};
