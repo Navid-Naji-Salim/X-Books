@@ -72,6 +72,7 @@ export const RecordActionsMenu = ({
   const pendingFocus = useRef<FocusTarget | null>(null);
   const isOpenRef = useRef(false);
   const verticalOffsetRef = useRef<number | null>(null);
+  const pageHeightAtOpenRef = useRef<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const MoreIcon = appIcons.actions.more;
@@ -96,6 +97,7 @@ export const RecordActionsMenu = ({
     pendingFocus.current = null;
     isOpenRef.current = false;
     verticalOffsetRef.current = null;
+    pageHeightAtOpenRef.current = null;
     setIsOpen(false);
     setIsRendered(false);
     if (options.restoreFocus) {
@@ -112,6 +114,12 @@ export const RecordActionsMenu = ({
     }
     isOpenRef.current = true;
     verticalOffsetRef.current = null;
+    pageHeightAtOpenRef.current = Math.max(
+      document.scrollingElement?.scrollHeight ?? 0,
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight,
+      window.innerHeight,
+    );
     setIsRendered(true);
     setIsOpen(true);
   }, [focusEdgeItem, isTriggerDisabled]);
@@ -178,12 +186,14 @@ export const RecordActionsMenu = ({
       const boundaryCanContainMenu = boundaryMaxLeft >= boundaryMinLeft;
       const minLeft = boundaryCanContainMenu ? boundaryMinLeft : EDGE;
       const maxLeft = boundaryCanContainMenu ? boundaryMaxLeft : viewportMaxLeft;
-      const maxTop = Math.max(EDGE, window.innerHeight - height - EDGE);
       let left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
       let verticalOffset = verticalOffsetRef.current;
       if (verticalOffset === null) {
-        const initialTop = Math.min(Math.max(EDGE, belowTop), maxTop);
-        verticalOffset = initialTop - belowTop;
+        const belowDocumentTop = belowTop + window.scrollY;
+        const pageHeight = pageHeightAtOpenRef.current ?? document.documentElement.scrollHeight;
+        const maxDocumentTop = Math.max(EDGE, pageHeight - height - EDGE);
+        const initialDocumentTop = Math.min(Math.max(EDGE, belowDocumentTop), maxDocumentTop);
+        verticalOffset = initialDocumentTop - belowDocumentTop;
         verticalOffsetRef.current = verticalOffset;
       }
       // Keep the opening nudge fixed so scrolling moves the menu exactly with its trigger.
