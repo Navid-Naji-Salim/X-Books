@@ -1,5 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
+import { DayPicker, type ChevronProps, type DropdownProps, type Matcher } from "@daypicker/react";
+import { ar, ckb, enUS } from "@daypicker/react/locale";
+import * as Select from "@radix-ui/react-select";
 import { appIcons } from "../icons";
 import { useLanguage } from "../i18n";
 
@@ -21,16 +24,19 @@ type PopupPosition = { left: number; top: number; width: number };
 const CalendarIcon = appIcons.form.calendar;
 const PreviousIcon = appIcons.date.previous;
 const NextIcon = appIcons.date.next;
+const DropdownIcon = appIcons.disclosure.down;
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+const calendarStart = new Date(1900, 0, 1);
+const calendarEnd = new Date(2100, 11, 31);
 
 const parseDate = (value: string) => {
   const match = datePattern.exec(value);
-  if (!match) return null;
+  if (!match) return undefined;
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
   const date = new Date(year, month - 1, day);
-  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? date : null;
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? date : undefined;
 };
 
 const formatDate = (date: Date) => {
@@ -40,8 +46,45 @@ const formatDate = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-const sameDay = (left: Date, right: Date) => formatDate(left) === formatDate(right);
 const isAllowed = (value: string, min?: string, max?: string) => (!min || value >= min) && (!max || value <= max);
+
+const PickerChevron = ({ orientation, className, size = 18, style }: ChevronProps) => {
+  if (orientation === "left") return <PreviousIcon className={className} size={size} style={style} />;
+  if (orientation === "right") return <NextIcon className={className} size={size} style={style} />;
+  return <DropdownIcon className={className} size={size} style={{ ...style, transform: orientation === "up" ? "rotate(180deg)" : undefined }} />;
+};
+
+const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-label": ariaLabel }: DropdownProps) => (
+  <Select.Root
+    value={String(value)}
+    disabled={disabled}
+    onValueChange={(nextValue) => onChange?.({
+      target: { value: nextValue },
+      currentTarget: { value: nextValue },
+    } as ChangeEvent<HTMLSelectElement>)}
+  >
+    <Select.Trigger className={`date-picker-select-trigger ${className ?? ""}`} aria-label={ariaLabel}>
+      <Select.Value />
+      <Select.Icon className="date-picker-select-icon"><DropdownIcon /></Select.Icon>
+    </Select.Trigger>
+    <Select.Portal>
+      <Select.Content className="date-picker-select-content" position="popper" sideOffset={6} collisionPadding={8}>
+        <Select.ScrollUpButton className="date-picker-select-scroll"><DropdownIcon className="is-up" /></Select.ScrollUpButton>
+        <Select.Viewport className="date-picker-select-viewport">
+          {options?.map((option) => (
+            <Select.Item className="date-picker-select-item" disabled={option.disabled} key={option.value} value={String(option.value)}>
+              <Select.ItemText>{option.label}</Select.ItemText>
+              <Select.ItemIndicator className="date-picker-select-indicator" aria-hidden="true">✓</Select.ItemIndicator>
+            </Select.Item>
+          ))}
+        </Select.Viewport>
+        <Select.ScrollDownButton className="date-picker-select-scroll"><DropdownIcon /></Select.ScrollDownButton>
+      </Select.Content>
+    </Select.Portal>
+  </Select.Root>
+);
+
+const pickerComponents = { Chevron: PickerChevron, Dropdown: PickerDropdown };
 
 export const DateField = ({ id, label, value, onChange, disabled, readOnly, required, min, max, name }: DateFieldProps) => {
   const { language, t } = useLanguage();
@@ -50,16 +93,23 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   const inputRef = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(value);
-  const selectedDate = parseDate(value);
-  const [viewDate, setViewDate] = useState(() => selectedDate ?? new Date());
   const [position, setPosition] = useState<PopupPosition>({ left: 8, top: 8, width: 320 });
-  const locale = language === "ku" ? "ckb" : language === "ar" ? "ar-IQ" : "en-US";
+  const selectedDate = parseDate(value);
+  const minDate = min ? parseDate(min) : undefined;
+  const maxDate = max ? parseDate(max) : undefined;
+  const disabledDates: Matcher[] = [
+    ...(minDate ? [{ before: minDate }] : []),
+    ...(maxDate ? [{ after: maxDate }] : []),
+  ];
+  const locale = language === "ku" ? ckb : language === "ar" ? ar : enUS;
+  const direction = language === "en" ? "ltr" : "rtl";
   const localizedLabel = t(label);
+  const calendarId = `${id}-calendar`;
   const copy = language === "ku"
-    ? { calendar: "ڕۆژژمێر", open: "کردنەوەی ڕۆژژمێر", close: "داخستنی ڕۆژژمێر", previous: "مانگی پێشوو", next: "مانگی داهاتوو", month: "مانگ", year: "ساڵ", today: "ئەمڕۆ", clear: "پاککردنەوە" }
+    ? { calendar: "ڕۆژژمێر", open: "کردنەوەی ڕۆژژمێر", close: "داخستنی ڕۆژژمێر", today: "ئەمڕۆ", clear: "پاککردنەوە" }
     : language === "ar"
-      ? { calendar: "التقويم", open: "فتح التقويم", close: "إغلاق التقويم", previous: "الشهر السابق", next: "الشهر التالي", month: "الشهر", year: "السنة", today: "اليوم", clear: "مسح" }
-      : { calendar: "calendar", open: "Open calendar", close: "Close calendar", previous: "Previous month", next: "Next month", month: "Month", year: "Year", today: "Today", clear: "Clear" };
+      ? { calendar: "التقويم", open: "فتح التقويم", close: "إغلاق التقويم", today: "اليوم", clear: "مسح" }
+      : { calendar: "calendar", open: "Open calendar", close: "Close calendar", today: "Today", clear: "Clear" };
 
   useEffect(() => setDraft(value), [value]);
   useEffect(() => {
@@ -68,9 +118,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
 
   const close = () => setIsOpen(false);
   const toggle = () => {
-    if (disabled || readOnly) return;
-    if (!isOpen) setViewDate(selectedDate ?? new Date());
-    setIsOpen((current) => !current);
+    if (!disabled && !readOnly) setIsOpen((current) => !current);
   };
 
   const commitDraft = () => {
@@ -79,22 +127,28 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       return;
     }
     const parsed = parseDate(draft);
-    if (parsed && isAllowed(draft, min, max)) {
-      onChange(draft);
-      setViewDate(parsed);
-    } else {
-      setDraft(value);
-    }
+    if (parsed && isAllowed(draft, min, max)) onChange(draft);
+    else setDraft(value);
+  };
+
+  const chooseDate = (date: Date) => {
+    const nextValue = formatDate(date);
+    setDraft(nextValue);
+    onChange(nextValue);
+    close();
+    inputRef.current?.focus();
   };
 
   useEffect(() => {
     if (!isOpen) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
+      if (target instanceof Element && target.closest(".date-picker-select-content")) return;
       if (!rootRef.current?.contains(target) && !popupRef.current?.contains(target)) close();
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        if (event.target instanceof Element && event.target.closest(".date-picker-select-content")) return;
         close();
         inputRef.current?.focus();
       }
@@ -131,103 +185,40 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [isOpen, viewDate]);
-
-  const monthNames = useMemo(() => Array.from({ length: 12 }, (_, month) =>
-    new Intl.DateTimeFormat(locale, { month: "long" }).format(new Date(2024, month, 1))), [locale]);
-  const weekdayNames = useMemo(() => Array.from({ length: 7 }, (_, day) =>
-    new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(new Date(2024, 0, 7 + day))), [locale]);
-  const years = useMemo(() => Array.from({ length: 201 }, (_, index) => 1900 + index), []);
-  const firstGridDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1 - new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay());
-  const days = Array.from({ length: 42 }, (_, index) => new Date(firstGridDay.getFullYear(), firstGridDay.getMonth(), firstGridDay.getDate() + index));
-  const today = new Date();
-
-  const chooseDate = (date: Date) => {
-    const nextValue = formatDate(date);
-    if (!isAllowed(nextValue, min, max)) return;
-    setDraft(nextValue);
-    onChange(nextValue);
-    setViewDate(date);
-    close();
-    inputRef.current?.focus();
-  };
-
-  const focusDate = (targetDate: Date) => {
-    setViewDate(new Date(targetDate.getFullYear(), targetDate.getMonth(), 1));
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-      popupRef.current?.querySelector<HTMLButtonElement>(`[data-date="${formatDate(targetDate)}"]`)?.focus();
-    }));
-  };
+  }, [isOpen]);
 
   const popup = isOpen ? createPortal(
     <div
       ref={popupRef}
       className="date-picker-popover"
-      role="dialog"
-      aria-label={`${localizedLabel} ${copy.calendar}`}
       style={{ left: position.left, top: position.top, width: position.width }}
     >
-      <div className="date-picker-header">
-        <button type="button" className="date-picker-nav" aria-label={copy.previous} onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}>
-          <PreviousIcon />
-        </button>
-        <div className="date-picker-period">
-          <select aria-label={copy.month} value={viewDate.getMonth()} onChange={(event) => setViewDate(new Date(viewDate.getFullYear(), Number(event.currentTarget.value), 1))}>
-            {monthNames.map((month, index) => <option key={month} value={index}>{month}</option>)}
-          </select>
-          <select aria-label={copy.year} value={viewDate.getFullYear()} onChange={(event) => setViewDate(new Date(Number(event.currentTarget.value), viewDate.getMonth(), 1))}>
-            {years.map((year) => <option key={year} value={year}>{year}</option>)}
-          </select>
-        </div>
-        <button type="button" className="date-picker-nav" aria-label={copy.next} onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}>
-          <NextIcon />
-        </button>
-      </div>
-      <div className="date-picker-weekdays" aria-hidden="true">
-        {weekdayNames.map((weekday, index) => <span key={`${weekday}-${index}`}>{weekday}</span>)}
-      </div>
-      <div className="date-picker-grid" role="grid">
-        {days.map((date) => {
-          const dateValue = formatDate(date);
-          const outsideMonth = date.getMonth() !== viewDate.getMonth();
-          const unavailable = !isAllowed(dateValue, min, max);
-          return <button
-            key={dateValue}
-            type="button"
-            role="gridcell"
-            data-date={dateValue}
-            className={`date-picker-day${outsideMonth ? " is-outside" : ""}${selectedDate && sameDay(date, selectedDate) ? " is-selected" : ""}${sameDay(date, today) ? " is-today" : ""}`}
-            aria-label={new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(date)}
-            aria-selected={Boolean(selectedDate && sameDay(date, selectedDate))}
-            aria-current={sameDay(date, today) ? "date" : undefined}
-            disabled={unavailable}
-            onClick={() => chooseDate(date)}
-            onKeyDown={(event) => {
-              const offsets: Partial<Record<string, number>> = {
-                ArrowLeft: -1,
-                ArrowRight: 1,
-                ArrowUp: -7,
-                ArrowDown: 7,
-                Home: -date.getDay(),
-                End: 6 - date.getDay(),
-              };
-              const offset = offsets[event.key];
-              if (offset !== undefined) {
-                event.preventDefault();
-                focusDate(new Date(date.getFullYear(), date.getMonth(), date.getDate() + offset));
-              } else if (event.key === "PageUp" || event.key === "PageDown") {
-                event.preventDefault();
-                const monthOffset = event.key === "PageUp" ? -1 : 1;
-                const targetMonth = new Date(date.getFullYear(), date.getMonth() + monthOffset, 1);
-                const lastDay = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0).getDate();
-                focusDate(new Date(targetMonth.getFullYear(), targetMonth.getMonth(), Math.min(date.getDate(), lastDay)));
-              }
-            }}
-          >{new Intl.NumberFormat(locale).format(date.getDate())}</button>;
-        })}
-      </div>
+      <DayPicker
+        id={calendarId}
+        className="date-picker-calendar"
+        mode="single"
+        required
+        selected={selectedDate}
+        defaultMonth={selectedDate ?? new Date()}
+        onSelect={chooseDate}
+        disabled={disabledDates}
+        startMonth={calendarStart}
+        endMonth={calendarEnd}
+        captionLayout="dropdown"
+        navLayout="around"
+        fixedWeeks
+        showOutsideDays
+        autoFocus
+        locale={locale}
+        numerals={language === "en" ? "latn" : "arab"}
+        dir={direction}
+        lang={language === "ku" ? "ckb" : language === "ar" ? "ar-IQ" : "en-US"}
+        role="dialog"
+        aria-label={`${localizedLabel} ${copy.calendar}`}
+        components={pickerComponents}
+      />
       <div className="date-picker-footer">
-        <button type="button" onClick={() => chooseDate(today)} disabled={!isAllowed(formatDate(today), min, max)}>{copy.today}</button>
+        <button type="button" onClick={() => chooseDate(new Date())} disabled={!isAllowed(formatDate(new Date()), min, max)}>{copy.today}</button>
         <button type="button" onClick={() => { setDraft(""); onChange(""); close(); inputRef.current?.focus(); }}>{copy.clear}</button>
       </div>
     </div>,
@@ -253,6 +244,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
         min={min}
         max={max}
         aria-haspopup="dialog"
+        aria-controls={isOpen ? calendarId : undefined}
         aria-expanded={isOpen}
         onChange={(event) => setDraft(event.currentTarget.value)}
         onBlur={commitDraft}
@@ -264,7 +256,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
           }
         }}
       />
-      <button type="button" className="date-field-trigger" aria-label={`${isOpen ? copy.close : copy.open}: ${localizedLabel}`} aria-expanded={isOpen} disabled={disabled || readOnly} onClick={toggle}>
+      <button type="button" className="date-field-trigger" aria-label={`${isOpen ? copy.close : copy.open}: ${localizedLabel}`} aria-controls={isOpen ? calendarId : undefined} aria-expanded={isOpen} disabled={disabled || readOnly} onClick={toggle}>
         <CalendarIcon />
       </button>
     </div>
