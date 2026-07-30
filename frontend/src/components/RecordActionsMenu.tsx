@@ -39,6 +39,7 @@ type FocusTarget = "first" | "last";
 
 const EDGE = 8;
 const GAP = 6;
+const TRIGGER_CLEARANCE = 10;
 const FOCUSABLE_SELECTOR = [
   "a[href]",
   "button:not([disabled])",
@@ -178,7 +179,7 @@ export const RecordActionsMenu = ({
       const minLeft = boundaryCanContainMenu ? boundaryMinLeft : EDGE;
       const maxLeft = boundaryCanContainMenu ? boundaryMaxLeft : viewportMaxLeft;
       const maxTop = Math.max(EDGE, window.innerHeight - height - EDGE);
-      const left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
+      let left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
       let verticalOffset = verticalOffsetRef.current;
       if (verticalOffset === null) {
         const initialTop = Math.min(Math.max(EDGE, belowTop), maxTop);
@@ -187,6 +188,21 @@ export const RecordActionsMenu = ({
       }
       // Keep the opening nudge fixed so scrolling moves the menu exactly with its trigger.
       const top = belowTop + verticalOffset;
+      const overlapsTrigger = (
+        left < triggerRect.right
+        && left + width > triggerRect.left
+        && top < triggerRect.bottom
+        && top + height > triggerRect.top
+      );
+      if (verticalOffset < 0 && overlapsTrigger) {
+        const leftOfTrigger = triggerRect.left - TRIGGER_CLEARANCE - width;
+        if (leftOfTrigger >= minLeft) {
+          left = leftOfTrigger;
+        } else {
+          const rightOfTrigger = triggerRect.right + TRIGGER_CLEARANCE;
+          if (rightOfTrigger <= maxLeft) left = rightOfTrigger;
+        }
+      }
       const nextLeft = `${left + window.scrollX}px`;
       const nextTop = `${top + window.scrollY}px`;
       if (menu.style.left !== nextLeft) menu.style.left = nextLeft;
