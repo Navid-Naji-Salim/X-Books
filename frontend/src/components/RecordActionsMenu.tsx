@@ -90,7 +90,7 @@ export const RecordActionsMenu = ({
   const focusEdgeItem = useCallback((target: FocusTarget) => {
     const items = getEnabledItems();
     if (items.length === 0) return;
-    items[target === "first" ? 0 : items.length - 1]?.focus();
+    items[target === "first" ? 0 : items.length - 1]?.focus({ preventScroll: true });
   }, [getEnabledItems]);
 
   const closeMenu = useCallback((options: { immediate?: boolean; restoreFocus?: boolean } = {}) => {
