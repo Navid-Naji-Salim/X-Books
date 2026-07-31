@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { DayPicker, type ChevronProps, type DropdownProps, type Matcher } from "@daypicker/react";
 import { ar, ckb, enUS } from "@daypicker/react/locale";
@@ -19,27 +19,14 @@ type DateFieldProps = {
   name?: string;
 };
 
-type PopupPosition = { left: number; top: number; width: number };
-
 const CalendarIcon = appIcons.form.calendar;
 const PreviousIcon = appIcons.date.previous;
 const NextIcon = appIcons.date.next;
 const DropdownIcon = appIcons.disclosure.down;
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
-const calendarStart = new Date(1900, 0, 1);
-const calendarEnd = new Date(2100, 11, 31);
 const viewportEdge = 8;
 const popoverGap = 6;
-
-const isAnchorVisible = (element: HTMLElement) => {
-  const rect = element.getBoundingClientRect();
-  return rect.width > 0
-    && rect.height > 0
-    && rect.bottom > 0
-    && rect.right > 0
-    && rect.top < window.innerHeight
-    && rect.left < window.innerWidth;
-};
+const DatePickerOwnerContext = createContext<string | undefined>(undefined);
 
 const parseDate = (value: string) => {
   const match = datePattern.exec(value);
@@ -66,33 +53,49 @@ const PickerChevron = ({ orientation, className, size = 18, style }: ChevronProp
   return <DropdownIcon className={className} size={size} style={{ ...style, transform: orientation === "up" ? "rotate(180deg)" : undefined }} />;
 };
 
-const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-label": ariaLabel }: DropdownProps) => (
-  <Select.Root
-    value={String(value)}
+const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-label": ariaLabel }: DropdownProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ownerId = useContext(DatePickerOwnerContext);
+  const selectedValue = String(value);
+  const selectedLabel = options?.find((option) => String(option.value) === selectedValue)?.label;
+  const menuKind = (options?.length ?? 0) > 12 ? "is-years" : "is-months";
+
+  return <Select.Root
+    value={selectedValue}
+    open={isOpen}
     disabled={disabled}
+    onOpenChange={setIsOpen}
     onValueChange={(nextValue) => onChange?.({
       target: { value: nextValue },
       currentTarget: { value: nextValue },
     } as ChangeEvent<HTMLSelectElement>)}
   >
     <Select.Trigger className={`date-picker-select-trigger ${className ?? ""}`} aria-label={ariaLabel}>
-      <Select.Value />
+      <Select.Value>{selectedLabel}</Select.Value>
       <Select.Icon className="date-picker-select-icon"><DropdownIcon /></Select.Icon>
     </Select.Trigger>
     <Select.Portal>
-      <Select.Content className={`date-picker-select-content ${(options?.length ?? 0) > 12 ? "is-years" : "is-months"}`} position="popper" sideOffset={6} collisionPadding={8}>
-        <Select.Viewport className={`date-picker-select-viewport ${(options?.length ?? 0) > 12 ? "is-years" : "is-months"}`}>
-          {options?.map((option) => (
-            <Select.Item className="date-picker-select-item" disabled={option.disabled} key={option.value} value={String(option.value)}>
-              <Select.ItemText>{option.label}</Select.ItemText>
+      <Select.Content data-date-picker-owner={ownerId} className={`date-picker-select-content ${menuKind}`} position="popper" sideOffset={6} collisionPadding={8}>
+        <Select.Viewport className={`date-picker-select-viewport ${menuKind}`}>
+          {isOpen ? options?.map((option) => (
+            <Select.Item
+              aria-label={option.label}
+              aria-labelledby={undefined}
+              className="date-picker-select-item"
+              disabled={option.disabled}
+              key={option.value}
+              textValue={option.label}
+              value={String(option.value)}
+            >
+              {option.label}
               <Select.ItemIndicator className="date-picker-select-indicator" aria-hidden="true">✓</Select.ItemIndicator>
             </Select.Item>
-          ))}
+          )) : null}
         </Select.Viewport>
       </Select.Content>
     </Select.Portal>
-  </Select.Root>
-);
+  </Select.Root>;
+};
 
 const pickerComponents = { Chevron: PickerChevron, Dropdown: PickerDropdown };
 
@@ -102,9 +105,12 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const openerRef = useRef<"input" | "trigger">("trigger");
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(value);
-  const [position, setPosition] = useState<PopupPosition>({ left: viewportEdge, top: viewportEdge, width: 328 });
+  const currentApplicationYear = new Date().getFullYear();
+  const calendarStart = useMemo(() => new Date(currentApplicationYear - 50, 0, 1), [currentApplicationYear]);
+  const calendarEnd = useMemo(() => new Date(currentApplicationYear, 11, 31), [currentApplicationYear]);
   const selectedDate = parseDate(value);
   const minDate = min ? parseDate(min) : undefined;
   const maxDate = max ? parseDate(max) : undefined;
@@ -128,8 +134,10 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   }, [disabled, readOnly]);
 
   const close = () => setIsOpen(false);
-  const toggle = () => {
-    if (!disabled && !readOnly) setIsOpen((current) => !current);
+  const toggle = (opener: "input" | "trigger") => {
+    if (disabled || readOnly) return;
+    if (!isOpen) openerRef.current = opener;
+    setIsOpen((current) => !current);
   };
 
   const commitDraft = () => {
@@ -146,8 +154,6 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     const nextValue = formatDate(date);
     setDraft(nextValue);
     onChange(nextValue);
-    close();
-    inputRef.current?.focus();
   };
 
   useEffect(() => {
@@ -155,19 +161,22 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (target instanceof Element && target.closest(".date-picker-select-content")) return;
+      const hasOpenOwnedSelect = Array.from(document.querySelectorAll<HTMLElement>(".date-picker-select-content[data-state='open']"))
+        .some((content) => content.dataset.datePickerOwner === calendarId);
+      if (hasOpenOwnedSelect) return;
       if (!rootRef.current?.contains(target) && !popupRef.current?.contains(target)) close();
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (event.target instanceof Element && event.target.closest(".date-picker-select-content")) return;
         close();
-        inputRef.current?.focus();
+        (openerRef.current === "trigger" ? triggerRef.current : inputRef.current)?.focus();
       }
     };
-    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [isOpen]);
@@ -175,17 +184,10 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   useLayoutEffect(() => {
     if (!isOpen) return;
 
-    let frame = 0;
-
     const updatePosition = () => {
       const trigger = triggerRef.current;
       const popup = popupRef.current;
       if (!trigger || !popup) return;
-
-      if (!isAnchorVisible(trigger)) {
-        setIsOpen(false);
-        return;
-      }
 
       const anchor = trigger.getBoundingClientRect();
       const width = Math.min(328, Math.max(0, window.innerWidth - viewportEdge * 2));
@@ -207,68 +209,51 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
         Math.max(viewportEdge, window.innerHeight - height - viewportEdge),
       );
 
-      setPosition((current) => current.left === left && current.top === top && current.width === width
-        ? current
-        : { left, top, width });
-    };
-
-    const schedulePosition = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(() => {
-        frame = 0;
-        updatePosition();
-      });
+      popup.style.left = `${left}px`;
+      popup.style.top = `${top}px`;
+      popup.style.width = `${width}px`;
+      popup.style.visibility = "visible";
     };
 
     updatePosition();
-
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedulePosition);
-    if (triggerRef.current) observer?.observe(triggerRef.current);
-    if (popupRef.current) observer?.observe(popupRef.current);
-
-    window.addEventListener("resize", schedulePosition);
-    document.addEventListener("scroll", schedulePosition, true);
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      observer?.disconnect();
-      window.removeEventListener("resize", schedulePosition);
-      document.removeEventListener("scroll", schedulePosition, true);
-    };
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
   }, [direction, isOpen]);
 
   const popup = isOpen ? createPortal(
     <div
       ref={popupRef}
       className="date-picker-popover"
-      style={{ left: position.left, top: position.top, width: position.width }}
     >
-      <DayPicker
-        id={calendarId}
-        className="date-picker-calendar"
-        mode="single"
-        required
-        selected={selectedDate}
-        defaultMonth={selectedDate ?? new Date()}
-        onSelect={chooseDate}
-        disabled={disabledDates}
-        startMonth={calendarStart}
-        endMonth={calendarEnd}
-        captionLayout="dropdown"
-        navLayout="around"
-        fixedWeeks
-        showOutsideDays
-        autoFocus
-        locale={locale}
-        numerals={language === "en" ? "latn" : "arab"}
-        dir={direction}
-        lang={language === "ku" ? "ckb" : language === "ar" ? "ar-IQ" : "en-US"}
-        role="dialog"
-        aria-label={`${localizedLabel} ${copy.calendar}`}
-        components={pickerComponents}
-      />
+      <DatePickerOwnerContext.Provider value={calendarId}>
+        <DayPicker
+          id={calendarId}
+          className="date-picker-calendar"
+          mode="single"
+          required
+          selected={selectedDate}
+          defaultMonth={selectedDate ?? new Date()}
+          onSelect={chooseDate}
+          disabled={disabledDates}
+          startMonth={calendarStart}
+          endMonth={calendarEnd}
+          captionLayout="dropdown"
+          navLayout="around"
+          fixedWeeks
+          showOutsideDays
+          autoFocus
+          locale={locale}
+          numerals={language === "en" ? "latn" : "arab"}
+          dir={direction}
+          lang={language === "ku" ? "ckb" : language === "ar" ? "ar-IQ" : "en-US"}
+          role="dialog"
+          aria-label={`${localizedLabel} ${copy.calendar}`}
+          components={pickerComponents}
+        />
+      </DatePickerOwnerContext.Provider>
       <div className="date-picker-footer">
         <button type="button" onClick={() => chooseDate(new Date())} disabled={!isAllowed(formatDate(new Date()), min, max)}>{copy.today}</button>
-        <button type="button" onClick={() => { setDraft(""); onChange(""); close(); inputRef.current?.focus(); }}>{copy.clear}</button>
+        <button type="button" onClick={() => { setDraft(""); onChange(""); }}>{copy.clear}</button>
       </div>
     </div>,
     document.body,
@@ -301,11 +286,11 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
           if (event.key === "Enter") commitDraft();
           if (event.key === "ArrowDown" && event.altKey) {
             event.preventDefault();
-            toggle();
+            toggle("input");
           }
         }}
       />
-      <button ref={triggerRef} type="button" className="date-field-trigger" aria-label={`${isOpen ? copy.close : copy.open}: ${localizedLabel}`} aria-controls={isOpen ? calendarId : undefined} aria-expanded={isOpen} disabled={disabled || readOnly} onClick={toggle}>
+      <button ref={triggerRef} type="button" className="date-field-trigger" aria-label={`${isOpen ? copy.close : copy.open}: ${localizedLabel}`} aria-controls={isOpen ? calendarId : undefined} aria-expanded={isOpen} disabled={disabled || readOnly} onClick={() => toggle("trigger")}>
         <CalendarIcon />
       </button>
     </div>

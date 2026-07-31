@@ -763,12 +763,16 @@ textarea:focus {
 
 .date-picker-popover {
   position: fixed;
+  top: 8px;
+  left: 8px;
   z-index: 220;
   display: grid;
   gap: 0.55rem;
   border: 1px solid rgba(20, 33, 61, 0.12);
   border-radius: 18px;
   padding: 0.75rem;
+  width: min(328px, calc(100vw - 16px));
+  visibility: hidden;
   color: var(--ink);
   background: var(--popup-light);
   box-shadow: 0 24px 55px rgba(15, 35, 63, 0.2);
