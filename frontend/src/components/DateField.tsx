@@ -28,6 +28,18 @@ const DropdownIcon = appIcons.disclosure.down;
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 const calendarStart = new Date(1900, 0, 1);
 const calendarEnd = new Date(2100, 11, 31);
+const viewportEdge = 8;
+const popoverGap = 6;
+
+const isAnchorVisible = (element: HTMLElement) => {
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0
+    && rect.height > 0
+    && rect.bottom > 0
+    && rect.right > 0
+    && rect.top < window.innerHeight
+    && rect.left < window.innerWidth;
+};
 
 const parseDate = (value: string) => {
   const match = datePattern.exec(value);
@@ -68,9 +80,8 @@ const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-l
       <Select.Icon className="date-picker-select-icon"><DropdownIcon /></Select.Icon>
     </Select.Trigger>
     <Select.Portal>
-      <Select.Content className="date-picker-select-content" position="popper" sideOffset={6} collisionPadding={8}>
-        <Select.ScrollUpButton className="date-picker-select-scroll"><DropdownIcon className="is-up" /></Select.ScrollUpButton>
-        <Select.Viewport className="date-picker-select-viewport">
+      <Select.Content className={`date-picker-select-content ${(options?.length ?? 0) > 12 ? "is-years" : "is-months"}`} position="popper" sideOffset={6} collisionPadding={8}>
+        <Select.Viewport className={`date-picker-select-viewport ${(options?.length ?? 0) > 12 ? "is-years" : "is-months"}`}>
           {options?.map((option) => (
             <Select.Item className="date-picker-select-item" disabled={option.disabled} key={option.value} value={String(option.value)}>
               <Select.ItemText>{option.label}</Select.ItemText>
@@ -78,7 +89,6 @@ const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-l
             </Select.Item>
           ))}
         </Select.Viewport>
-        <Select.ScrollDownButton className="date-picker-select-scroll"><DropdownIcon /></Select.ScrollDownButton>
       </Select.Content>
     </Select.Portal>
   </Select.Root>
@@ -89,11 +99,12 @@ const pickerComponents = { Chevron: PickerChevron, Dropdown: PickerDropdown };
 export const DateField = ({ id, label, value, onChange, disabled, readOnly, required, min, max, name }: DateFieldProps) => {
   const { language, t } = useLanguage();
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(value);
-  const [position, setPosition] = useState<PopupPosition>({ left: 8, top: 8, width: 320 });
+  const [position, setPosition] = useState<PopupPosition>({ left: viewportEdge, top: viewportEdge, width: 328 });
   const selectedDate = parseDate(value);
   const minDate = min ? parseDate(min) : undefined;
   const maxDate = max ? parseDate(max) : undefined;
@@ -163,29 +174,67 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
 
   useLayoutEffect(() => {
     if (!isOpen) return;
+
+    let frame = 0;
+
     const updatePosition = () => {
-      const anchor = rootRef.current?.getBoundingClientRect();
+      const trigger = triggerRef.current;
       const popup = popupRef.current;
-      if (!anchor || !popup) return;
-      const viewportGap = 8;
-      const fieldGap = 7;
-      const width = Math.min(328, window.innerWidth - viewportGap * 2);
+      if (!trigger || !popup) return;
+
+      if (!isAnchorVisible(trigger)) {
+        setIsOpen(false);
+        return;
+      }
+
+      const anchor = trigger.getBoundingClientRect();
+      const width = Math.min(328, Math.max(0, window.innerWidth - viewportEdge * 2));
       const height = popup.offsetHeight;
-      const left = Math.min(Math.max(anchor.right - width, viewportGap), window.innerWidth - width - viewportGap);
-      const below = anchor.bottom + fieldGap;
-      const top = below + height <= window.innerHeight - viewportGap
-        ? below
-        : Math.max(viewportGap, anchor.top - height - fieldGap);
-      setPosition({ left, top, width });
+      const preferredLeft = direction === "rtl" ? anchor.left : anchor.right - width;
+      const left = Math.min(
+        Math.max(viewportEdge, preferredLeft),
+        Math.max(viewportEdge, window.innerWidth - width - viewportEdge),
+      );
+      const below = anchor.bottom + popoverGap;
+      const above = anchor.top - height - popoverGap;
+      const spaceBelow = window.innerHeight - anchor.bottom - viewportEdge;
+      const spaceAbove = anchor.top - viewportEdge;
+      const fitsBelow = height <= spaceBelow;
+      const fitsAbove = height <= spaceAbove;
+      const preferredTop = fitsBelow || (!fitsAbove && spaceBelow >= spaceAbove) ? below : above;
+      const top = Math.min(
+        Math.max(viewportEdge, preferredTop),
+        Math.max(viewportEdge, window.innerHeight - height - viewportEdge),
+      );
+
+      setPosition((current) => current.left === left && current.top === top && current.width === width
+        ? current
+        : { left, top, width });
     };
+
+    const schedulePosition = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        updatePosition();
+      });
+    };
+
     updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
+
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedulePosition);
+    if (triggerRef.current) observer?.observe(triggerRef.current);
+    if (popupRef.current) observer?.observe(popupRef.current);
+
+    window.addEventListener("resize", schedulePosition);
+    document.addEventListener("scroll", schedulePosition, true);
     return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
+      if (frame) window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener("resize", schedulePosition);
+      document.removeEventListener("scroll", schedulePosition, true);
     };
-  }, [isOpen]);
+  }, [direction, isOpen]);
 
   const popup = isOpen ? createPortal(
     <div
@@ -256,7 +305,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
           }
         }}
       />
-      <button type="button" className="date-field-trigger" aria-label={`${isOpen ? copy.close : copy.open}: ${localizedLabel}`} aria-controls={isOpen ? calendarId : undefined} aria-expanded={isOpen} disabled={disabled || readOnly} onClick={toggle}>
+      <button ref={triggerRef} type="button" className="date-field-trigger" aria-label={`${isOpen ? copy.close : copy.open}: ${localizedLabel}`} aria-controls={isOpen ? calendarId : undefined} aria-expanded={isOpen} disabled={disabled || readOnly} onClick={toggle}>
         <CalendarIcon />
       </button>
     </div>
