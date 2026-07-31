@@ -67,9 +67,16 @@ const PickerChevron = ({ orientation, className, size = 18, style }: ChevronProp
 const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-label": ariaLabel }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const ownerId = useContext(DatePickerOwnerContext);
+  const selectedItemRef = useRef<HTMLDivElement>(null);
   const selectedValue = String(value);
   const selectedLabel = options?.find((option) => String(option.value) === selectedValue)?.label;
   const menuKind = (options?.length ?? 0) > 12 ? "is-years" : "is-months";
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const frame = requestAnimationFrame(() => selectedItemRef.current?.scrollIntoView({ block: "nearest" }));
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen]);
 
   return <DropdownMenu.Root
     open={isOpen}
@@ -104,11 +111,11 @@ const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-l
               className="date-picker-select-item"
               disabled={option.disabled}
               key={option.value}
+              ref={String(option.value) === selectedValue ? selectedItemRef : undefined}
               textValue={option.label}
               value={String(option.value)}
             >
               {option.label}
-              <DropdownMenu.ItemIndicator className="date-picker-select-indicator" aria-hidden="true">✓</DropdownMenu.ItemIndicator>
             </DropdownMenu.RadioItem>
           )) : null}
         </DropdownMenu.RadioGroup>
