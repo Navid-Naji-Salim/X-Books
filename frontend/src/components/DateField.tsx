@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef,
 import { createPortal } from "react-dom";
 import { DayPicker, type ChevronProps, type DropdownProps, type Matcher } from "@daypicker/react";
 import { ar, ckb, enUS } from "@daypicker/react/locale";
-import * as Select from "@radix-ui/react-select";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { appIcons } from "../icons";
 import { useLanguage } from "../i18n";
 
@@ -27,6 +27,17 @@ const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 const viewportEdge = 8;
 const popoverGap = 6;
 const DatePickerOwnerContext = createContext<string | undefined>(undefined);
+const interactiveTargetSelector = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[contenteditable='true']",
+  "[role='button']",
+  "[role='menuitem']",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
 
 const parseDate = (value: string) => {
   const match = datePattern.exec(value);
@@ -60,27 +71,36 @@ const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-l
   const selectedLabel = options?.find((option) => String(option.value) === selectedValue)?.label;
   const menuKind = (options?.length ?? 0) > 12 ? "is-years" : "is-months";
 
-  return <Select.Root
-    value={selectedValue}
+  return <DropdownMenu.Root
     open={isOpen}
-    disabled={disabled}
     onOpenChange={setIsOpen}
-    onValueChange={(nextValue) => onChange?.({
-      target: { value: nextValue },
-      currentTarget: { value: nextValue },
-    } as ChangeEvent<HTMLSelectElement>)}
+    modal={false}
   >
-    <Select.Trigger className={`date-picker-select-trigger ${className ?? ""}`} aria-label={ariaLabel}>
-      <Select.Value>{selectedLabel}</Select.Value>
-      <Select.Icon className="date-picker-select-icon"><DropdownIcon /></Select.Icon>
-    </Select.Trigger>
-    <Select.Portal>
-      <Select.Content data-date-picker-owner={ownerId} className={`date-picker-select-content ${menuKind}`} position="popper" sideOffset={6} collisionPadding={8}>
-        <Select.Viewport className={`date-picker-select-viewport ${menuKind}`}>
+    <DropdownMenu.Trigger asChild>
+      <button type="button" className={`date-picker-select-trigger ${className ?? ""}`} aria-label={ariaLabel} disabled={disabled}>
+        <span>{selectedLabel}</span>
+        <span className="date-picker-select-icon" aria-hidden="true"><DropdownIcon /></span>
+      </button>
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Portal>
+      <DropdownMenu.Content
+        data-date-picker-owner={ownerId}
+        className={`date-picker-select-content ${menuKind}`}
+        sideOffset={6}
+        collisionPadding={8}
+        loop
+      >
+        <DropdownMenu.RadioGroup
+          className={`date-picker-select-viewport ${menuKind}`}
+          value={selectedValue}
+          onValueChange={(nextValue) => onChange?.({
+            target: { value: nextValue },
+            currentTarget: { value: nextValue },
+          } as ChangeEvent<HTMLSelectElement>)}
+        >
           {isOpen ? options?.map((option) => (
-            <Select.Item
+            <DropdownMenu.RadioItem
               aria-label={option.label}
-              aria-labelledby={undefined}
               className="date-picker-select-item"
               disabled={option.disabled}
               key={option.value}
@@ -88,13 +108,13 @@ const PickerDropdown = ({ options, value, onChange, disabled, className, "aria-l
               value={String(option.value)}
             >
               {option.label}
-              <Select.ItemIndicator className="date-picker-select-indicator" aria-hidden="true">✓</Select.ItemIndicator>
-            </Select.Item>
+              <DropdownMenu.ItemIndicator className="date-picker-select-indicator" aria-hidden="true">✓</DropdownMenu.ItemIndicator>
+            </DropdownMenu.RadioItem>
           )) : null}
-        </Select.Viewport>
-      </Select.Content>
-    </Select.Portal>
-  </Select.Root>;
+        </DropdownMenu.RadioGroup>
+      </DropdownMenu.Content>
+    </DropdownMenu.Portal>
+  </DropdownMenu.Root>;
 };
 
 const pickerComponents = { Chevron: PickerChevron, Dropdown: PickerDropdown };
@@ -161,10 +181,14 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (target instanceof Element && target.closest(".date-picker-select-content")) return;
+      const isInsideDateField = Boolean(rootRef.current?.contains(target) || popupRef.current?.contains(target));
       const hasOpenOwnedSelect = Array.from(document.querySelectorAll<HTMLElement>(".date-picker-select-content[data-state='open']"))
         .some((content) => content.dataset.datePickerOwner === calendarId);
-      if (hasOpenOwnedSelect) return;
-      if (!rootRef.current?.contains(target) && !popupRef.current?.contains(target)) close();
+      if (hasOpenOwnedSelect) {
+        if (!isInsideDateField && target instanceof Element && target.closest(interactiveTargetSelector)) close();
+        return;
+      }
+      if (!isInsideDateField) close();
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -185,14 +209,14 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     if (!isOpen) return;
 
     const updatePosition = () => {
-      const trigger = triggerRef.current;
+      const field = rootRef.current;
       const popup = popupRef.current;
-      if (!trigger || !popup) return;
+      if (!field || !popup) return;
 
-      const anchor = trigger.getBoundingClientRect();
+      const anchor = field.getBoundingClientRect();
       const width = Math.min(328, Math.max(0, window.innerWidth - viewportEdge * 2));
       const height = popup.offsetHeight;
-      const preferredLeft = direction === "rtl" ? anchor.left : anchor.right - width;
+      const preferredLeft = anchor.right - width;
       const left = Math.min(
         Math.max(viewportEdge, preferredLeft),
         Math.max(viewportEdge, window.innerWidth - width - viewportEdge),
@@ -209,8 +233,8 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
         Math.max(viewportEdge, window.innerHeight - height - viewportEdge),
       );
 
-      popup.style.left = `${left}px`;
-      popup.style.top = `${top}px`;
+      popup.style.left = `${left + window.scrollX}px`;
+      popup.style.top = `${top + window.scrollY}px`;
       popup.style.width = `${width}px`;
       popup.style.visibility = "visible";
     };
@@ -218,7 +242,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     updatePosition();
     window.addEventListener("resize", updatePosition);
     return () => window.removeEventListener("resize", updatePosition);
-  }, [direction, isOpen]);
+  }, [isOpen]);
 
   const popup = isOpen ? createPortal(
     <div
