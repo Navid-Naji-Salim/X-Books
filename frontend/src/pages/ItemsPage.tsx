@@ -9,12 +9,13 @@ import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
 import { currency } from "../lib/format";
 import { appIcons } from "../icons";
-import type { Item } from "../types";
+import type { Contact, Item } from "../types";
 
 type ItemsPageProps = {
   dataError?: string;
   items: Item[];
   token: string;
+  vendors: Contact[];
   onRefresh: () => Promise<void>;
 };
 
@@ -42,6 +43,7 @@ type ItemDraft = {
   unitCost: string;
   purchaseAccount: string;
   purchaseTax: string;
+  preferredVendorId: string;
   purchaseDescription: string;
 };
 
@@ -61,6 +63,7 @@ const emptyDraft: ItemDraft = {
   unitCost: "",
   purchaseAccount: "Cost of Goods Sold",
   purchaseTax: "",
+  preferredVendorId: "",
   purchaseDescription: "",
 };
 
@@ -80,6 +83,7 @@ const itemToDraft = (item: Item): ItemDraft => ({
   unitCost: String(item.unitCost),
   purchaseAccount: item.purchaseAccount,
   purchaseTax: item.purchaseTax ?? "",
+  preferredVendorId: item.preferredVendorId ?? "",
   purchaseDescription: item.purchaseDescription ?? "",
 });
 
@@ -106,7 +110,7 @@ const readImageFile = (file: File) => new Promise<string>((resolve, reject) => {
   reader.readAsDataURL(file);
 });
 
-export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps) => {
+export const ItemsPage = ({ dataError, items, token, vendors, onRefresh }: ItemsPageProps) => {
   const ImageIcon = appIcons.media.image;
   const [draft, setDraft] = useState<ItemDraft>(emptyDraft);
   const [baseline, setBaseline] = useState<ItemDraft>(emptyDraft);
@@ -135,6 +139,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
       item.purchaseAccount,
       item.purchaseTax,
       item.purchaseDescription,
+      item.preferredVendor?.displayName,
       item.salesEnabled ? "sales" : null,
       item.purchaseEnabled ? "purchase" : null,
       item.salesPrice,
@@ -382,7 +387,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
               <DropdownField disabled={!draft.salesEnabled} label="Tax" name="salesTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} setOpenDropdown={setOpenDropdown} value={draft.salesTax} onChange={(value) => set("salesTax", value)} />
               <div className="field item-description-field">
                 <label htmlFor="salesDescription">Description</label>
-                <textarea disabled={!draft.salesEnabled} id="salesDescription" name="salesDescription" placeholder="Sales description" value={draft.salesDescription} onChange={(event) => set("salesDescription", event.currentTarget.value)} />
+                <textarea disabled={!draft.salesEnabled} id="salesDescription" name="salesDescription" placeholder="Customer-facing description" value={draft.salesDescription} onChange={(event) => set("salesDescription", event.currentTarget.value)} />
               </div>
             </ItemSection>
 
@@ -396,9 +401,20 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
               <MoneyField disabled={!draft.purchaseEnabled} label="Cost price" name="unitCost" required={draft.purchaseEnabled} value={draft.unitCost} onChange={(value) => set("unitCost", value)} />
               <DropdownField disabled={!draft.purchaseEnabled} label="Account" name="purchaseAccount" openDropdown={openDropdown} options={purchaseAccounts} required={draft.purchaseEnabled} setOpenDropdown={setOpenDropdown} value={draft.purchaseAccount} onChange={(value) => set("purchaseAccount", value)} />
               <DropdownField disabled={!draft.purchaseEnabled} label="Tax" name="purchaseTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} setOpenDropdown={setOpenDropdown} value={draft.purchaseTax} onChange={(value) => set("purchaseTax", value)} />
+              <DropdownField
+                disabled={!draft.purchaseEnabled}
+                label="Preferred vendor"
+                name="preferredVendorId"
+                openDropdown={openDropdown}
+                placeholder="Select a vendor"
+                options={vendors.map((vendor) => ({ label: vendor.displayName, value: vendor.id }))}
+                setOpenDropdown={setOpenDropdown}
+                value={draft.preferredVendorId}
+                onChange={(value) => set("preferredVendorId", value)}
+              />
               <div className="field item-description-field">
                 <label htmlFor="purchaseDescription">Description</label>
-                <textarea disabled={!draft.purchaseEnabled} id="purchaseDescription" name="purchaseDescription" placeholder="Purchase description" value={draft.purchaseDescription} onChange={(event) => set("purchaseDescription", event.currentTarget.value)} />
+                <textarea disabled={!draft.purchaseEnabled} id="purchaseDescription" name="purchaseDescription" placeholder="Vendor-facing description" value={draft.purchaseDescription} onChange={(event) => set("purchaseDescription", event.currentTarget.value)} />
               </div>
             </ItemSection>
           </div>
@@ -414,7 +430,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
             </div>
             <RecordListSearch label="Search items" placeholder="Search items by any detail…" value={query} onChange={setQuery} />
           </div>
-          <RecordTableScroll columns={5}>
+          <RecordTableScroll columns={6}>
             <table>
               <thead>
                 <tr>
@@ -422,13 +438,14 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                   <th>Type</th>
                   <th>Sales</th>
                   <th>Purchase</th>
+                  <th>Vendor</th>
                   <th className="record-actions-heading">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="muted">{query ? "No items match your search." : "No items yet."}</td>
+                    <td colSpan={6} className="muted">{query ? "No items match your search." : "No items yet."}</td>
                   </tr>
                 ) : (
                   filteredItems.map((item) => (
@@ -449,6 +466,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                         <br />
                         <span className="muted">{item.purchaseAccount}</span>
                       </td>
+                      <td>{item.preferredVendor?.displayName ?? "-"}</td>
                       <td className="record-actions-cell">
                         <RecordActionsMenu
                           recordLabel={item.name}
