@@ -2134,7 +2134,7 @@ th {
 
 .invoice-footer-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.72fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.72fr);
   gap: 1rem;
   align-items: stretch;
 }
@@ -2144,8 +2144,11 @@ th {
 
 .invoice-totals-card {
   display: grid;
+  grid-template-rows: repeat(3, minmax(3.5rem, 1fr)) minmax(4.25rem, 1.2fr);
   gap: 0;
-  padding-inline: 1.2rem;
+  height: 100%;
+  padding: 0.35rem 1.2rem;
+  border-radius: 18px;
   background: rgba(248, 250, 252, 0.88);
 }
 
