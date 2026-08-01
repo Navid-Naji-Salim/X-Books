@@ -47,7 +47,6 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   const rootRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const verticalOffsetRef = useRef<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [openPeriodDropdown, setOpenPeriodDropdown] = useState<string | null>(null);
   const [draft, setDraft] = useState(value);
@@ -67,14 +66,12 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   }, [disabled, readOnly]);
 
   const close = () => {
-    verticalOffsetRef.current = null;
     setIsOpen(false);
     setOpenPeriodDropdown(null);
   };
   const toggle = () => {
     if (disabled || readOnly) return;
     if (!isOpen) {
-      verticalOffsetRef.current = null;
       setViewDate(selectedDate ?? new Date());
     }
     setIsOpen((current) => !current);
@@ -123,19 +120,10 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       const viewportGap = 8;
       const fieldGap = 7;
       const width = Math.min(376, window.innerWidth - viewportGap * 2);
-      const height = popup.offsetHeight;
       const left = Math.min(Math.max(anchor.right - width, viewportGap), window.innerWidth - width - viewportGap);
       const below = anchor.bottom + fieldGap;
-      let verticalOffset = verticalOffsetRef.current;
-      if (verticalOffset === null) {
-        const initialTop = below + height <= window.innerHeight - viewportGap
-          ? below
-          : Math.max(viewportGap, anchor.top - height - fieldGap);
-        verticalOffset = initialTop - below;
-        verticalOffsetRef.current = verticalOffset;
-      }
       const nextLeft = `${left + window.scrollX}px`;
-      const nextTop = `${below + verticalOffset + window.scrollY}px`;
+      const nextTop = `${below + window.scrollY}px`;
       const nextWidth = `${width}px`;
       if (popup.style.left !== nextLeft) popup.style.left = nextLeft;
       if (popup.style.top !== nextTop) popup.style.top = nextTop;
