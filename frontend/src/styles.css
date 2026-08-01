@@ -2173,6 +2173,11 @@ th {
   text-align: right;
 }
 
+.invoice-totals-card > div:nth-child(2) {
+  grid-template-columns: max-content 7rem minmax(0, 1fr) minmax(6rem, auto);
+}
+
+.invoice-totals-card > div:nth-child(2) > strong { grid-column: 4; }
 .invoice-totals-card > div:not(:nth-child(2)) > strong { grid-column: 3; }
 .invoice-discount-input { display: grid; grid-template-columns: 1fr 2.5rem; }
 .invoice-discount-input input { min-height: 2.6rem; border-radius: 12px 0 0 12px; padding: 0.55rem 0.65rem; text-align: right; }
