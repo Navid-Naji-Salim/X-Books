@@ -2134,22 +2134,23 @@ th {
 
 .invoice-footer-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.72fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   align-items: stretch;
 }
 
-.invoice-notes-card { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0.95rem; }
-.invoice-notes-card textarea { height: 100%; min-height: 11.5rem; }
+.invoice-notes-card { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; gap: 0.95rem; }
+.invoice-notes-card textarea { height: 100%; min-height: 8.5rem; }
 
 .invoice-totals-card {
   display: grid;
   grid-template-rows: repeat(3, minmax(3.5rem, 1fr)) minmax(4.25rem, 1.2fr);
   gap: 0;
+  min-width: 0;
   height: 100%;
   padding: 0.35rem 1.2rem;
   border-radius: 18px;
-  background: rgba(248, 250, 252, 0.88);
+  background: rgba(226, 232, 240, 0.58);
 }
 
 .invoice-totals-card > div {
