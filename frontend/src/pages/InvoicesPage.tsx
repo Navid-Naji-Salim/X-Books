@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
+import { DateField } from "../components/DateField";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
@@ -247,12 +248,12 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             <section className="invoice-detail-card">
               <h3>Invoice details</h3>
               <div className="field"><label htmlFor="invoiceNumber">Invoice number</label><input id="invoiceNumber" value={invoiceNumber} required disabled={isViewingPaidInvoice} onChange={(event) => setInvoiceNumber(event.currentTarget.value)} /></div>
-              <div className="field"><label htmlFor="invoiceDate">Invoice date</label><input id="invoiceDate" type="date" value={invoiceDate} required disabled={isViewingPaidInvoice} onChange={(event) => { const value = event.currentTarget.value; setInvoiceDate(value); setDueDate(dueDateFor(value, terms)); }} /></div>
+              <DateField id="invoiceDate" label="Invoice date" value={invoiceDate} required disabled={isViewingPaidInvoice} onChange={(value) => { setInvoiceDate(value); setDueDate(dueDateFor(value, terms)); }} />
             </section>
             <section className="invoice-detail-card">
               <h3>Payment schedule</h3>
               <DropdownField label="Terms" name="terms" options={termsOptions} disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={terms} onChange={(value) => { setTerms(value); setDueDate(dueDateFor(invoiceDate, value)); }} />
-              <div className="field"><label htmlFor="dueDate">Due date</label><input id="dueDate" type="date" value={dueDate} required disabled={isViewingPaidInvoice} onChange={(event) => setDueDate(event.currentTarget.value)} /></div>
+              <DateField id="dueDate" label="Due date" value={dueDate} required disabled={isViewingPaidInvoice} onChange={setDueDate} />
             </section>
           </div>
         </section>
@@ -363,7 +364,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             }
           }}>
             <div className="item-form-head"><div><h2 id="payment-modal-title">Record payment</h2><p>{paymentInvoice.invoiceNumber} · {paymentInvoice.customer.displayName}</p></div></div>
-            <div className="field"><label htmlFor="paymentDate">Payment date</label><input id="paymentDate" type="date" required value={paymentDate} onChange={(event) => setPaymentDate(event.currentTarget.value)} /></div>
+            <DateField id="paymentDate" label="Payment date" required value={paymentDate} onChange={setPaymentDate} />
             <div className="field"><label htmlFor="paymentAmount">Amount</label><input id="paymentAmount" type="number" min="0.01" max={paymentInvoice.remainingBalance} step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} /></div>
             <div className="message" role="status">{message}</div>
             <div className="payment-modal-actions"><button className="ghost-button" disabled={isRecordingPayment} type="button" onClick={() => setPaymentInvoice(null)}>Cancel</button><button className="button" disabled={isRecordingPayment} type="submit">{isRecordingPayment ? "Saving..." : "Save payment"}</button></div>
