@@ -210,7 +210,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   return (
     <>
       {dataError ? <div className="panel page-alert">{dataError}</div> : null}
-      <form className={`invoice-workspace ${isViewingPaidInvoice ? "is-read-only" : ""}`} onSubmit={async (event) => {
+      <form className={`panel invoice-workspace invoice-document-card ${isViewingPaidInvoice ? "is-read-only" : ""}`} onSubmit={async (event) => {
         event.preventDefault();
         if (isViewingPaidInvoice) return;
         setMessage("");
@@ -227,7 +227,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
           setMessage(error instanceof ApiError ? error.message : "Unable to save invoice.");
         }
       }}>
-        <section className="panel item-form compact-item-form invoice-form-panel">
+        <section className="item-form compact-item-form invoice-form-panel">
           <div className="item-form-head">
             <div><h2>{selectedInvoiceId ? "Invoice details" : "New invoice"}</h2><p>Customer and billing details</p></div>
             <div className="invoice-form-actions">
@@ -258,7 +258,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
           </div>
         </section>
 
-        <section className="panel invoice-items-panel">
+        <section className="invoice-items-panel">
           <div className="item-form-head"><div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div></div>
           <div className="table-wrap invoice-table-wrap">
             <table className="invoice-table">
@@ -282,8 +282,8 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         </section>
 
         <section className="invoice-footer-grid">
-          <div className="panel invoice-notes-card"><h2 id="customerNotesLabel">Notes</h2><textarea aria-labelledby="customerNotesLabel" id="customerNotes" placeholder="Notes for internal use" value={customerNotes} disabled={isViewingPaidInvoice} onChange={(event) => setCustomerNotes(event.currentTarget.value)} /></div>
-          <div className="panel invoice-totals-card">
+          <div className="invoice-notes-card"><h2 id="customerNotesLabel">Notes</h2><textarea aria-labelledby="customerNotesLabel" id="customerNotes" placeholder="Notes for internal use" value={customerNotes} disabled={isViewingPaidInvoice} onChange={(event) => setCustomerNotes(event.currentTarget.value)} /></div>
+          <div className="invoice-totals-card">
             <div><span>Subtotal</span><strong>{currency.format(totals.subtotal)}</strong></div>
             <div><label htmlFor="discountPercent">Discount</label><span className="invoice-discount-input"><input id="discountPercent" type="number" min="0" max="100" step="0.01" value={discountPercent} disabled={isViewingPaidInvoice} onChange={(event) => setDiscountPercent(Number(event.currentTarget.value))} /><b>%</b></span><strong>-{currency.format(totals.discountAmount)}</strong></div>
             <div><span>Tax</span><strong>{currency.format(totals.taxTotal)}</strong></div>

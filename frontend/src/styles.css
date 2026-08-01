@@ -2042,6 +2042,29 @@ th {
   gap: 1rem;
 }
 
+.invoice-document-card {
+  gap: 0;
+  overflow: visible;
+}
+
+.invoice-document-card > .invoice-form-panel {
+  padding: 0 0 1.2rem;
+}
+
+.invoice-document-card > .invoice-items-panel,
+.invoice-document-card > .invoice-footer-grid {
+  border-top: 1px solid var(--line);
+  padding-top: 1.2rem;
+}
+
+.invoice-document-card > .invoice-items-panel {
+  padding-bottom: 1.2rem;
+}
+
+.invoice-document-card > .message {
+  margin-top: 1rem;
+}
+
 .invoice-form-panel {
   display: grid;
   gap: 1rem;
@@ -2122,6 +2145,7 @@ th {
 .invoice-totals-card {
   display: grid;
   gap: 0;
+  padding-inline: 1.2rem;
   background: rgba(248, 250, 252, 0.88);
 }
 

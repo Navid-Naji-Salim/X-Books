@@ -245,7 +245,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
     <>
       {dataError ? <div className="panel page-alert">{dataError}</div> : null}
       <form
-        className={`invoice-workspace ${isReadOnly ? "is-read-only" : ""}`}
+        className={`panel invoice-workspace invoice-document-card ${isReadOnly ? "is-read-only" : ""}`}
         onSubmit={async (event) => {
           event.preventDefault();
           if (isReadOnly || isSaving) return;
@@ -274,7 +274,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
           }
         }}
       >
-        <section className="panel item-form compact-item-form invoice-form-panel">
+        <section className="item-form compact-item-form invoice-form-panel">
           <div className="item-form-head">
             <div>
               <h2>{selectedBillId ? "Bill details" : "New bill"}</h2>
@@ -354,7 +354,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
           </div>
         </section>
 
-        <section className="panel invoice-items-panel">
+        <section className="invoice-items-panel">
           <div className="item-form-head">
             <div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
           </div>
@@ -446,11 +446,11 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
         </section>
 
         <section className="invoice-footer-grid">
-          <div className="panel invoice-notes-card">
+          <div className="invoice-notes-card">
             <h2 id="billNotesLabel">Notes</h2>
             <textarea aria-labelledby="billNotesLabel" id="billNotes" placeholder="Notes for internal use" readOnly={isReadOnly} value={notes} onChange={(event) => setNotes(event.currentTarget.value)} />
           </div>
-          <div className="panel invoice-totals-card">
+          <div className="invoice-totals-card">
             <div><span>Subtotal</span><strong>{currency.format(totals.subtotal)}</strong></div>
             <div>
               <label htmlFor="billDiscount">Discount</label>
