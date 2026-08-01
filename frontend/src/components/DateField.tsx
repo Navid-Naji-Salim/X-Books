@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { appIcons } from "../icons";
 import { useLanguage } from "../i18n";
+import { DropdownField } from "./FormControls";
 
 type DateFieldProps = {
   id: string;
@@ -49,6 +50,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   const popupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [openPeriodDropdown, setOpenPeriodDropdown] = useState<string | null>(null);
   const [draft, setDraft] = useState(value);
   const selectedDate = parseDate(value);
   const [viewDate, setViewDate] = useState(() => selectedDate ?? new Date());
@@ -66,7 +68,10 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     if (disabled || readOnly) setIsOpen(false);
   }, [disabled, readOnly]);
 
-  const close = () => setIsOpen(false);
+  const close = () => {
+    setIsOpen(false);
+    setOpenPeriodDropdown(null);
+  };
   const toggle = () => {
     if (disabled || readOnly) return;
     if (!isOpen) setViewDate(selectedDate ?? new Date());
@@ -91,7 +96,8 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     if (!isOpen) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (!rootRef.current?.contains(target) && !popupRef.current?.contains(target)) close();
+      const isPeriodOption = target instanceof Element && Boolean(target.closest(".date-picker-period-options"));
+      if (!rootRef.current?.contains(target) && !popupRef.current?.contains(target) && !isPeriodOption) close();
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -137,7 +143,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     new Intl.DateTimeFormat(locale, { month: "long" }).format(new Date(2024, month, 1))), [locale]);
   const weekdayNames = useMemo(() => Array.from({ length: 7 }, (_, day) =>
     new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(new Date(2024, 0, 7 + day))), [locale]);
-  const years = useMemo(() => Array.from({ length: 201 }, (_, index) => 1900 + index), []);
+  const years = useMemo(() => Array.from({ length: 51 }, (_, index) => String(2000 + index)), []);
   const firstGridDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1 - new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay());
   const days = Array.from({ length: 42 }, (_, index) => new Date(firstGridDay.getFullYear(), firstGridDay.getMonth(), firstGridDay.getDate() + index));
   const today = new Date();
@@ -172,12 +178,38 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
           <PreviousIcon />
         </button>
         <div className="date-picker-period">
-          <select aria-label={copy.month} value={viewDate.getMonth()} onChange={(event) => setViewDate(new Date(viewDate.getFullYear(), Number(event.currentTarget.value), 1))}>
-            {monthNames.map((month, index) => <option key={month} value={index}>{month}</option>)}
-          </select>
-          <select aria-label={copy.year} value={viewDate.getFullYear()} onChange={(event) => setViewDate(new Date(Number(event.currentTarget.value), viewDate.getMonth(), 1))}>
-            {years.map((year) => <option key={year} value={year}>{year}</option>)}
-          </select>
+          <DropdownField
+            ariaLabel={copy.month}
+            className="date-picker-period-dropdown"
+            floatingMenuHeight={496}
+            floatingOptions
+            includeFormValue={false}
+            label={copy.month}
+            labelClassName="sr-only"
+            name={`${id}-calendar-month`}
+            openDropdown={openPeriodDropdown}
+            options={monthNames.map((month, index) => ({ label: month, value: String(index) }))}
+            optionsClassName="date-picker-period-options is-month"
+            setOpenDropdown={setOpenPeriodDropdown}
+            value={String(viewDate.getMonth())}
+            onChange={(month) => setViewDate(new Date(viewDate.getFullYear(), Number(month), 1))}
+          />
+          <DropdownField
+            ariaLabel={copy.year}
+            className="date-picker-period-dropdown"
+            floatingMenuHeight={496}
+            floatingOptions
+            includeFormValue={false}
+            label={copy.year}
+            labelClassName="sr-only"
+            name={`${id}-calendar-year`}
+            openDropdown={openPeriodDropdown}
+            options={years}
+            optionsClassName="date-picker-period-options is-year"
+            setOpenDropdown={setOpenPeriodDropdown}
+            value={String(viewDate.getFullYear())}
+            onChange={(year) => setViewDate(new Date(Number(year), viewDate.getMonth(), 1))}
+          />
         </div>
         <button type="button" className="date-picker-nav" aria-label={copy.next} onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}>
           <NextIcon />

@@ -7,8 +7,12 @@ type Option = string | { label: string; value: string };
 
 type DropdownFieldProps = {
   label?: string;
+  ariaLabel?: string;
+  className?: string;
+  labelClassName?: string;
   name: string;
   options: Option[];
+  optionsClassName?: string;
   defaultValue?: string;
   placeholder?: string;
   required?: boolean;
@@ -19,12 +23,15 @@ type DropdownFieldProps = {
   value?: string;
   onChange?: (value: string) => void;
   floatingOptions?: boolean;
+  floatingMenuHeight?: number;
+  includeFormValue?: boolean;
 };
 
 export const DropdownField = ({
   label = "Unit", name, options, defaultValue = "", placeholder = "Select an option",
+  ariaLabel, className = "", labelClassName = "", optionsClassName = "",
   required, disabled, resetVersion, openDropdown, setOpenDropdown,
-  value: controlledValue, onChange, floatingOptions = false,
+  value: controlledValue, onChange, floatingOptions = false, floatingMenuHeight = 152, includeFormValue = true,
 }: DropdownFieldProps) => {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -47,16 +54,21 @@ export const DropdownField = ({
     if (!summary) return;
     const rect = summary.getBoundingClientRect();
     const menuGap = 6;
-    const menuHeight = 152;
-    const openAbove = window.innerHeight - rect.bottom < menuHeight + menuGap && rect.top > menuHeight;
+    const viewportGap = 8;
+    const spaceBelow = window.innerHeight - rect.bottom - menuGap;
+    const spaceAbove = rect.top - menuGap;
+    const top = spaceBelow >= floatingMenuHeight
+      ? rect.bottom + menuGap
+      : spaceAbove >= floatingMenuHeight
+        ? rect.top - floatingMenuHeight - menuGap
+        : Math.max(viewportGap, window.innerHeight - floatingMenuHeight - viewportGap);
     setFloatingStyle({
       left: rect.left,
       width: rect.width,
-      ...(openAbove
-        ? { bottom: window.innerHeight - rect.top + menuGap, top: "auto" }
-        : { top: rect.bottom + menuGap, bottom: "auto" }),
+      top,
+      bottom: "auto",
     });
-  }, []);
+  }, [floatingMenuHeight]);
 
   useLayoutEffect(() => {
     if (!isOpen || !floatingOptions) {
@@ -83,7 +95,7 @@ export const DropdownField = ({
   }, [isOpen, setOpenDropdown]);
 
   const optionsMenu = isOpen ? <div
-    className={`select-options ${floatingOptions ? "is-floating" : ""}`}
+    className={`select-options${floatingOptions ? " is-floating" : ""}${optionsClassName ? ` ${optionsClassName}` : ""}`}
     ref={optionsRef}
     style={floatingOptions ? floatingStyle : undefined}
   >
@@ -99,11 +111,11 @@ export const DropdownField = ({
   </div> : null;
 
   return (
-    <div className="field dropdown-field">
-      <label htmlFor={`${name}-value`}>{label}</label>
-      <input id={`${name}-value`} name={name} type="hidden" value={selectedValue} required={required} />
+    <div className={`field dropdown-field${className ? ` ${className}` : ""}`}>
+      <label className={labelClassName || undefined} htmlFor={`${name}-value`}>{label}</label>
+      {includeFormValue ? <input id={`${name}-value`} name={name} type="hidden" value={selectedValue} required={required} /> : null}
       <details ref={detailsRef} className="select-menu" open={isOpen}>
-        <summary aria-disabled={disabled} onClick={(event) => {
+        <summary aria-disabled={disabled} aria-label={ariaLabel} onClick={(event) => {
           event.preventDefault();
           if (!disabled) setOpenDropdown(isOpen ? null : name);
         }}>{selectedLabel || placeholder}</summary>

@@ -801,21 +801,61 @@ textarea:focus {
 
 .date-picker-period {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 5.2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.35rem;
 }
 
-.date-picker-period select {
+.date-picker-period-dropdown {
   min-width: 0;
-  height: 2.25rem;
-  border-color: transparent;
-  border-radius: 10px;
-  padding: 0.35rem 0.55rem;
-  color: var(--ink);
-  background: #f8fafc;
+  gap: 0;
+}
+
+.date-picker-period-dropdown .select-menu summary {
+  height: 2.72rem;
+  min-height: 2.72rem;
+  padding: 0.64rem 0.78rem;
   font-size: 0.83rem;
-  font-weight: 850;
-  text-align: center;
+}
+
+.select-options.date-picker-period-options {
+  height: 31rem;
+  max-height: none;
+  overflow-x: hidden;
+}
+
+.date-picker-period-options button {
+  font-size: 0.83rem;
+  line-height: 1.55;
+}
+
+.date-picker-period-options.is-month {
+  overflow-y: hidden;
+}
+
+.date-picker-period-options.is-year {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
+}
+
+.date-picker-period-options.is-year::-webkit-scrollbar {
+  width: 8px;
+}
+
+.date-picker-period-options.is-year::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.date-picker-period-options.is-year::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.42);
+  background-clip: padding-box;
+}
+
+.date-picker-period-options.is-year::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.58);
+  background-clip: padding-box;
 }
 
 .date-picker-weekdays,
