@@ -818,9 +818,12 @@ textarea:focus {
 }
 
 .select-options.date-picker-period-options {
-  height: 31rem;
+  height: 15.5rem;
   max-height: none;
   overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
 }
 
 .date-picker-period-options button {
@@ -828,32 +831,22 @@ textarea:focus {
   line-height: 1.55;
 }
 
-.date-picker-period-options.is-month {
-  overflow-y: hidden;
-}
-
-.date-picker-period-options.is-year {
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
-}
-
-.date-picker-period-options.is-year::-webkit-scrollbar {
+.date-picker-period-options::-webkit-scrollbar {
   width: 8px;
 }
 
-.date-picker-period-options.is-year::-webkit-scrollbar-track {
+.date-picker-period-options::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.date-picker-period-options.is-year::-webkit-scrollbar-thumb {
+.date-picker-period-options::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
   background: rgba(100, 116, 139, 0.42);
   background-clip: padding-box;
 }
 
-.date-picker-period-options.is-year::-webkit-scrollbar-thumb:hover {
+.date-picker-period-options::-webkit-scrollbar-thumb:hover {
   background: rgba(71, 85, 105, 0.58);
   background-clip: padding-box;
 }

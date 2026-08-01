@@ -96,8 +96,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     if (!isOpen) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
-      const isPeriodOption = target instanceof Element && Boolean(target.closest(".date-picker-period-options"));
-      if (!rootRef.current?.contains(target) && !popupRef.current?.contains(target) && !isPeriodOption) close();
+      if (!rootRef.current?.contains(target) && !popupRef.current?.contains(target)) close();
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -121,7 +120,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       if (!anchor || !popup) return;
       const viewportGap = 8;
       const fieldGap = 7;
-      const width = Math.min(328, window.innerWidth - viewportGap * 2);
+      const width = Math.min(376, window.innerWidth - viewportGap * 2);
       const height = popup.offsetHeight;
       const left = Math.min(Math.max(anchor.right - width, viewportGap), window.innerWidth - width - viewportGap);
       const below = anchor.bottom + fieldGap;
@@ -181,8 +180,6 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
           <DropdownField
             ariaLabel={copy.month}
             className="date-picker-period-dropdown"
-            floatingMenuHeight={496}
-            floatingOptions
             includeFormValue={false}
             label={copy.month}
             labelClassName="sr-only"
@@ -197,8 +194,6 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
           <DropdownField
             ariaLabel={copy.year}
             className="date-picker-period-dropdown"
-            floatingMenuHeight={496}
-            floatingOptions
             includeFormValue={false}
             label={copy.year}
             labelClassName="sr-only"

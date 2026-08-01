@@ -23,7 +23,6 @@ type DropdownFieldProps = {
   value?: string;
   onChange?: (value: string) => void;
   floatingOptions?: boolean;
-  floatingMenuHeight?: number;
   includeFormValue?: boolean;
 };
 
@@ -31,7 +30,7 @@ export const DropdownField = ({
   label = "Unit", name, options, defaultValue = "", placeholder = "Select an option",
   ariaLabel, className = "", labelClassName = "", optionsClassName = "",
   required, disabled, resetVersion, openDropdown, setOpenDropdown,
-  value: controlledValue, onChange, floatingOptions = false, floatingMenuHeight = 152, includeFormValue = true,
+  value: controlledValue, onChange, floatingOptions = false, includeFormValue = true,
 }: DropdownFieldProps) => {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -54,21 +53,16 @@ export const DropdownField = ({
     if (!summary) return;
     const rect = summary.getBoundingClientRect();
     const menuGap = 6;
-    const viewportGap = 8;
-    const spaceBelow = window.innerHeight - rect.bottom - menuGap;
-    const spaceAbove = rect.top - menuGap;
-    const top = spaceBelow >= floatingMenuHeight
-      ? rect.bottom + menuGap
-      : spaceAbove >= floatingMenuHeight
-        ? rect.top - floatingMenuHeight - menuGap
-        : Math.max(viewportGap, window.innerHeight - floatingMenuHeight - viewportGap);
+    const menuHeight = 152;
+    const openAbove = window.innerHeight - rect.bottom < menuHeight + menuGap && rect.top > menuHeight;
     setFloatingStyle({
       left: rect.left,
       width: rect.width,
-      top,
-      bottom: "auto",
+      ...(openAbove
+        ? { bottom: window.innerHeight - rect.top + menuGap, top: "auto" }
+        : { top: rect.bottom + menuGap, bottom: "auto" }),
     });
-  }, [floatingMenuHeight]);
+  }, []);
 
   useLayoutEffect(() => {
     if (!isOpen || !floatingOptions) {
