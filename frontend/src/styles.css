@@ -2133,6 +2133,7 @@ th {
 .invoice-add-row svg { width: 17px; height: 17px; }
 
 .invoice-footer-grid {
+  --invoice-footer-surface-height: 15rem;
   display: grid;
   grid-template-areas:
     "notes-heading ."
@@ -2146,17 +2147,24 @@ th {
 
 .invoice-notes-card { display: contents; }
 .invoice-notes-card h2 { grid-area: notes-heading; }
-.invoice-notes-card textarea { grid-area: notes-input; height: 100%; min-height: 8.5rem; }
+.invoice-notes-card textarea {
+  grid-area: notes-input;
+  width: 100%;
+  height: var(--invoice-footer-surface-height);
+  min-height: var(--invoice-footer-surface-height);
+}
 
 .invoice-totals-card {
   grid-area: totals;
   display: grid;
   grid-template-rows: repeat(3, minmax(3rem, 1fr)) minmax(3.75rem, 1.15fr);
   gap: 0;
+  width: 100%;
   min-width: 0;
-  height: 100%;
+  height: var(--invoice-footer-surface-height);
+  min-height: var(--invoice-footer-surface-height);
   padding: 0.25rem 1.2rem;
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(226, 232, 240, 0.58);
 }
 
