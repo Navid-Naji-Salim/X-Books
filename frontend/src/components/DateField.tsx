@@ -17,8 +17,6 @@ type DateFieldProps = {
   name?: string;
 };
 
-type PopupPosition = { left: number; top: number; width: number };
-
 const CalendarIcon = appIcons.form.calendar;
 const PreviousIcon = appIcons.date.previous;
 const NextIcon = appIcons.date.next;
@@ -49,12 +47,12 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   const rootRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const verticalOffsetRef = useRef<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [openPeriodDropdown, setOpenPeriodDropdown] = useState<string | null>(null);
   const [draft, setDraft] = useState(value);
   const selectedDate = parseDate(value);
   const [viewDate, setViewDate] = useState(() => selectedDate ?? new Date());
-  const [position, setPosition] = useState<PopupPosition>({ left: 8, top: 8, width: 320 });
   const locale = language === "ku" ? "ckb" : language === "ar" ? "ar-IQ" : "en-US";
   const localizedLabel = t(label);
   const copy = language === "ku"
@@ -69,12 +67,16 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   }, [disabled, readOnly]);
 
   const close = () => {
+    verticalOffsetRef.current = null;
     setIsOpen(false);
     setOpenPeriodDropdown(null);
   };
   const toggle = () => {
     if (disabled || readOnly) return;
-    if (!isOpen) setViewDate(selectedDate ?? new Date());
+    if (!isOpen) {
+      verticalOffsetRef.current = null;
+      setViewDate(selectedDate ?? new Date());
+    }
     setIsOpen((current) => !current);
   };
 
@@ -124,17 +126,29 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       const height = popup.offsetHeight;
       const left = Math.min(Math.max(anchor.right - width, viewportGap), window.innerWidth - width - viewportGap);
       const below = anchor.bottom + fieldGap;
-      const top = below + height <= window.innerHeight - viewportGap
-        ? below
-        : Math.max(viewportGap, anchor.top - height - fieldGap);
-      setPosition({ left, top, width });
+      let verticalOffset = verticalOffsetRef.current;
+      if (verticalOffset === null) {
+        const initialTop = below + height <= window.innerHeight - viewportGap
+          ? below
+          : Math.max(viewportGap, anchor.top - height - fieldGap);
+        verticalOffset = initialTop - below;
+        verticalOffsetRef.current = verticalOffset;
+      }
+      const nextLeft = `${left + window.scrollX}px`;
+      const nextTop = `${below + verticalOffset + window.scrollY}px`;
+      const nextWidth = `${width}px`;
+      if (popup.style.left !== nextLeft) popup.style.left = nextLeft;
+      if (popup.style.top !== nextTop) popup.style.top = nextTop;
+      if (popup.style.width !== nextWidth) popup.style.width = nextWidth;
     };
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
+    let frame = 0;
+    const trackPosition = () => {
+      updatePosition();
+      frame = window.requestAnimationFrame(trackPosition);
+    };
+    trackPosition();
     return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
+      if (frame) window.cancelAnimationFrame(frame);
     };
   }, [isOpen, viewDate]);
 
@@ -170,7 +184,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       className="date-picker-popover"
       role="dialog"
       aria-label={`${localizedLabel} ${copy.calendar}`}
-      style={{ left: position.left, top: position.top, width: position.width }}
+      style={{ left: 8, top: 8, width: 320 }}
     >
       <div className="date-picker-header">
         <button type="button" className="date-picker-nav" aria-label={copy.previous} onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}>
