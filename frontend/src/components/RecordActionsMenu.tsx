@@ -170,6 +170,11 @@ export const RecordActionsMenu = ({
       const isRtl = document.documentElement.dir === "rtl";
       const belowTop = triggerRect.bottom + GAP;
       const aboveTop = triggerRect.top - height - GAP;
+      const aboveBottom = triggerRect.top - GAP;
+      const viewportTop = EDGE;
+      const viewportBottom = window.innerHeight - EDGE;
+      const fitsAbove = aboveTop >= viewportTop && aboveBottom <= viewportBottom;
+      const fitsBelow = belowTop >= viewportTop && belowTop + height <= viewportBottom;
       const preferredLeft = align === "right" || !isRtl ? triggerRect.right - width : triggerRect.left;
       const boundaryRect = boundaryRef?.current?.getBoundingClientRect();
       const viewportMaxLeft = Math.max(EDGE, window.innerWidth - width - EDGE);
@@ -183,11 +188,15 @@ export const RecordActionsMenu = ({
       const left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
       let nextPlacement = placementRef.current;
       if (nextPlacement === null) {
-        const fitsBelow = belowTop + height <= window.innerHeight - EDGE;
-        const fitsAbove = aboveTop >= EDGE;
         const spaceBelow = window.innerHeight - triggerRect.bottom - GAP - EDGE;
         const spaceAbove = triggerRect.top - GAP - EDGE;
         nextPlacement = fitsBelow || (!fitsAbove && spaceBelow >= spaceAbove) ? "below" : "above";
+      } else {
+        const currentFits = nextPlacement === "below" ? fitsBelow : fitsAbove;
+        const oppositeFits = nextPlacement === "below" ? fitsAbove : fitsBelow;
+        if (!currentFits && oppositeFits) nextPlacement = nextPlacement === "below" ? "above" : "below";
+      }
+      if (placementRef.current !== nextPlacement) {
         placementRef.current = nextPlacement;
         setPlacement(nextPlacement);
       }
