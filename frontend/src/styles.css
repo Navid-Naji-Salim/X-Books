@@ -951,7 +951,7 @@ textarea:focus {
   border: 0;
   border-radius: 9px;
   padding: 0.42rem 0.62rem;
-  color: var(--ink);
+  color: #075985;
   background: transparent;
   font-size: 0.76rem;
   font-weight: 850;
