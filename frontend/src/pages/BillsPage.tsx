@@ -357,6 +357,21 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
         <section className="invoice-items-panel">
           <div className="item-form-head">
             <div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
+            <button
+              className="button invoice-add-row"
+              disabled={isReadOnly}
+              type="button"
+              onClick={() => {
+                const vendor = vendors.find((entry) => entry.id === vendorId);
+                setLines((current) => [
+                  ...current,
+                  { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: vendor?.taxRate ?? "" },
+                ]);
+                setNextLineId((value) => value + 1);
+              }}
+            >
+              <AddIcon /> Add new row
+            </button>
           </div>
           <RecordTableScroll className="invoice-lines-table-scroll" columns={6}>
             <table className="invoice-table">
@@ -428,21 +443,6 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
               </tbody>
             </table>
           </RecordTableScroll>
-          <button
-            className="button invoice-add-row"
-            disabled={isReadOnly}
-            type="button"
-            onClick={() => {
-              const vendor = vendors.find((entry) => entry.id === vendorId);
-              setLines((current) => [
-                ...current,
-                { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: vendor?.taxRate ?? "" },
-              ]);
-              setNextLineId((value) => value + 1);
-            }}
-          >
-            <AddIcon /> Add new row
-          </button>
         </section>
 
         <section className="invoice-footer-grid">

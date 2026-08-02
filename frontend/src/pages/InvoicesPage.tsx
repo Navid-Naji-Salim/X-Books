@@ -259,7 +259,10 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         </section>
 
         <section className="invoice-items-panel">
-          <div className="item-form-head"><div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div></div>
+          <div className="item-form-head">
+            <div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
+            <button className="button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add new row</button>
+          </div>
           <RecordTableScroll className="invoice-lines-table-scroll" columns={6}>
             <table className="invoice-table">
               <thead><tr><th>Item details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr></thead>
@@ -278,7 +281,6 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               ))}</tbody>
             </table>
           </RecordTableScroll>
-            <button className="button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add new row</button>
         </section>
 
         <section className="invoice-footer-grid">
