@@ -58,7 +58,7 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
     ? { calendar: "ڕۆژژمێر", open: "کردنەوەی ڕۆژژمێر", close: "داخستنی ڕۆژژمێر", previous: "مانگی پێشوو", next: "مانگی داهاتوو", month: "مانگ", year: "ساڵ", today: "ئەمڕۆ", clear: "پاککردنەوە" }
     : language === "ar"
       ? { calendar: "التقويم", open: "فتح التقويم", close: "إغلاق التقويم", previous: "الشهر السابق", next: "الشهر التالي", month: "الشهر", year: "السنة", today: "اليوم", clear: "مسح" }
-      : { calendar: "calendar", open: "Open calendar", close: "Close calendar", previous: "Previous month", next: "Next month", month: "Month", year: "Year", today: "Today", clear: "Clear" };
+      : { calendar: "Calendar", open: "Open Calendar", close: "Close Calendar", previous: "Previous Month", next: "Next Month", month: "Month", year: "Year", today: "Today", clear: "Clear" };
 
   useEffect(() => setDraft(value), [value]);
   useEffect(() => {

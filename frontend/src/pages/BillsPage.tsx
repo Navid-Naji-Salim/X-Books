@@ -277,8 +277,8 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
         <section className="item-form compact-item-form invoice-form-panel">
           <div className="item-form-head">
             <div>
-              <h2>{selectedBillId ? "Bill details" : "New bill"}</h2>
-              <p>Vendor and billing details</p>
+              <h2>{selectedBillId ? "Bill Details" : "New Bill"}</h2>
+              <p>Vendor and Billing Details</p>
             </div>
             <div className="invoice-form-actions">
               {selectedBillId ? (
@@ -288,7 +288,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
               ) : null}
               {!isReadOnly ? (
                 <button className="button form-primary-action" disabled={isSaving} type="submit">
-                  {isSaving ? "Saving..." : selectedBillId ? "Edit bill" : "Save bill"}
+                  {isSaving ? "Saving..." : selectedBillId ? "Edit Bill" : "Save Bill"}
                 </button>
               ) : null}
             </div>
@@ -317,14 +317,14 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
               />
             </section>
             <section className="invoice-detail-card">
-              <h3>Bill details</h3>
+              <h3>Bill Details</h3>
               <div className="field">
-                <label htmlFor="billNumber">Bill number</label>
+                <label htmlFor="billNumber">Bill Number</label>
                 <input id="billNumber" readOnly value={selectedBill?.billNumber ?? nextBillNumber} />
               </div>
               <DateField
                 id="billDate"
-                label="Bill date"
+                label="Bill Date"
                 readOnly={isReadOnly}
                 required
                 value={billDate}
@@ -335,7 +335,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
               />
             </section>
             <section className="invoice-detail-card">
-              <h3>Payment schedule</h3>
+              <h3>Payment Schedule</h3>
               <DropdownField
                 disabled={isReadOnly}
                 label="Terms"
@@ -349,14 +349,14 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                   setDueDate(dueDateFor(billDate, value));
                 }}
               />
-              <DateField id="billDueDate" label="Due date" readOnly={isReadOnly} required value={dueDate} onChange={setDueDate} />
+              <DateField id="billDueDate" label="Due Date" readOnly={isReadOnly} required value={dueDate} onChange={setDueDate} />
             </section>
           </div>
         </section>
 
         <section className="invoice-items-panel">
           <div className="item-form-head">
-            <div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
+            <div><h2>Item Table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
             <button
               className="button invoice-add-row"
               disabled={isReadOnly}
@@ -370,13 +370,13 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                 setNextLineId((value) => value + 1);
               }}
             >
-              <AddIcon /> Add new row
+              <AddIcon /> Add New Row
             </button>
           </div>
           <RecordTableScroll className="invoice-lines-table-scroll" columns={6}>
             <table className="invoice-table">
               <thead>
-                <tr><th>Item details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr>
+                <tr><th>Item Details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr>
               </thead>
               <tbody>
                 {lines.map((line) => (
@@ -426,9 +426,9 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                     </td>
                     <td className="invoice-amount">{currency.format(line.quantity * line.rate)}</td>
                     <td>
-                      <Tooltip content="Remove line" disabled={isReadOnly || lines.length === 1} placement="top">
+                      <Tooltip content="Remove Line" disabled={isReadOnly || lines.length === 1} placement="top">
                         <button
-                          aria-label="Remove line"
+                          aria-label="Remove Line"
                           className="invoice-remove-line"
                           disabled={isReadOnly || lines.length === 1}
                           type="button"
@@ -469,13 +469,13 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
 
       <section className="panel saved-invoices-panel record-list-panel">
         <div className="item-form-head record-list-head">
-          <div><h2>Saved bills</h2><p>{countLabel}</p></div>
-          <RecordListSearch label="Search bills" placeholder="Search bills by any detail…" value={query} onChange={setQuery} />
+          <div><h2>Saved Bills</h2><p>{countLabel}</p></div>
+          <RecordListSearch label="Search Bills" placeholder="Search bills by any detail…" value={query} onChange={setQuery} />
         </div>
         <RecordTableScroll className="saved-invoices-table-wrap" columns={7}>
           <table className="saved-invoices-table">
             <thead>
-              <tr><th>Bill number</th><th>Vendor</th><th>Bill date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr>
+              <tr><th>Bill Number</th><th>Vendor</th><th>Bill Date</th><th>Due Date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr>
             </thead>
             <tbody>
               {filteredBills.length === 0 ? (
@@ -500,7 +500,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                           onSelect: () => loadBill(bill),
                         },
                         ...(bill.status !== "Paid" ? [{
-                          label: "Pay bill",
+                          label: "Pay Bill",
                           icon: appIcons.actions.payment,
                           disabled: deletingId !== null || isSaving,
                           onSelect: () => {
@@ -552,9 +552,9 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
             }}
           >
             <div className="item-form-head">
-              <div><h2 id="bill-payment-title">Pay bill</h2><p>{paymentBill.billNumber} · {paymentBill.vendor.displayName}</p></div>
+              <div><h2 id="bill-payment-title">Pay Bill</h2><p>{paymentBill.billNumber} · {paymentBill.vendor.displayName}</p></div>
             </div>
-            <DateField id="billPaymentDate" label="Payment date" required value={paymentDate} onChange={setPaymentDate} />
+            <DateField id="billPaymentDate" label="Payment Date" required value={paymentDate} onChange={setPaymentDate} />
             <div className="field">
               <label htmlFor="billPaymentAmount">Amount</label>
               <input id="billPaymentAmount" type="number" min="0.01" max={paymentBill.remainingBalance} step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} />
@@ -562,7 +562,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
             <div className="message" role="status">{message}</div>
             <div className="payment-modal-actions">
               <button className="ghost-button" disabled={isPaying} type="button" onClick={() => setPaymentBill(null)}>Cancel</button>
-              <button className="button" disabled={isPaying} type="submit">{isPaying ? "Saving..." : "Save payment"}</button>
+              <button className="button" disabled={isPaying} type="submit">{isPaying ? "Saving..." : "Save Payment"}</button>
             </div>
           </form>
         </div>

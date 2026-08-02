@@ -214,7 +214,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
     }
   };
 
-  const title = mode === "new" ? "New item" : "Item details";
+  const title = mode === "new" ? "New Item" : "Item Details";
 
   return (
     <>
@@ -248,16 +248,16 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
           <div className="item-form-head">
             <div>
               <h2>{title}</h2>
-              <p>Catalog details</p>
+              <p>Catalog Details</p>
             </div>
             <div className="invoice-form-actions">
               {mode === "edit" ? (
                 <>
                   <button className="ghost-button" disabled={isSaving} type="button" onClick={closeItem}>Close</button>
-                  <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit item"}</button>
+                  <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit Item"}</button>
                 </>
               ) : (
-                <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save item"}</button>
+                <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save Item"}</button>
               )}
             </div>
           </div>
@@ -299,7 +299,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                   ref={imageInputRef}
                   type="file"
                   accept="image/*"
-                  aria-label="Item image"
+                  aria-label="Item Image"
                   onChange={(event) => {
                     void selectImage(event.currentTarget.files?.[0]);
                     event.currentTarget.value = "";
@@ -309,32 +309,32 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                 {draft.imageUrl ? (
                   <>
                     <button
-                      aria-label="View image"
+                      aria-label="View Image"
                       className="item-image-open"
                       type="button"
                       onClick={() => setIsImagePreviewOpen(true)}
                     >
-                      <img className="item-image-preview" src={draft.imageUrl} alt={draft.name ? `${draft.name} preview` : "Item image preview"} />
+                      <img className="item-image-preview" src={draft.imageUrl} alt={draft.name ? `${draft.name} preview` : "Item Image Preview"} />
                     </button>
                     <RecordActionsMenu
                       align="right"
                       boundaryRef={imageDropRef}
                       className="item-image-actions"
-                      label="Image actions"
-                      recordLabel={draft.name || "Item image"}
+                      label="Image Actions"
+                      recordLabel={draft.name || "Item Image"}
                       actions={[
                         {
-                          label: "View image",
+                          label: "View Image",
                           icon: appIcons.actions.view,
                           onSelect: () => setIsImagePreviewOpen(true),
                         },
                         {
-                          label: "Choose another image",
+                          label: "Choose Another Image",
                           icon: appIcons.media.image,
                           onSelect: () => imageInputRef.current?.click(),
                         },
                         {
-                          label: "Remove image",
+                          label: "Remove Image",
                           icon: appIcons.actions.remove,
                           tone: "danger",
                           onSelect: () => {
@@ -351,7 +351,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                     <span className="image-glyph" aria-hidden="true">
                       <ImageIcon />
                     </span>
-                    <strong>Item image</strong>
+                    <strong>Item Image</strong>
                     <span>Drop or browse</span>
                   </label>
                 )}
@@ -362,10 +362,10 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
               checked={draft.salesEnabled}
               checkboxName="salesEnabled"
               onCheckedChange={(checked) => set("salesEnabled", checked)}
-              title="Sales information"
+              title="Sales Information"
               variant="sales"
             >
-              <MoneyField disabled={!draft.salesEnabled} label="Selling price" name="salesPrice" required={draft.salesEnabled} value={draft.salesPrice} onChange={(value) => set("salesPrice", value)} />
+              <MoneyField disabled={!draft.salesEnabled} label="Sales Price" name="salesPrice" required={draft.salesEnabled} value={draft.salesPrice} onChange={(value) => set("salesPrice", value)} />
               <DropdownField disabled={!draft.salesEnabled} label="Account" name="salesAccount" openDropdown={openDropdown} options={salesAccounts} required={draft.salesEnabled} setOpenDropdown={setOpenDropdown} value={draft.salesAccount} onChange={(value) => set("salesAccount", value)} />
               <DropdownField disabled={!draft.salesEnabled} label="Tax" name="salesTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} setOpenDropdown={setOpenDropdown} value={draft.salesTax} onChange={(value) => set("salesTax", value)} />
               <div className="field item-description-field">
@@ -378,10 +378,10 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
               checked={draft.purchaseEnabled}
               checkboxName="purchaseEnabled"
               onCheckedChange={(checked) => set("purchaseEnabled", checked)}
-              title="Purchase information"
+              title="Purchase Information"
               variant="purchase"
             >
-              <MoneyField disabled={!draft.purchaseEnabled} label="Cost price" name="unitCost" required={draft.purchaseEnabled} value={draft.unitCost} onChange={(value) => set("unitCost", value)} />
+              <MoneyField disabled={!draft.purchaseEnabled} label="Cost Price" name="unitCost" required={draft.purchaseEnabled} value={draft.unitCost} onChange={(value) => set("unitCost", value)} />
               <DropdownField disabled={!draft.purchaseEnabled} label="Account" name="purchaseAccount" openDropdown={openDropdown} options={purchaseAccounts} required={draft.purchaseEnabled} setOpenDropdown={setOpenDropdown} value={draft.purchaseAccount} onChange={(value) => set("purchaseAccount", value)} />
               <DropdownField disabled={!draft.purchaseEnabled} label="Tax" name="purchaseTax" openDropdown={openDropdown} placeholder="Select a tax" options={TAX_OPTIONS} setOpenDropdown={setOpenDropdown} value={draft.purchaseTax} onChange={(value) => set("purchaseTax", value)} />
               <div className="field item-description-field">
@@ -397,10 +397,10 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
         <div className="panel item-list-panel record-list-panel">
           <div className="item-form-head record-list-head">
             <div>
-              <h2>Item list</h2>
+              <h2>Item List</h2>
               <p>{countLabel}</p>
             </div>
-            <RecordListSearch label="Search items" placeholder="Search items by any detail…" value={query} onChange={setQuery} />
+            <RecordListSearch label="Search Items" placeholder="Search items by any detail…" value={query} onChange={setQuery} />
           </div>
           <RecordTableScroll columns={5}>
             <table>
@@ -466,7 +466,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
         </div>
       </section>
       <ImageLightbox
-        alt={draft.name || "Item image"}
+        alt={draft.name || "Item Image"}
         isOpen={isImagePreviewOpen}
         src={draft.imageUrl}
         onClose={() => setIsImagePreviewOpen(false)}

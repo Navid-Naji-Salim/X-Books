@@ -119,7 +119,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
 
   const settingsMenu = (
     <div
-      aria-label={t("User settings")}
+      aria-label={t("User Settings")}
       aria-hidden={!isSettingsOpen}
       className={`profile-menu is-floating ${isSettingsOpen ? "is-open" : "is-closing"}`}
       id="user-settings-menu"
@@ -142,7 +142,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
         </div>
       </div>
       <button className="logout-button" type="button" onClick={onLogout}>
-        {t("Log out")}
+        {t("Log Out")}
       </button>
     </div>
   );
@@ -162,7 +162,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
       <nav className="nav">
         <Tooltip content="Expand" disabled={!isCollapsed} placement="side" resetKey={isCollapsed}>
           <button
-            aria-label={t(isCollapsed ? "Expand sidebar" : "Collapse sidebar")}
+            aria-label={t(isCollapsed ? "Expand Sidebar" : "Collapse Sidebar")}
             className="nav-control"
             type="button"
             onClick={onToggleCollapse}
@@ -236,7 +236,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
             aria-controls="user-settings-menu"
             aria-expanded={isSettingsOpen}
             aria-haspopup="dialog"
-            aria-label={t(isSettingsOpen ? "Close user settings" : "Open user settings")}
+            aria-label={t(isSettingsOpen ? "Close User Settings" : "Open User Settings")}
             className="settings-button"
             ref={settingsButtonRef}
             type="button"

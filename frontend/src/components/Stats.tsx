@@ -16,7 +16,7 @@ export const Stats = ({ summary }: { summary: StatsSummary }) => (
       <strong>{summary.vendorCount}</strong>
     </div>
     <div className="stat-card">
-      <span>Inventory value</span>
+      <span>Inventory Value</span>
       <strong>{currency.format(summary.inventoryValue)}</strong>
     </div>
   </section>

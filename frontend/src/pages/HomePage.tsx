@@ -18,7 +18,7 @@ const greeting = () => {
 
 const AgingCard = ({ title, subtitle, data, to }: { title: string; subtitle: string; data: AccountAging; to: string }) => (
   <section className="panel home-aging-card">
-    <div className="home-card-head"><div><span>{title}</span><strong>{fullMoney(data.outstanding)}</strong><small>{subtitle}</small></div><Link className="ghost-button home-aging-action" to={to}>View all</Link></div>
+    <div className="home-card-head"><div><span>{title}</span><strong>{fullMoney(data.outstanding)}</strong><small>{subtitle}</small></div><Link className="ghost-button home-aging-action" to={to}>View All</Link></div>
     <div className="home-aging-split"><div><span>Current</span><strong>{fullMoney(data.current)}</strong></div><div className={data.overdue > 0 ? "is-overdue" : ""}><span>Overdue</span><strong>{fullMoney(data.overdue)}</strong></div></div>
   </section>
 );
@@ -68,9 +68,9 @@ export const HomePage = ({ user, dataError, summary }: { user: User; dataError: 
     <div className="home-page">
       <header className="home-hero"><h1>{greeting()}, {user.name || "Nawid"}</h1><p>Your financial overview, clearly presented.</p></header>
       {dataError ? <div className="panel page-alert">{dataError}</div> : null}
-      <div className="home-aging-grid"><AgingCard title="Receivables" subtitle="Total unpaid invoices" data={summary.receivables} to="/sales/invoices" /><AgingCard title="Payables" subtitle="Total unpaid bills" data={summary.payables} to="/purchases/bills" /></div>
-      <FinancialChart title="Cash flow" description={`Cash received and paid by month · ${summary.year}`} data={summary.months} summary={[{ label: "Incoming", value: cashFlow.incoming }, { label: "Outgoing", value: cashFlow.outgoing }, { label: "Net activity", value: cashFlow.netActivity }]} series={[{ key: "cashReceived", label: "Incoming cash", color: "#15803d" }, { key: "cashPaid", label: "Outgoing cash", color: "#dc2626" }]} />
-      <FinancialChart title="Income vs expenses" description={`Invoices and bills recorded by month · ${summary.year}`} data={summary.months} summary={[{ label: "Income", value: summary.activity.totalIncome }, { label: "Expenses", value: summary.activity.totalExpenses }, { label: "Net activity", value: summary.activity.netActivity }]} series={[{ key: "income", label: "Invoice income", color: "#15803d" }, { key: "expenses", label: "Recorded expenses", color: "#dc2626" }]} />
+      <div className="home-aging-grid"><AgingCard title="Receivables" subtitle="Total Unpaid Invoices" data={summary.receivables} to="/sales/invoices" /><AgingCard title="Payables" subtitle="Total Unpaid Bills" data={summary.payables} to="/purchases/bills" /></div>
+      <FinancialChart title="Cash Flow" description={`Cash received and paid by month · ${summary.year}`} data={summary.months} summary={[{ label: "Incoming", value: cashFlow.incoming }, { label: "Outgoing", value: cashFlow.outgoing }, { label: "Net Activity", value: cashFlow.netActivity }]} series={[{ key: "cashReceived", label: "Incoming Cash", color: "#15803d" }, { key: "cashPaid", label: "Outgoing Cash", color: "#dc2626" }]} />
+      <FinancialChart title="Income vs Expenses" description={`Invoices and bills recorded by month · ${summary.year}`} data={summary.months} summary={[{ label: "Income", value: summary.activity.totalIncome }, { label: "Expenses", value: summary.activity.totalExpenses }, { label: "Net Activity", value: summary.activity.netActivity }]} series={[{ key: "income", label: "Invoice Income", color: "#15803d" }, { key: "expenses", label: "Recorded Expenses", color: "#dc2626" }]} />
     </div>
   );
 };

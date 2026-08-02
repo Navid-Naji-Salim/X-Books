@@ -171,7 +171,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
     }
   };
 
-  const title = mode === "new" ? "New customer" : "Customer details";
+  const title = mode === "new" ? "New Customer" : "Customer Details";
   const countLabel = query.trim()
     ? `${filteredContacts.length} of ${contacts.length} customers`
     : `${contacts.length} customer${contacts.length === 1 ? "" : "s"}`;
@@ -204,7 +204,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
           }}
         >
           <div className="item-form-head">
-            <div><h2>{title}</h2><p>Contact and billing details</p></div>
+            <div><h2>{title}</h2><p>Contact and Billing Details</p></div>
             <div className="invoice-form-actions">
               {mode === "view" ? (
                 <>
@@ -212,48 +212,48 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
                     if (!confirmDiscardChanges()) return;
                     resetToNew();
                   }}>Close</button>
-                  <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit customer"}</button>
+                  <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit Customer"}</button>
                 </>
               ) : (
-                <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save customer"}</button>
+                <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save Customer"}</button>
               )}
             </div>
           </div>
 
           <div className="item-compact-grid customer-compact-grid">
             <section className="item-basics customer-basics">
-              <h3 className="customer-section-title">Customer details</h3>
+              <h3 className="customer-section-title">Customer Details</h3>
               <div className="radio-field">
                 <span>Type</span>
                 <label className="radio-option"><input checked={draft.customerType === "business"} type="radio" name="customerType" value="business" onChange={() => setDraft((current) => ({ ...current, customerType: "business" }))} /><span className="option-text">Business</span></label>
                 <label className="radio-option"><input checked={draft.customerType === "individual"} type="radio" name="customerType" value="individual" onChange={() => setDraft((current) => ({ ...current, customerType: "individual" }))} /><span className="option-text">Individual</span></label>
               </div>
               {draft.customerType === "business" ? (
-                <Field label="Company name" name="companyName" placeholder={CONTACT_PLACEHOLDERS.businessName} required value={draft.companyName} onChange={(event) => set("companyName", event.currentTarget.value)} />
+                <Field label="Company Name" name="companyName" placeholder={CONTACT_PLACEHOLDERS.businessName} required value={draft.companyName} onChange={(event) => set("companyName", event.currentTarget.value)} />
               ) : (
-                <div className="split"><Field label="First name" name="firstName" placeholder={CONTACT_PLACEHOLDERS.firstName} required value={draft.firstName} onChange={(event) => set("firstName", event.currentTarget.value)} /><Field label="Last name" name="lastName" placeholder={CONTACT_PLACEHOLDERS.lastName} required value={draft.lastName} onChange={(event) => set("lastName", event.currentTarget.value)} /></div>
+                <div className="split"><Field label="First Name" name="firstName" placeholder={CONTACT_PLACEHOLDERS.firstName} required value={draft.firstName} onChange={(event) => set("firstName", event.currentTarget.value)} /><Field label="Last Name" name="lastName" placeholder={CONTACT_PLACEHOLDERS.lastName} required value={draft.lastName} onChange={(event) => set("lastName", event.currentTarget.value)} /></div>
               )}
-              <Field label="Email address" name="email" placeholder={CONTACT_PLACEHOLDERS.email} type="email" value={draft.email} onChange={(event) => set("email", event.currentTarget.value)} />
+              <Field label="Email Address" name="email" placeholder={CONTACT_PLACEHOLDERS.email} type="email" value={draft.email} onChange={(event) => set("email", event.currentTarget.value)} />
               <Field label="Phone" name="phone" value={draft.phone} onChange={(event) => set("phone", event.currentTarget.value)} />
             </section>
 
             <section className="item-info-section customer-info-section">
-              <h3 className="check-title customer-section-title">Billing address</h3>
+              <h3 className="check-title customer-section-title">Billing Address</h3>
               <div className="item-info-fields">
-                <Field label="Address line 1" name="addressLine1" placeholder="Street and building" value={draft.addressLine1} onChange={(event) => set("addressLine1", event.currentTarget.value)} />
-                <Field label="Address line 2" name="addressLine2" placeholder="Suite, floor, or landmark" value={draft.addressLine2} onChange={(event) => set("addressLine2", event.currentTarget.value)} />
+                <Field label="Address Line 1" name="addressLine1" placeholder="Street and building" value={draft.addressLine1} onChange={(event) => set("addressLine1", event.currentTarget.value)} />
+                <Field label="Address Line 2" name="addressLine2" placeholder="Suite, floor, or landmark" value={draft.addressLine2} onChange={(event) => set("addressLine2", event.currentTarget.value)} />
                 <Field label="City" name="city" placeholder={CONTACT_PLACEHOLDERS.city} value={draft.city} onChange={(event) => set("city", event.currentTarget.value)} />
-                <Field label="State / province" name="state" placeholder={CONTACT_PLACEHOLDERS.state} value={draft.state} onChange={(event) => set("state", event.currentTarget.value)} />
-                <Field label="Postal code" name="postalCode" placeholder={CONTACT_PLACEHOLDERS.postalCode} value={draft.postalCode} onChange={(event) => set("postalCode", event.currentTarget.value)} />
+                <Field label="State / Province" name="state" placeholder={CONTACT_PLACEHOLDERS.state} value={draft.state} onChange={(event) => set("state", event.currentTarget.value)} />
+                <Field label="Postal Code" name="postalCode" placeholder={CONTACT_PLACEHOLDERS.postalCode} value={draft.postalCode} onChange={(event) => set("postalCode", event.currentTarget.value)} />
                 <Field label="Country" name="country" placeholder={CONTACT_PLACEHOLDERS.country} value={draft.country} onChange={(event) => set("country", event.currentTarget.value)} />
               </div>
             </section>
 
             <section className="item-info-section customer-info-section">
-              <h3 className="check-title customer-section-title">Sales settings</h3>
+              <h3 className="check-title customer-section-title">Sales Settings</h3>
               <div className="item-info-fields">
                 <DropdownField label="Tax" name="taxRate" options={TAX_OPTIONS} placeholder="Select a tax" openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.taxRate} onChange={(value) => set("taxRate", value)} />
-                <DropdownField label="Payment terms" name="paymentTerms" options={paymentTerms} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.paymentTerms} onChange={(value) => set("paymentTerms", value)} />
+                <DropdownField label="Payment Terms" name="paymentTerms" options={paymentTerms} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={draft.paymentTerms} onChange={(value) => set("paymentTerms", value)} />
                 <div className="field item-description-field customer-notes"><label htmlFor="customer-notes">Notes</label><textarea id="customer-notes" name="notes" placeholder="Notes for internal use" value={draft.notes} onChange={(event) => set("notes", event.currentTarget.value)} /></div>
               </div>
             </section>
@@ -263,8 +263,8 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
 
         <div className="panel item-list-panel customer-list-panel record-list-panel">
           <div className="item-form-head record-list-head">
-            <div><h2>Customer list</h2><p>{countLabel}</p></div>
-            <RecordListSearch label="Search customers" placeholder="Search customers by any detail…" value={query} onChange={setQuery} />
+            <div><h2>Customer List</h2><p>{countLabel}</p></div>
+            <RecordListSearch label="Search Customers" placeholder="Search customers by any detail…" value={query} onChange={setQuery} />
           </div>
           <RecordTableScroll className="customer-table-wrap" columns={6}>
             <table>

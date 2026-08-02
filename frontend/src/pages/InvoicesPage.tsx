@@ -229,10 +229,10 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
       }}>
         <section className="item-form compact-item-form invoice-form-panel">
           <div className="item-form-head">
-            <div><h2>{selectedInvoiceId ? "Invoice details" : "New invoice"}</h2><p>Customer and billing details</p></div>
+            <div><h2>{selectedInvoiceId ? "Invoice Details" : "New Invoice"}</h2><p>Customer and Billing Details</p></div>
             <div className="invoice-form-actions">
               {selectedInvoiceId ? <button className="ghost-button" type="button" onClick={closeInvoice}>Close</button> : null}
-              {!isViewingPaidInvoice ? <button className="button form-primary-action" type="submit">{selectedInvoiceId ? "Edit invoice" : "Save invoice"}</button> : null}
+              {!isViewingPaidInvoice ? <button className="button form-primary-action" type="submit">{selectedInvoiceId ? "Edit Invoice" : "Save Invoice"}</button> : null}
             </div>
           </div>
           <div className="invoice-details-grid">
@@ -246,26 +246,26 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               }} />
             </section>
             <section className="invoice-detail-card">
-              <h3>Invoice details</h3>
-              <div className="field"><label htmlFor="invoiceNumber">Invoice number</label><input id="invoiceNumber" value={invoiceNumber} required disabled={isViewingPaidInvoice} onChange={(event) => setInvoiceNumber(event.currentTarget.value)} /></div>
-              <DateField id="invoiceDate" label="Invoice date" value={invoiceDate} required disabled={isViewingPaidInvoice} onChange={(value) => { setInvoiceDate(value); setDueDate(dueDateFor(value, terms)); }} />
+              <h3>Invoice Details</h3>
+              <div className="field"><label htmlFor="invoiceNumber">Invoice Number</label><input id="invoiceNumber" value={invoiceNumber} required disabled={isViewingPaidInvoice} onChange={(event) => setInvoiceNumber(event.currentTarget.value)} /></div>
+              <DateField id="invoiceDate" label="Invoice Date" value={invoiceDate} required disabled={isViewingPaidInvoice} onChange={(value) => { setInvoiceDate(value); setDueDate(dueDateFor(value, terms)); }} />
             </section>
             <section className="invoice-detail-card">
-              <h3>Payment schedule</h3>
+              <h3>Payment Schedule</h3>
               <DropdownField label="Terms" name="terms" options={termsOptions} disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={terms} onChange={(value) => { setTerms(value); setDueDate(dueDateFor(invoiceDate, value)); }} />
-              <DateField id="dueDate" label="Due date" value={dueDate} required disabled={isViewingPaidInvoice} onChange={setDueDate} />
+              <DateField id="dueDate" label="Due Date" value={dueDate} required disabled={isViewingPaidInvoice} onChange={setDueDate} />
             </section>
           </div>
         </section>
 
         <section className="invoice-items-panel">
           <div className="item-form-head">
-            <div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
-            <button className="button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add new row</button>
+            <div><h2>Item Table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
+            <button className="button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add New Row</button>
           </div>
           <RecordTableScroll className="invoice-lines-table-scroll" columns={6}>
             <table className="invoice-table">
-              <thead><tr><th>Item details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr></thead>
+              <thead><tr><th>Item Details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr></thead>
               <tbody>{lines.map((line) => (
                 <tr key={line.id}>
                   <td className="invoice-item-cell"><DropdownField floatingOptions label="Item" name={`item-${line.id}`} options={itemOptionsFor(line, sellableItems)} placeholder="Select an item" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.itemId} onChange={(value) => {
@@ -276,7 +276,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                   <td><input aria-label="Rate" type="number" min="0" step="0.01" value={line.rate} disabled={isViewingPaidInvoice} onChange={(event) => updateLine(line.id, { rate: Number(event.currentTarget.value) })} /></td>
                   <td className="invoice-tax-cell"><DropdownField floatingOptions label="Tax" name={`tax-${line.id}`} options={TAX_OPTIONS} placeholder="Select a tax" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.tax} onChange={(value) => updateLine(line.id, { tax: value })} /></td>
                   <td className="invoice-amount">{currency.format(line.quantity * line.rate)}</td>
-                  <td><Tooltip content="Remove line" disabled={lines.length === 1 || isViewingPaidInvoice} placement="top"><button aria-label="Remove line" className="invoice-remove-line" disabled={lines.length === 1 || isViewingPaidInvoice} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><DeleteIcon /></button></Tooltip></td>
+                  <td><Tooltip content="Remove Line" disabled={lines.length === 1 || isViewingPaidInvoice} placement="top"><button aria-label="Remove Line" className="invoice-remove-line" disabled={lines.length === 1 || isViewingPaidInvoice} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><DeleteIcon /></button></Tooltip></td>
                 </tr>
               ))}</tbody>
             </table>
@@ -295,10 +295,10 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         <div className="message">{message}</div>
       </form>
       <section className="panel saved-invoices-panel record-list-panel">
-        <div className="item-form-head record-list-head"><div><h2>Saved invoices</h2><p>{countLabel}</p></div><RecordListSearch label="Search invoices" placeholder="Search invoices by any detail…" value={query} onChange={setQuery} /></div>
+        <div className="item-form-head record-list-head"><div><h2>Saved Invoices</h2><p>{countLabel}</p></div><RecordListSearch label="Search Invoices" placeholder="Search invoices by any detail…" value={query} onChange={setQuery} /></div>
         <RecordTableScroll className="saved-invoices-table-wrap" columns={7}>
           <table className="saved-invoices-table">
-            <thead><tr><th>Invoice number</th><th>Customer</th><th>Invoice date</th><th>Due date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr></thead>
+            <thead><tr><th>Invoice Number</th><th>Customer</th><th>Invoice Date</th><th>Due Date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr></thead>
             <tbody>
               {filteredInvoices.length === 0 ? <tr><td className="muted" colSpan={7}>{query ? "No invoices match your search." : "No saved invoices yet."}</td></tr> : filteredInvoices.map((invoice) => (
                 <tr key={invoice.id}>
@@ -321,7 +321,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                         },
                         ...(invoice.status !== "Paid" ? [
                           {
-                            label: "Record payment",
+                            label: "Record Payment",
                             icon: appIcons.actions.payment,
                             disabled: deletingId !== null,
                             onSelect: () => {
@@ -365,11 +365,11 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               setIsRecordingPayment(false);
             }
           }}>
-            <div className="item-form-head"><div><h2 id="payment-modal-title">Record payment</h2><p>{paymentInvoice.invoiceNumber} · {paymentInvoice.customer.displayName}</p></div></div>
-            <DateField id="paymentDate" label="Payment date" required value={paymentDate} onChange={setPaymentDate} />
+            <div className="item-form-head"><div><h2 id="payment-modal-title">Record Payment</h2><p>{paymentInvoice.invoiceNumber} · {paymentInvoice.customer.displayName}</p></div></div>
+            <DateField id="paymentDate" label="Payment Date" required value={paymentDate} onChange={setPaymentDate} />
             <div className="field"><label htmlFor="paymentAmount">Amount</label><input id="paymentAmount" type="number" min="0.01" max={paymentInvoice.remainingBalance} step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} /></div>
             <div className="message" role="status">{message}</div>
-            <div className="payment-modal-actions"><button className="ghost-button" disabled={isRecordingPayment} type="button" onClick={() => setPaymentInvoice(null)}>Cancel</button><button className="button" disabled={isRecordingPayment} type="submit">{isRecordingPayment ? "Saving..." : "Save payment"}</button></div>
+            <div className="payment-modal-actions"><button className="ghost-button" disabled={isRecordingPayment} type="button" onClick={() => setPaymentInvoice(null)}>Cancel</button><button className="button" disabled={isRecordingPayment} type="submit">{isRecordingPayment ? "Saving..." : "Save Payment"}</button></div>
           </form>
         </div>
       ) : null}

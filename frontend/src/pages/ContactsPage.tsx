@@ -45,14 +45,14 @@ export const ContactsPage = ({ contacts, kind, summary, token, onRefresh }: Cont
             }
           }}
         >
-          <h2>{isCustomers ? "Create customer" : "Create vendor"}</h2>
+          <h2>{isCustomers ? "Create Customer" : "Create Vendor"}</h2>
           <Field
-            label="Display name"
+            label="Display Name"
             name="displayName"
             placeholder={isCustomers ? "Acme Trading" : "Northline Supplies"}
             required
           />
-          <Field label="Company name" name="companyName" />
+          <Field label="Company Name" name="companyName" />
           <div className="split">
             <Field label="Email" name="email" type="email" />
             <Field label="Phone" name="phone" />
@@ -66,7 +66,7 @@ export const ContactsPage = ({ contacts, kind, summary, token, onRefresh }: Cont
             />
           </div>
           <button className="button" type="submit">
-            {isCustomers ? "Create customer" : "Create vendor"}
+            {isCustomers ? "Create Customer" : "Create Vendor"}
           </button>
           <div className="message">{message}</div>
         </form>

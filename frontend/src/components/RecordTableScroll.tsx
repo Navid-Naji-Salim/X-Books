@@ -172,7 +172,7 @@ export const RecordTableScroll = ({ children, className, columns }: RecordTableS
           style={{ height: metrics.trackHeight, top: metrics.trackTop }}
         >
           <div
-            aria-label="Scroll table rows"
+            aria-label="Scroll Table Rows"
             aria-orientation="vertical"
             aria-valuemax={Math.round(metrics.maxScroll)}
             aria-valuemin={0}

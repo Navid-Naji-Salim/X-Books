@@ -74,7 +74,7 @@ export const ImageLightbox = ({ alt, isOpen, src, onClose }: ImageLightboxProps)
           <img src={src} alt={alt} />
         </div>
         <button
-          aria-label="Close image preview"
+          aria-label="Close Image Preview"
           className="image-lightbox-close"
           ref={closeButtonRef}
           type="button"
