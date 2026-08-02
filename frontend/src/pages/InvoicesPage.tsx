@@ -60,7 +60,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
 
 export const InvoicesPage = ({ customers, dataError, invoices, items, token, onRefresh }: Props) => {
   const AddIcon = appIcons.actions.add;
-  const RemoveIcon = appIcons.actions.remove;
+  const DeleteIcon = appIcons.actions.delete;
   const today = dateInputValue();
   const [customerId, setCustomerId] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState(() => `INV-${String(invoices.length + 1).padStart(6, "0")}`);
@@ -260,7 +260,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
 
         <section className="invoice-items-panel">
           <div className="item-form-head"><div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div></div>
-          <div className="table-wrap invoice-table-wrap">
+          <RecordTableScroll className="invoice-lines-table-scroll" columns={6}>
             <table className="invoice-table">
               <thead><tr><th>Item details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr></thead>
               <tbody>{lines.map((line) => (
@@ -273,11 +273,11 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                   <td><input aria-label="Rate" type="number" min="0" step="0.01" value={line.rate} disabled={isViewingPaidInvoice} onChange={(event) => updateLine(line.id, { rate: Number(event.currentTarget.value) })} /></td>
                   <td className="invoice-tax-cell"><DropdownField floatingOptions label="Tax" name={`tax-${line.id}`} options={TAX_OPTIONS} placeholder="Select a tax" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.tax} onChange={(value) => updateLine(line.id, { tax: value })} /></td>
                   <td className="invoice-amount">{currency.format(line.quantity * line.rate)}</td>
-                  <td><Tooltip content="Remove line" disabled={lines.length === 1 || isViewingPaidInvoice} placement="top"><button aria-label="Remove line" className="invoice-remove-line" disabled={lines.length === 1 || isViewingPaidInvoice} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><RemoveIcon /></button></Tooltip></td>
+                  <td><Tooltip content="Remove line" disabled={lines.length === 1 || isViewingPaidInvoice} placement="top"><button aria-label="Remove line" className="invoice-remove-line" disabled={lines.length === 1 || isViewingPaidInvoice} type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><DeleteIcon /></button></Tooltip></td>
                 </tr>
               ))}</tbody>
             </table>
-          </div>
+          </RecordTableScroll>
             <button className="ghost-button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add new row</button>
         </section>
 

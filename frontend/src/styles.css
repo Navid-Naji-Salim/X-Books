@@ -2103,14 +2103,29 @@ th {
   overflow: visible;
 }
 
-.invoice-table-wrap {
-  border: 1px solid rgba(20, 33, 61, 0.1);
-  border-radius: 15px;
-  max-width: 100%;
-  overflow-x: auto;
+.invoice-lines-table-scroll {
+  display: flex;
+  flex-direction: column;
+  max-block-size: 26rem;
 }
 
-.invoice-table { min-width: 800px; }
+.invoice-lines-table-scroll > .record-table-wrap {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+.invoice-lines-table-scroll .invoice-table {
+  min-width: 800px;
+  grid-template-columns:
+    minmax(17rem, 34fr)
+    minmax(6rem, 12fr)
+    minmax(7.5rem, 15fr)
+    minmax(10.5rem, 21fr)
+    minmax(7rem, 14fr)
+    max-content;
+}
+
+.invoice-lines-table-scroll .invoice-table tbody { max-block-size: 23rem; }
 .invoice-table thead { background: rgba(248, 250, 252, 0.98); }
 .invoice-table th:first-child { border-top-left-radius: 14px; }
 .invoice-table th:last-child { border-top-right-radius: 14px; }
@@ -2470,7 +2485,6 @@ th {
 
   .record-list-head { align-items: stretch; }
   .record-list-search { width: 100%; }
-  .invoice-table-wrap { overflow-x: auto; }
   .invoice-totals-card > div { grid-template-columns: 1fr minmax(6rem, 0.7fr) minmax(5rem, auto); }
   .report-toolbar { grid-template-columns: 1fr 1fr; }
   .report-toolbar > .dropdown-field { grid-column: 1 / -1; }

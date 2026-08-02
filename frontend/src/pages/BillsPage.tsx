@@ -75,7 +75,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
 
 export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, token, onRefresh }: Props) => {
   const AddIcon = appIcons.actions.add;
-  const RemoveIcon = appIcons.actions.remove;
+  const DeleteIcon = appIcons.actions.delete;
   const today = dateInputValue();
   const [vendorId, setVendorId] = useState("");
   const [billDate, setBillDate] = useState(today);
@@ -358,7 +358,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
           <div className="item-form-head">
             <div><h2>Item table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
           </div>
-          <div className="table-wrap invoice-table-wrap">
+          <RecordTableScroll className="invoice-lines-table-scroll" columns={6}>
             <table className="invoice-table">
               <thead>
                 <tr><th>Item details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr>
@@ -419,7 +419,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                           type="button"
                           onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}
                         >
-                          <RemoveIcon />
+                          <DeleteIcon />
                         </button>
                       </Tooltip>
                     </td>
@@ -427,7 +427,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                 ))}
               </tbody>
             </table>
-          </div>
+          </RecordTableScroll>
           <button
             className="ghost-button invoice-add-row"
             disabled={isReadOnly}
