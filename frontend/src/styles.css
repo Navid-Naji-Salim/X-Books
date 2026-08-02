@@ -951,7 +951,7 @@ textarea:focus {
   border: 0;
   border-radius: 9px;
   padding: 0.42rem 0.62rem;
-  color: #075985;
+  color: var(--ink);
   background: transparent;
   font-size: 0.76rem;
   font-weight: 850;
@@ -2148,7 +2148,7 @@ th {
 .invoice-remove-line { display: grid; width: 2rem; height: 2rem; place-items: center; border: 0; border-radius: 10px; color: var(--red); background: transparent; }
 .invoice-remove-line svg { width: 18px; height: 18px; }
 .invoice-remove-line:hover:not(:disabled) { background: rgba(254, 226, 226, 0.72); }
-.invoice-add-row { display: inline-flex; gap: 0.38rem; align-items: center; justify-self: start; color: #075985; }
+.invoice-add-row { display: inline-flex; gap: 0.38rem; align-items: center; justify-self: start; }
 .invoice-add-row svg { width: 17px; height: 17px; }
 
 .invoice-footer-grid {

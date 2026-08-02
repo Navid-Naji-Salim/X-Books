@@ -278,7 +278,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               ))}</tbody>
             </table>
           </RecordTableScroll>
-            <button className="ghost-button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add new row</button>
+            <button className="button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add new row</button>
         </section>
 
         <section className="invoice-footer-grid">

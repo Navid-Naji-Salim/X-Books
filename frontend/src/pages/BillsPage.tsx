@@ -429,7 +429,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
             </table>
           </RecordTableScroll>
           <button
-            className="ghost-button invoice-add-row"
+            className="button invoice-add-row"
             disabled={isReadOnly}
             type="button"
             onClick={() => {
