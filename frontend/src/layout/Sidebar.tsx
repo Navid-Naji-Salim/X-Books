@@ -132,8 +132,8 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
     >
       <div className="profile-menu-head">
         <span>{t("Settings")}</span>
-        <strong>{user.name}</strong>
-        <small>{user.email}</small>
+        <strong translate="no">{user.name}</strong>
+        <small translate="no">{user.email}</small>
       </div>
       <div className="language-setting">
         <span>{t("Language")}</span>
@@ -230,7 +230,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
         <div className="profile-card">
           <div className="brand-mark">{user.name.trim().charAt(0).toUpperCase() || "N"}</div>
           <div className="profile-copy">
-            <strong>{user.name}</strong>
+            <strong translate="no">{user.name}</strong>
           </div>
           <button
             aria-controls="user-settings-menu"

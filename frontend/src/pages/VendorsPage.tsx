@@ -8,6 +8,7 @@ import { RecordTableScroll } from "../components/RecordTableScroll";
 import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { CONTACT_PLACEHOLDERS } from "../contactPlaceholders";
 import { appIcons } from "../icons";
+import { useLanguage } from "../i18n";
 import type { Contact, CustomerType } from "../types";
 
 type Props = { contacts: Contact[]; dataError?: string; token: string; onRefresh: () => Promise<void> };
@@ -45,6 +46,7 @@ const vendorToDraft = (vendor: Contact): Draft => {
 };
 
 export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) => {
+  const { t } = useLanguage();
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [baseline, setBaseline] = useState<Draft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -109,16 +111,16 @@ export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) =>
             <tbody>
               {filtered.length === 0 ? <tr><td colSpan={6} className="muted">{query ? "No vendors match your search." : "No vendors yet."}</td></tr> : filtered.map((vendor) => (
                 <tr key={vendor.id}>
-                  <td><strong>{vendor.displayName}</strong><br /><span className="muted">{vendor.vendorType === "individual" ? "Individual" : "Business"}</span></td>
-                  <td>{vendor.email || "-"}<br /><span className="muted">{vendor.phone || "No phone"}</span></td>
-                  <td>{[vendor.city, vendor.country].filter(Boolean).join(", ") || "-"}</td>
+                  <td><strong translate="no">{vendor.displayName}</strong><br /><span className="muted">{vendor.vendorType === "individual" ? "Individual" : "Business"}</span></td>
+                  <td><span translate="no">{vendor.email || "-"}</span><br />{vendor.phone ? <span className="muted" translate="no">{vendor.phone}</span> : <span className="muted">No phone</span>}</td>
+                  <td translate="no">{[vendor.city, vendor.country].filter(Boolean).join(", ") || "-"}</td>
                   <td>{vendor.taxRate || "-"}</td><td>{vendor.paymentTerms || "Due on Receipt"}</td>
                   <td className="record-actions-cell">
                     <RecordActionsMenu
                       recordLabel={vendor.displayName}
                       actions={[
                         { label: "View", icon: appIcons.actions.view, onSelect: () => openVendor(vendor) },
-                        { label: deletingId === vendor.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId === vendor.id, onSelect: async () => { if (!window.confirm(`Delete ${vendor.displayName}?`)) return; setDeletingId(vendor.id); setMessage(""); try { await api.deleteVendor(token, vendor.id); if (editingId === vendor.id) reset(); await onRefresh(); } catch (error) { setMessage(error instanceof ApiError ? error.message : "Unable to delete vendor."); } finally { setDeletingId(null); } } },
+                        { label: deletingId === vendor.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId === vendor.id, onSelect: async () => { if (!window.confirm(t(`Delete ${vendor.displayName}?`))) return; setDeletingId(vendor.id); setMessage(""); try { await api.deleteVendor(token, vendor.id); if (editingId === vendor.id) reset(); await onRefresh(); } catch (error) { setMessage(error instanceof ApiError ? error.message : "Unable to delete vendor."); } finally { setDeletingId(null); } } },
                       ]}
                     />
                   </td>

@@ -8,6 +8,7 @@ import { RecordTableScroll } from "../components/RecordTableScroll";
 import { Tooltip } from "../components/Tooltip";
 import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { currency } from "../lib/format";
+import { formatLocalizedDate, useLanguage } from "../i18n";
 import { appIcons } from "../icons";
 import type { Contact, Invoice, Item } from "../types";
 
@@ -59,6 +60,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
 };
 
 export const InvoicesPage = ({ customers, dataError, invoices, items, token, onRefresh }: Props) => {
+  const { language, t } = useLanguage();
   const AddIcon = appIcons.actions.add;
   const DeleteIcon = appIcons.actions.delete;
   const today = dateInputValue();
@@ -193,7 +195,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   };
 
   const deleteInvoice = async (invoice: Invoice) => {
-    if (!window.confirm(`Delete invoice ${invoice.invoiceNumber}?`)) return;
+    if (!window.confirm(t(`Delete invoice ${invoice.invoiceNumber}?`))) return;
     setMessage("");
     setDeletingId(invoice.id);
     try {
@@ -238,7 +240,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
           <div className="invoice-details-grid">
             <section className="invoice-detail-card">
               <h3>Customer</h3>
-              <DropdownField label="Customer" name="customerId" options={customers.map((customer) => ({ label: customer.displayName, value: customer.id }))} placeholder="Select a customer" required disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={customerId} onChange={(value) => {
+              <DropdownField label="Customer" name="customerId" options={customers.map((customer) => ({ label: customer.displayName, value: customer.id }))} placeholder="Select a customer" required disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} translateOptions={false} value={customerId} onChange={(value) => {
                 setCustomerId(value);
                 const customer = customers.find((entry) => entry.id === value);
                 const nextTerms = customer?.paymentTerms || "Due on Receipt";
@@ -260,7 +262,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
 
         <section className="invoice-items-panel">
           <div className="item-form-head">
-            <div><h2>Item Table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
+            <div><h2>Item Table</h2><p>{`${lines.length} line ${lines.length === 1 ? "item" : "items"}`}</p></div>
             <button className="button invoice-add-row" type="button" disabled={isViewingPaidInvoice} onClick={() => { setLines((current) => [...current, { id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]); setNextLineId((value) => value + 1); }}><AddIcon /> Add New Row</button>
           </div>
           <RecordTableScroll className="invoice-lines-table-scroll" columns={6}>
@@ -268,7 +270,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               <thead><tr><th>Item Details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr></thead>
               <tbody>{lines.map((line) => (
                 <tr key={line.id}>
-                  <td className="invoice-item-cell"><DropdownField floatingOptions label="Item" name={`item-${line.id}`} options={itemOptionsFor(line, sellableItems)} placeholder="Select an item" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} value={line.itemId} onChange={(value) => {
+                  <td className="invoice-item-cell"><DropdownField floatingOptions label="Item" name={`item-${line.id}`} options={itemOptionsFor(line, sellableItems)} placeholder="Select an item" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} translateOptions={false} value={line.itemId} onChange={(value) => {
                     const item = sellableItems.find((entry) => entry.id === value);
                     updateLine(line.id, { itemId: value, itemName: item?.name ?? line.itemName, rate: item?.salesPrice ?? 0, tax: item?.salesTax ?? "" });
                   }} /></td>
@@ -302,12 +304,12 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             <tbody>
               {filteredInvoices.length === 0 ? <tr><td className="muted" colSpan={7}>{query ? "No invoices match your search." : "No saved invoices yet."}</td></tr> : filteredInvoices.map((invoice) => (
                 <tr key={invoice.id}>
-                  <td><strong>{invoice.invoiceNumber}</strong></td>
-                  <td>{invoice.customer.displayName}</td>
-                  <td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
-                  <td>{new Date(invoice.dueDate).toLocaleDateString()}</td>
+                  <td translate="no"><strong>{invoice.invoiceNumber}</strong></td>
+                  <td translate="no">{invoice.customer.displayName}</td>
+                  <td translate="no">{formatLocalizedDate(invoice.invoiceDate, language)}</td>
+                  <td translate="no">{formatLocalizedDate(invoice.dueDate, language)}</td>
                   <td><span className={`invoice-status ${invoice.status === "Paid" ? "is-paid" : invoice.status === "Partially Paid" ? "is-partially-paid" : "is-unpaid"}`}>{invoice.status}</span></td>
-                  <td><strong>{currency.format(invoice.total)}</strong></td>
+                  <td translate="no"><strong>{currency.format(invoice.total)}</strong></td>
                   <td className="record-actions-cell">
                     <RecordActionsMenu
                       disabled={deletingId !== null}
@@ -365,7 +367,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
               setIsRecordingPayment(false);
             }
           }}>
-            <div className="item-form-head"><div><h2 id="payment-modal-title">Record Payment</h2><p>{paymentInvoice.invoiceNumber} · {paymentInvoice.customer.displayName}</p></div></div>
+            <div className="item-form-head"><div><h2 id="payment-modal-title">Record Payment</h2><p translate="no">{paymentInvoice.invoiceNumber} · {paymentInvoice.customer.displayName}</p></div></div>
             <DateField id="paymentDate" label="Payment Date" required value={paymentDate} onChange={setPaymentDate} />
             <div className="field"><label htmlFor="paymentAmount">Amount</label><input id="paymentAmount" type="number" min="0.01" max={paymentInvoice.remainingBalance} step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.currentTarget.value))} /></div>
             <div className="message" role="status">{message}</div>

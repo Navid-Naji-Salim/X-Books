@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField } from "../components/FormControls";
 import { DateField } from "../components/DateField";
+import { formatLocalizedDate, useLanguage } from "../i18n";
 import { currency } from "../lib/format";
 import type { Bill, Contact, Invoice } from "../types";
 import { reports, type ReportId } from "../reportDefinitions";
@@ -11,10 +12,11 @@ type Props = { token: string };
 const Summary = ({ entries }: { entries: Array<[string, string]> }) => <div className="report-summary">{entries.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>;
 
 const inputDate = (date: Date) => { const adjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60_000); return adjusted.toISOString().slice(0, 10); };
-const reportDate = (value: string | Date) => typeof value === "string" && !value ? "—" : new Date(typeof value === "string" ? `${value}T00:00:00` : value).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-const generatedTime = (value: Date) => `${reportDate(value)}, ${value.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
-
 export const ReportsPage = ({ token }: Props) => {
+  const { language, t } = useLanguage();
+  const locale = language === "ku" ? "ckb" : language === "ar" ? "ar-IQ" : "en-GB";
+  const reportDate = (value: string | Date) => typeof value === "string" && !value ? "—" : formatLocalizedDate(value, language, "long");
+  const generatedTime = (value: Date) => `${reportDate(value)}, ${value.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" })}`;
   const reportPagesRef = useRef<HTMLDivElement>(null);
   const today = new Date();
   const [id, setId] = useState<ReportId>("profit-loss");
@@ -56,11 +58,11 @@ export const ReportsPage = ({ token }: Props) => {
   } else if (id === "sales") {
     detailTitle = "Invoice Details";
     pdfSummary = [["Total Sales", currency.format(sales)], ["Paid", currency.format(paidSales)], ["Outstanding", currency.format(sales - paidSales)]];
-    pdfHeaders = ["Invoice", "Customer", "Date", "Status", "Total"]; pdfRows = invoices.map((invoice) => [invoice.invoiceNumber, invoice.customer.displayName, new Date(invoice.invoiceDate).toLocaleDateString(), invoice.status, currency.format(invoice.total)]);
+    pdfHeaders = ["Invoice", "Customer", "Date", "Status", "Total"]; pdfRows = invoices.map((invoice) => [invoice.invoiceNumber, invoice.customer.displayName, formatLocalizedDate(invoice.invoiceDate, language), invoice.status, currency.format(invoice.total)]);
   } else if (id === "purchases") {
     detailTitle = "Bill Details";
     pdfSummary = [["Total Purchases", currency.format(purchases)], ["Paid", currency.format(paidPurchases)], ["Outstanding", currency.format(purchases - paidPurchases)]];
-    pdfHeaders = ["Bill", "Vendor", "Date", "Status", "Total"]; pdfRows = bills.map((bill) => [bill.billNumber, bill.vendor.displayName, new Date(bill.billDate).toLocaleDateString(), bill.status, currency.format(bill.total)]);
+    pdfHeaders = ["Bill", "Vendor", "Date", "Status", "Total"]; pdfRows = bills.map((bill) => [bill.billNumber, bill.vendor.displayName, formatLocalizedDate(bill.billDate, language), bill.status, currency.format(bill.total)]);
   } else {
     const isCustomers = id === "customers";
     detailTitle = `${isCustomers ? "Customer" : "Vendor"} Details`;
@@ -69,15 +71,21 @@ export const ReportsPage = ({ token }: Props) => {
     pdfSummary = [[isCustomers ? "Customers" : "Vendors", String(rows.length)], ["Transaction Total", currency.format(total)], ["Outstanding", currency.format(outstanding)]];
     pdfHeaders = ["Name", "Transactions", "Total", "Outstanding"]; pdfRows = rows.map((row) => [row.contact.displayName, String(row.count), currency.format(row.total), currency.format(row.outstanding)]);
   }
+  const localizedPdfHeaders = pdfHeaders.map(t);
+  const localizedPdfRows = pdfRows.map((row) => row.map((cell, column) => {
+    if (id === "profit-loss" && column === 0) return t(cell);
+    if ((id === "sales" || id === "purchases") && column === 3) return t(cell);
+    return cell;
+  }));
   const firstPageCapacity = 16;
   const continuedPageCapacity = 24;
   const paginatedRows = (() => {
-    if (pdfRows.length === 0) return [([] as string[][])];
-    const pages: string[][][] = [pdfRows.slice(0, firstPageCapacity)];
-    for (let index = firstPageCapacity; index < pdfRows.length; index += continuedPageCapacity) pages.push(pdfRows.slice(index, index + continuedPageCapacity));
+    if (localizedPdfRows.length === 0) return [([] as string[][])];
+    const pages: string[][][] = [localizedPdfRows.slice(0, firstPageCapacity)];
+    for (let index = firstPageCapacity; index < localizedPdfRows.length; index += continuedPageCapacity) pages.push(localizedPdfRows.slice(index, index + continuedPageCapacity));
     return pages;
   })();
-  const templateRows = id === "profit-loss" ? pdfRows.map((row) => row.map((cell, index) => index === 0 ? cell : "")) : [pdfHeaders.map(() => "")];
+  const templateRows = id === "profit-loss" ? localizedPdfRows.map((row) => row.map((cell, index) => index === 0 ? cell : "")) : [localizedPdfHeaders.map(() => "")];
   const generate = async () => {
     if (!fromDate || !toDate || fromDate > toDate) { setError("Choose a valid date range."); return; }
     setError(""); setIsGenerating(true);

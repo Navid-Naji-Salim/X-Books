@@ -157,7 +157,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
   };
 
   const deleteCustomer = async (customer: Contact) => {
-    if (!window.confirm(`Delete ${customer.displayName}?`)) return;
+    if (!window.confirm(t(`Delete ${customer.displayName}?`))) return;
     setMessage("");
     setDeletingId(customer.id);
     try {
@@ -273,9 +273,9 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
                 {filteredContacts.length === 0 ? <tr><td colSpan={6} className="muted">{query ? "No customers match your search." : "No customers yet."}</td></tr> : filteredContacts.map((contact) => {
                   return (
                     <tr key={contact.id}>
-                      <td><strong>{contact.displayName}</strong><br /><span className="muted">{contact.customerType === "individual" ? "Individual" : "Business"}</span></td>
-                      <td>{contact.email || "-"}<br /><span className="muted">{contact.phone || "No phone"}</span></td>
-                      <td>{[contact.city, contact.country].filter(Boolean).join(", ") || "-"}</td>
+                      <td><strong translate="no">{contact.displayName}</strong><br /><span className="muted">{contact.customerType === "individual" ? "Individual" : "Business"}</span></td>
+                      <td><span translate="no">{contact.email || "-"}</span><br />{contact.phone ? <span className="muted" translate="no">{contact.phone}</span> : <span className="muted">No phone</span>}</td>
+                      <td translate="no">{[contact.city, contact.country].filter(Boolean).join(", ") || "-"}</td>
                       <td>{contact.taxRate || "-"}</td><td>{contact.paymentTerms || "Due on Receipt"}</td>
                       <td className="record-actions-cell">
                         <RecordActionsMenu

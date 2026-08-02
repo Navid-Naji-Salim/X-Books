@@ -9,6 +9,7 @@ import { Tooltip } from "../components/Tooltip";
 import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { appIcons } from "../icons";
 import { currency } from "../lib/format";
+import { formatLocalizedDate, useLanguage } from "../i18n";
 import type { Bill, Contact, Item } from "../types";
 
 type Props = {
@@ -74,6 +75,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
 };
 
 export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, token, onRefresh }: Props) => {
+  const { language, t } = useLanguage();
   const AddIcon = appIcons.actions.add;
   const DeleteIcon = appIcons.actions.delete;
   const today = dateInputValue();
@@ -227,7 +229,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
   };
 
   const deleteBill = async (bill: Bill) => {
-    if (!window.confirm(`Delete bill ${bill.billNumber}?`)) return;
+    if (!window.confirm(t(`Delete bill ${bill.billNumber}?`))) return;
     setMessage("");
     setDeletingId(bill.id);
     try {
@@ -305,6 +307,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                 required
                 openDropdown={openDropdown}
                 setOpenDropdown={setOpenDropdown}
+                translateOptions={false}
                 value={vendorId}
                 onChange={(value) => {
                   setVendorId(value);
@@ -356,7 +359,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
 
         <section className="invoice-items-panel">
           <div className="item-form-head">
-            <div><h2>Item Table</h2><p>{lines.length} line {lines.length === 1 ? "item" : "items"}</p></div>
+            <div><h2>Item Table</h2><p>{`${lines.length} line ${lines.length === 1 ? "item" : "items"}`}</p></div>
             <button
               className="button invoice-add-row"
               disabled={isReadOnly}
@@ -391,6 +394,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                         placeholder="Select an item"
                         openDropdown={openDropdown}
                         setOpenDropdown={setOpenDropdown}
+                        translateOptions={false}
                         value={line.itemId}
                         onChange={(value) => {
                           const item = purchasableItems.find((entry) => entry.id === value);
@@ -482,12 +486,12 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                 <tr><td className="muted" colSpan={7}>{query ? "No bills match your search." : "No saved bills yet."}</td></tr>
               ) : filteredBills.map((bill) => (
                 <tr key={bill.id}>
-                  <td><strong>{bill.billNumber}</strong></td>
-                  <td>{bill.vendor.displayName}</td>
-                  <td>{new Date(bill.billDate).toLocaleDateString()}</td>
-                  <td>{new Date(bill.dueDate).toLocaleDateString()}</td>
+                  <td translate="no"><strong>{bill.billNumber}</strong></td>
+                  <td translate="no">{bill.vendor.displayName}</td>
+                  <td translate="no">{formatLocalizedDate(bill.billDate, language)}</td>
+                  <td translate="no">{formatLocalizedDate(bill.dueDate, language)}</td>
                   <td><span className={`invoice-status ${bill.status === "Paid" ? "is-paid" : bill.status === "Partially Paid" ? "is-partially-paid" : "is-unpaid"}`}>{bill.status}</span></td>
-                  <td><strong>{currency.format(bill.total)}</strong></td>
+                  <td translate="no"><strong>{currency.format(bill.total)}</strong></td>
                   <td className="record-actions-cell">
                     <RecordActionsMenu
                       disabled={deletingId !== null || isSaving}
@@ -552,7 +556,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
             }}
           >
             <div className="item-form-head">
-              <div><h2 id="bill-payment-title">Pay Bill</h2><p>{paymentBill.billNumber} · {paymentBill.vendor.displayName}</p></div>
+              <div><h2 id="bill-payment-title">Pay Bill</h2><p translate="no">{paymentBill.billNumber} · {paymentBill.vendor.displayName}</p></div>
             </div>
             <DateField id="billPaymentDate" label="Payment Date" required value={paymentDate} onChange={setPaymentDate} />
             <div className="field">

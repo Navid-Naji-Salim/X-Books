@@ -24,13 +24,14 @@ type DropdownFieldProps = {
   onChange?: (value: string) => void;
   floatingOptions?: boolean;
   includeFormValue?: boolean;
+  translateOptions?: boolean;
 };
 
 export const DropdownField = ({
   label = "Unit", name, options, defaultValue = "", placeholder = "Select an option",
   ariaLabel, className = "", labelClassName = "", optionsClassName = "",
   required, disabled, resetVersion, openDropdown, setOpenDropdown,
-  value: controlledValue, onChange, floatingOptions = false, includeFormValue = true,
+  value: controlledValue, onChange, floatingOptions = false, includeFormValue = true, translateOptions = true,
 }: DropdownFieldProps) => {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -96,7 +97,7 @@ export const DropdownField = ({
     {options.map((option) => {
       const optionValue = typeof option === "string" ? option : option.value;
       const optionLabel = typeof option === "string" ? option : option.label;
-      return <button className={optionValue === selectedValue ? "is-selected" : ""} disabled={disabled} key={optionValue} type="button" onClick={() => {
+      return <button className={optionValue === selectedValue ? "is-selected" : ""} disabled={disabled} key={optionValue} translate={translateOptions ? undefined : "no"} type="button" onClick={() => {
         if (controlledValue === undefined) setInternalValue(optionValue);
         onChange?.(optionValue);
         setOpenDropdown(null);
@@ -112,7 +113,7 @@ export const DropdownField = ({
         <summary aria-disabled={disabled} aria-label={ariaLabel} onClick={(event) => {
           event.preventDefault();
           if (!disabled) setOpenDropdown(isOpen ? null : name);
-        }}>{selectedLabel || placeholder}</summary>
+        }} translate={selectedOption && !translateOptions ? "no" : undefined}>{selectedLabel || placeholder}</summary>
         {!floatingOptions ? optionsMenu : null}
       </details>
       {floatingOptions && optionsMenu && floatingStyle

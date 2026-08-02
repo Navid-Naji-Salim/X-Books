@@ -92,13 +92,13 @@ export const ContactsPage = ({ contacts, kind, summary, token, onRefresh }: Cont
                   contacts.map((contact) => (
                     <tr key={contact.id}>
                       <td>
-                        <strong>{contact.displayName}</strong>
+                        <strong translate="no">{contact.displayName}</strong>
                         <br />
                         <span className="muted">{contact.notes}</span>
                       </td>
-                      <td>{contact.companyName ?? "-"}</td>
-                      <td>{contact.email ?? "-"}</td>
-                      <td>{contact.phone ?? "-"}</td>
+                      <td translate="no">{contact.companyName ?? "-"}</td>
+                      <td translate="no">{contact.email ?? "-"}</td>
+                      <td translate="no">{contact.phone ?? "-"}</td>
                     </tr>
                   ))
                 )}

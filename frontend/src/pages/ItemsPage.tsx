@@ -9,6 +9,7 @@ import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
 import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { currency } from "../lib/format";
+import { useLanguage } from "../i18n";
 import { appIcons } from "../icons";
 import type { Item } from "../types";
 
@@ -108,6 +109,7 @@ const readImageFile = (file: File) => new Promise<string>((resolve, reject) => {
 });
 
 export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps) => {
+  const { t } = useLanguage();
   const ImageIcon = appIcons.media.image;
   const [draft, setDraft] = useState<ItemDraft>(emptyDraft);
   const [baseline, setBaseline] = useState<ItemDraft>(emptyDraft);
@@ -196,7 +198,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
   };
 
   const deleteItem = async (item: Item) => {
-    const confirmed = window.confirm(`Delete ${item.name}?`);
+    const confirmed = window.confirm(t(`Delete ${item.name}?`));
     if (!confirmed) {
       return;
     }
@@ -338,7 +340,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                           icon: appIcons.actions.remove,
                           tone: "danger",
                           onSelect: () => {
-                            if (!window.confirm("Are you sure you want to remove this image?")) return;
+                            if (!window.confirm(t("Are you sure you want to remove this image?"))) return;
                             setIsImagePreviewOpen(false);
                             set("imageUrl", "");
                           },
@@ -422,7 +424,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                   filteredItems.map((item) => (
                     <tr key={item.id}>
                       <td>
-                        <strong>{item.name}</strong>
+                        <strong translate="no">{item.name}</strong>
                         <br />
                         <span className="muted">{item.unit ?? "No unit"}</span>
                       </td>
