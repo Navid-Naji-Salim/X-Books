@@ -2125,7 +2125,7 @@ th {
     max-content;
 }
 
-.invoice-lines-table-scroll .invoice-table tbody { max-block-size: 23rem; }
+.invoice-lines-table-scroll .invoice-table tbody { max-block-size: 18.25rem; }
 .invoice-lines-table-scroll .invoice-table thead {
   border-bottom: 1px solid var(--line);
 }
