@@ -973,7 +973,7 @@ textarea:focus {
 
 .workspace-frame {
   --workspace-half-comfort: 36rem;
-  --workspace-max-inline-size: 90rem;
+  --workspace-max-inline-size: 82rem;
   inline-size: min(100%, calc(50% + var(--workspace-half-comfort)), var(--workspace-max-inline-size));
   min-inline-size: 0;
   margin-inline: auto;
@@ -984,24 +984,9 @@ textarea:focus {
   --workspace-max-inline-size: 92.5rem;
 }
 
-.workspace-frame.is-document {
-  --workspace-half-comfort: 40rem;
-  --workspace-max-inline-size: 96rem;
-}
-
 .workspace-frame.is-report {
   --workspace-half-comfort: 37rem;
   --workspace-max-inline-size: 88rem;
-}
-
-.workspace-frame.is-records .items-workspace > .compact-item-form {
-  inline-size: min(100%, 76rem);
-  margin-inline: auto;
-}
-
-.workspace-frame.is-document > .invoice-document-card {
-  inline-size: min(100%, 82rem);
-  margin-inline: auto;
 }
 
 .app-shell.sidebar-has-toggled.sidebar-collapsed .content {
