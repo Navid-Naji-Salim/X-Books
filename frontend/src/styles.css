@@ -2227,6 +2227,10 @@ th {
   align-items: center;
 }
 
+html[lang="ckb"] .invoice-form-actions {
+  --form-primary-action-width: 12rem;
+}
+
 .form-primary-action {
   display: inline-flex;
   width: var(--form-primary-action-width);
