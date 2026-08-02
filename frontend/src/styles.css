@@ -2126,6 +2126,10 @@ th {
 }
 
 .invoice-lines-table-scroll .invoice-table tbody { max-block-size: 23rem; }
+.invoice-lines-table-scroll .invoice-table thead {
+  border-bottom: 1px solid var(--line);
+}
+.invoice-lines-table-scroll .invoice-table thead th { border-bottom: 0; }
 .invoice-table thead { background: rgba(248, 250, 252, 0.98); }
 .invoice-table th:first-child { border-top-left-radius: 14px; }
 .invoice-table th:last-child { border-top-right-radius: 14px; }
