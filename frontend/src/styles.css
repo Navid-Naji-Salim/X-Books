@@ -2277,6 +2277,7 @@ html[lang="ckb"] .invoice-form-actions {
 .saved-invoices-table thead { background: rgba(248, 250, 252, 0.98); }
 .saved-invoices-table th:first-child { border-top-left-radius: 14px; }
 .saved-invoices-table th:last-child { border-top-right-radius: 14px; }
+.saved-invoices-table-wrap .saved-invoices-table tbody { clip-path: inset(1px 0); }
 .saved-invoices-table tbody tr:last-child td { border-bottom: 0; }
 .invoice-status { display: inline-flex; border-radius: 999px; padding: 0.32rem 0.62rem; font-size: 0.75rem; font-weight: 900; }
 .invoice-status.is-unpaid { color: #991b1b; background: #fee2e2; }

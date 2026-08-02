@@ -69,7 +69,7 @@ export const RecordTableScroll = ({ children, className, columns, visibleRows }:
         0,
       );
       const nextLimit = rows.length > visibleRows && visibleHeight > 0
-        ? `${Math.ceil(visibleHeight)}px`
+        ? `${visibleHeight}px`
         : "";
       if (rowsContainer.style.maxBlockSize !== nextLimit) {
         rowsContainer.style.maxBlockSize = nextLimit;
