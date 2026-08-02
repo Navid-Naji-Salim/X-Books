@@ -35,11 +35,11 @@ export type RecordActionsMenuProps = {
   recordLabel?: string;
 };
 
+type Placement = "above" | "below";
 type FocusTarget = "first" | "last";
 
 const EDGE = 8;
 const GAP = 6;
-const TRIGGER_CLEARANCE = 10;
 const FOCUSABLE_SELECTOR = [
   "a[href]",
   "button:not([disabled])",
@@ -71,10 +71,10 @@ export const RecordActionsMenu = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<FocusTarget | null>(null);
   const isOpenRef = useRef(false);
-  const verticalOffsetRef = useRef<number | null>(null);
-  const pageHeightAtOpenRef = useRef<number | null>(null);
+  const placementRef = useRef<Placement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
+  const [placement, setPlacement] = useState<Placement>("below");
   const MoreIcon = appIcons.actions.more;
   const isTriggerDisabled = disabled || actions.length === 0;
   const accessibleLabel = recordLabel ? `${t(label)}: ${recordLabel}` : t(label);
@@ -96,8 +96,7 @@ export const RecordActionsMenu = ({
   const closeMenu = useCallback((options: { immediate?: boolean; restoreFocus?: boolean } = {}) => {
     pendingFocus.current = null;
     isOpenRef.current = false;
-    verticalOffsetRef.current = null;
-    pageHeightAtOpenRef.current = null;
+    placementRef.current = null;
     setIsOpen(false);
     setIsRendered(false);
     if (options.restoreFocus) {
@@ -113,13 +112,7 @@ export const RecordActionsMenu = ({
       return;
     }
     isOpenRef.current = true;
-    verticalOffsetRef.current = null;
-    pageHeightAtOpenRef.current = Math.max(
-      document.scrollingElement?.scrollHeight ?? 0,
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight,
-      window.innerHeight,
-    );
+    placementRef.current = null;
     setIsRendered(true);
     setIsOpen(true);
   }, [focusEdgeItem, isTriggerDisabled]);
@@ -176,6 +169,7 @@ export const RecordActionsMenu = ({
       const height = menu.offsetHeight;
       const isRtl = document.documentElement.dir === "rtl";
       const belowTop = triggerRect.bottom + GAP;
+      const aboveTop = triggerRect.top - height - GAP;
       const preferredLeft = align === "right" || !isRtl ? triggerRect.right - width : triggerRect.left;
       const boundaryRect = boundaryRef?.current?.getBoundingClientRect();
       const viewportMaxLeft = Math.max(EDGE, window.innerWidth - width - EDGE);
@@ -186,33 +180,18 @@ export const RecordActionsMenu = ({
       const boundaryCanContainMenu = boundaryMaxLeft >= boundaryMinLeft;
       const minLeft = boundaryCanContainMenu ? boundaryMinLeft : EDGE;
       const maxLeft = boundaryCanContainMenu ? boundaryMaxLeft : viewportMaxLeft;
-      let left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
-      let verticalOffset = verticalOffsetRef.current;
-      if (verticalOffset === null) {
-        const belowDocumentTop = belowTop + window.scrollY;
-        const pageHeight = pageHeightAtOpenRef.current ?? document.documentElement.scrollHeight;
-        const maxDocumentTop = Math.max(EDGE, pageHeight - height - EDGE);
-        const initialDocumentTop = Math.min(Math.max(EDGE, belowDocumentTop), maxDocumentTop);
-        verticalOffset = initialDocumentTop - belowDocumentTop;
-        verticalOffsetRef.current = verticalOffset;
+      const left = Math.min(Math.max(minLeft, preferredLeft), maxLeft);
+      let nextPlacement = placementRef.current;
+      if (nextPlacement === null) {
+        const fitsBelow = belowTop + height <= window.innerHeight - EDGE;
+        const fitsAbove = aboveTop >= EDGE;
+        const spaceBelow = window.innerHeight - triggerRect.bottom - GAP - EDGE;
+        const spaceAbove = triggerRect.top - GAP - EDGE;
+        nextPlacement = fitsBelow || (!fitsAbove && spaceBelow >= spaceAbove) ? "below" : "above";
+        placementRef.current = nextPlacement;
+        setPlacement(nextPlacement);
       }
-      // Keep the opening nudge fixed so scrolling moves the menu exactly with its trigger.
-      const top = belowTop + verticalOffset;
-      const overlapsTrigger = (
-        left < triggerRect.right
-        && left + width > triggerRect.left
-        && top < triggerRect.bottom
-        && top + height > triggerRect.top
-      );
-      if (verticalOffset < 0 && overlapsTrigger) {
-        const leftOfTrigger = triggerRect.left - TRIGGER_CLEARANCE - width;
-        if (leftOfTrigger >= minLeft) {
-          left = leftOfTrigger;
-        } else {
-          const rightOfTrigger = triggerRect.right + TRIGGER_CLEARANCE;
-          if (rightOfTrigger <= maxLeft) left = rightOfTrigger;
-        }
-      }
+      const top = nextPlacement === "below" ? belowTop : aboveTop;
       const nextLeft = `${left + window.scrollX}px`;
       const nextTop = `${top + window.scrollY}px`;
       if (menu.style.left !== nextLeft) menu.style.left = nextLeft;
@@ -314,7 +293,7 @@ export const RecordActionsMenu = ({
           aria-hidden={!isOpen}
           aria-label={accessibleLabel}
           aria-orientation="vertical"
-          className={`record-actions-menu record-actions-menu-below record-actions-menu-align-${align} ${isOpen ? "is-open" : "is-closing"}`}
+          className={`record-actions-menu record-actions-menu-${placement} record-actions-menu-align-${align} ${isOpen ? "is-open" : "is-closing"}`}
           id={menuId}
           ref={menuRef}
           role="menu"
