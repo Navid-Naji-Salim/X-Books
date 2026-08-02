@@ -5,6 +5,7 @@ export type Language = "en" | "ku" | "ar";
 const translations: Record<string, { ku: string; ar: string }> = {
   "Edit Item": { ku: "دەستکاریی کاڵا", ar: "تعديل العنصر" },
   "Bill Details": { ku: "وردەکاریی وەسڵ", ar: "تفاصيل فاتورة الشراء" },
+  "Enter phone number": { ku: "ژمارەی تەلەفۆن بنووسە", ar: "أدخل رقم الهاتف" },
   "Partially Paid": { ku: "بەشێکی دراوە", ar: "مدفوع جزئياً" },
   Home: { ku: "سەرەکی", ar: "الرئيسية" }, Items: { ku: "کاڵاکان", ar: "العناصر" }, Sales: { ku: "فرۆشتن", ar: "المبيعات" }, Purchases: { ku: "کڕین", ar: "المشتريات" }, Report: { ku: "ڕاپۆرت", ar: "التقرير" }, Reports: { ku: "ڕاپۆرتەکان", ar: "التقارير" },
   Invoices: { ku: "پسووڵەکان", ar: "الفواتير" }, Customers: { ku: "کڕیارەکان", ar: "العملاء" }, Vendors: { ku: "دابینکەرەکان", ar: "الموردون" }, Bills: { ku: "وەسڵەکان", ar: "فواتير الشراء" },

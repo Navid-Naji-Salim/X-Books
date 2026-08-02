@@ -3,6 +3,7 @@ export const CONTACT_PLACEHOLDERS = {
   firstName: "Dilan",
   lastName: "Karim",
   email: "dilan.karim@example.com",
+  phone: "Enter phone number",
   city: "Erbil",
   state: "Kurdistan Region",
   postalCode: "44001",

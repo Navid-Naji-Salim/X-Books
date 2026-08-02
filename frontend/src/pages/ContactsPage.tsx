@@ -3,6 +3,7 @@ import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { PageTitle } from "../components/PageTitle";
 import { Stats } from "../components/Stats";
+import { CONTACT_PLACEHOLDERS } from "../contactPlaceholders";
 import type { Contact } from "../types";
 
 type ContactsPageProps = {
@@ -55,7 +56,7 @@ export const ContactsPage = ({ contacts, kind, summary, token, onRefresh }: Cont
           <Field label="Company Name" name="companyName" />
           <div className="split">
             <Field label="Email" name="email" type="email" />
-            <Field label="Phone" name="phone" />
+            <Field label="Phone" name="phone" placeholder={CONTACT_PLACEHOLDERS.phone} />
           </div>
           <div className="field">
             <label htmlFor={`${kind}-notes`}>Notes</label>

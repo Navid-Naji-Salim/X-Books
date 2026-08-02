@@ -234,7 +234,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
                 <div className="split"><Field label="First Name" name="firstName" placeholder={CONTACT_PLACEHOLDERS.firstName} required value={draft.firstName} onChange={(event) => set("firstName", event.currentTarget.value)} /><Field label="Last Name" name="lastName" placeholder={CONTACT_PLACEHOLDERS.lastName} required value={draft.lastName} onChange={(event) => set("lastName", event.currentTarget.value)} /></div>
               )}
               <Field label="Email Address" name="email" placeholder={CONTACT_PLACEHOLDERS.email} type="email" value={draft.email} onChange={(event) => set("email", event.currentTarget.value)} />
-              <Field label="Phone" name="phone" value={draft.phone} onChange={(event) => set("phone", event.currentTarget.value)} />
+              <Field label="Phone" name="phone" placeholder={CONTACT_PLACEHOLDERS.phone} value={draft.phone} onChange={(event) => set("phone", event.currentTarget.value)} />
             </section>
 
             <section className="item-info-section customer-info-section">
