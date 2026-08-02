@@ -40,6 +40,7 @@ type FocusTarget = "first" | "last";
 
 const EDGE = 8;
 const GAP = 6;
+const SCROLLABLE_OVERFLOW = new Set(["auto", "overlay", "scroll"]);
 const FOCUSABLE_SELECTOR = [
   "a[href]",
   "button:not([disabled])",
@@ -54,6 +55,32 @@ const isVisibleFocusable = (element: HTMLElement) => (
   element.getClientRects().length > 0
   && !element.matches(":disabled")
   && !element.closest("[aria-hidden='true'], [inert]")
+);
+
+const getNearestScrollableAncestor = (element: HTMLElement) => {
+  let ancestor = element.parentElement;
+  while (ancestor && ancestor !== document.body && ancestor !== document.documentElement) {
+    const style = window.getComputedStyle(ancestor);
+    const scrollsHorizontally = SCROLLABLE_OVERFLOW.has(style.overflowX)
+      && ancestor.scrollWidth > ancestor.clientWidth;
+    const scrollsVertically = SCROLLABLE_OVERFLOW.has(style.overflowY)
+      && ancestor.scrollHeight > ancestor.clientHeight;
+    if (scrollsHorizontally || scrollsVertically) return ancestor;
+    ancestor = ancestor.parentElement;
+  }
+  return null;
+};
+
+const hasVisibleIntersection = (
+  rect: DOMRect,
+  bounds: { bottom: number; left: number; right: number; top: number },
+) => (
+  rect.width > 0
+  && rect.height > 0
+  && rect.right > bounds.left
+  && rect.left < bounds.right
+  && rect.bottom > bounds.top
+  && rect.top < bounds.bottom
 );
 
 export const RecordActionsMenu = ({
@@ -162,9 +189,32 @@ export const RecordActionsMenu = ({
     const trigger = triggerRef.current;
     const menu = menuRef.current;
     if (!trigger || !menu) return;
+    const scrollContainer = getNearestScrollableAncestor(trigger);
 
     const updatePosition = () => {
       const triggerRect = trigger.getBoundingClientRect();
+      const isVisibleInViewport = hasVisibleIntersection(triggerRect, {
+        bottom: window.innerHeight,
+        left: 0,
+        right: window.innerWidth,
+        top: 0,
+      });
+      let isVisibleInScrollContainer = true;
+      if (scrollContainer) {
+        const scrollContainerRect = scrollContainer.getBoundingClientRect();
+        const containerLeft = scrollContainerRect.left + scrollContainer.clientLeft;
+        const containerTop = scrollContainerRect.top + scrollContainer.clientTop;
+        isVisibleInScrollContainer = hasVisibleIntersection(triggerRect, {
+          bottom: containerTop + scrollContainer.clientHeight,
+          left: containerLeft,
+          right: containerLeft + scrollContainer.clientWidth,
+          top: containerTop,
+        });
+      }
+      if (!isVisibleInViewport || !isVisibleInScrollContainer) {
+        closeMenu({ immediate: true });
+        return;
+      }
       const width = menu.offsetWidth;
       const height = menu.offsetHeight;
       const isRtl = document.documentElement.dir === "rtl";
@@ -217,7 +267,7 @@ export const RecordActionsMenu = ({
     return () => {
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [align, boundaryRef, isRendered, language]);
+  }, [align, boundaryRef, closeMenu, isRendered, language]);
 
   const closeIfFocusLeaves = (event: ReactFocusEvent<HTMLElement>) => {
     const next = event.relatedTarget as Node | null;
