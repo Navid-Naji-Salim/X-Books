@@ -298,7 +298,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
       </form>
       <section className="panel saved-invoices-panel record-list-panel">
         <div className="item-form-head record-list-head"><div><h2>Saved Invoices</h2><p>{countLabel}</p></div><RecordListSearch label="Search Invoices" placeholder="Search invoices by any detail…" value={query} onChange={setQuery} /></div>
-        <RecordTableScroll className="saved-invoices-table-wrap" columns={7}>
+        <RecordTableScroll className="saved-invoices-table-wrap" columns={7} visibleRows={4}>
           <table className="saved-invoices-table">
             <thead><tr><th>Invoice Number</th><th>Customer</th><th>Invoice Date</th><th>Due Date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr></thead>
             <tbody>

@@ -13,6 +13,7 @@ type RecordTableScrollProps = {
   children: ReactNode;
   className?: string;
   columns: number;
+  visibleRows?: number;
 };
 
 type ScrollbarMetrics = {
@@ -35,7 +36,7 @@ const emptyMetrics: ScrollbarMetrics = {
 
 const scrollbarBottomInset = 8;
 
-export const RecordTableScroll = ({ children, className, columns }: RecordTableScrollProps) => {
+export const RecordTableScroll = ({ children, className, columns, visibleRows }: RecordTableScrollProps) => {
   const { language } = useLanguage();
   const horizontalRef = useRef<HTMLDivElement>(null);
   const isPinnedToRtlStartRef = useRef(true);
@@ -56,6 +57,23 @@ export const RecordTableScroll = ({ children, className, columns }: RecordTableS
     const updatePinnedState = () => {
       if (language === "en") return;
       isPinnedToRtlStartRef.current = Math.abs(horizontalContainer.scrollLeft - rtlStart()) <= 1;
+    };
+    const updateRowsLimit = () => {
+      if (!visibleRows) {
+        rowsContainer.style.maxBlockSize = "";
+        return;
+      }
+      const rows = Array.from(rowsContainer.rows);
+      const visibleHeight = rows.slice(0, visibleRows).reduce(
+        (height, row) => height + row.getBoundingClientRect().height,
+        0,
+      );
+      const nextLimit = rows.length > visibleRows && visibleHeight > 0
+        ? `${Math.ceil(visibleHeight)}px`
+        : "";
+      if (rowsContainer.style.maxBlockSize !== nextLimit) {
+        rowsContainer.style.maxBlockSize = nextLimit;
+      }
     };
     const updateScrollbar = () => {
       const horizontalRect = horizontalContainer.getBoundingClientRect();
@@ -85,12 +103,14 @@ export const RecordTableScroll = ({ children, className, columns }: RecordTableS
 
     isPinnedToRtlStartRef.current = language !== "en";
     alignToLanguageStart();
+    updateRowsLimit();
     updateScrollbar();
     horizontalContainer.addEventListener("scroll", updatePinnedState, { passive: true });
     rowsContainer.addEventListener("scroll", updateScrollbar, { passive: true });
 
     const resizeObserver = new ResizeObserver(() => {
       if (language !== "en" && isPinnedToRtlStartRef.current) alignToLanguageStart();
+      updateRowsLimit();
       updateScrollbar();
     });
     resizeObserver.observe(horizontalContainer);
@@ -98,7 +118,10 @@ export const RecordTableScroll = ({ children, className, columns }: RecordTableS
     const table = horizontalContainer.querySelector("table");
     if (table) resizeObserver.observe(table);
 
-    const mutationObserver = new MutationObserver(updateScrollbar);
+    const mutationObserver = new MutationObserver(() => {
+      updateRowsLimit();
+      updateScrollbar();
+    });
     mutationObserver.observe(rowsContainer, { childList: true, subtree: true });
 
     return () => {
@@ -107,7 +130,7 @@ export const RecordTableScroll = ({ children, className, columns }: RecordTableS
       horizontalContainer.removeEventListener("scroll", updatePinnedState);
       rowsContainer.removeEventListener("scroll", updateScrollbar);
     };
-  }, [language]);
+  }, [language, visibleRows]);
 
   const handleThumbPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     const rowsContainer = getRowsContainer();

@@ -476,7 +476,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
           <div><h2>Saved Bills</h2><p>{countLabel}</p></div>
           <RecordListSearch label="Search Bills" placeholder="Search bills by any detail…" value={query} onChange={setQuery} />
         </div>
-        <RecordTableScroll className="saved-invoices-table-wrap" columns={7}>
+        <RecordTableScroll className="saved-invoices-table-wrap" columns={7} visibleRows={4}>
           <table className="saved-invoices-table">
             <thead>
               <tr><th>Bill Number</th><th>Vendor</th><th>Bill Date</th><th>Due Date</th><th>Status</th><th>Total</th><th className="record-actions-heading">Actions</th></tr>
