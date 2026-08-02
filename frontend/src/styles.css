@@ -971,6 +971,39 @@ textarea:focus {
   padding: clamp(1rem, 3vw, 2.5rem);
 }
 
+.workspace-frame {
+  --workspace-half-comfort: 36rem;
+  --workspace-max-inline-size: 90rem;
+  inline-size: min(100%, calc(50% + var(--workspace-half-comfort)), var(--workspace-max-inline-size));
+  min-inline-size: 0;
+  margin-inline: auto;
+}
+
+.workspace-frame.is-home {
+  --workspace-half-comfort: 40rem;
+  --workspace-max-inline-size: 92.5rem;
+}
+
+.workspace-frame.is-document {
+  --workspace-half-comfort: 40rem;
+  --workspace-max-inline-size: 96rem;
+}
+
+.workspace-frame.is-report {
+  --workspace-half-comfort: 37rem;
+  --workspace-max-inline-size: 88rem;
+}
+
+.workspace-frame.is-records .items-workspace > .compact-item-form {
+  inline-size: min(100%, 76rem);
+  margin-inline: auto;
+}
+
+.workspace-frame.is-document > .invoice-document-card {
+  inline-size: min(100%, 82rem);
+  margin-inline: auto;
+}
+
 .app-shell.sidebar-has-toggled.sidebar-collapsed .content {
   animation: content-after-sidebar-collapse var(--sidebar-motion-duration) cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2517,6 +2550,7 @@ html[lang="ckb"] .invoice-form-actions {
   .report-screen-only { display: none !important; }
   .app-shell { display: block; }
   .content { padding: 0; }
+  .workspace-frame { inline-size: 100%; margin: 0; }
   .report-document { width: 100%; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
   .report-viewer { min-height: 0; padding: 0; border: 0; border-radius: 0; background: white; }
   .report-document-shell { width: 100%; }
