@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { DateField } from "../components/DateField";
+import { ModalLayer } from "../components/ModalLayer";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
@@ -351,7 +352,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
         </RecordTableScroll>
       </section>
       {paymentInvoice ? (
-        <div className="modal-backdrop" role="presentation" onMouseDown={() => !isRecordingPayment && setPaymentInvoice(null)}>
+        <ModalLayer closeDisabled={isRecordingPayment} onClose={() => setPaymentInvoice(null)}>
           <form className="panel payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title" onMouseDown={(event) => event.stopPropagation()} onSubmit={async (event) => {
             event.preventDefault();
             setMessage("");
@@ -373,7 +374,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             <div className="message" role="status">{message}</div>
             <div className="payment-modal-actions"><button className="ghost-button" disabled={isRecordingPayment} type="button" onClick={() => setPaymentInvoice(null)}>Cancel</button><button className="button" disabled={isRecordingPayment} type="submit">{isRecordingPayment ? "Saving..." : "Save Payment"}</button></div>
           </form>
-        </div>
+        </ModalLayer>
       ) : null}
     </>
   );

@@ -1609,6 +1609,7 @@ textarea:focus {
   z-index: 4000;
   inset: 0;
   background: rgba(2, 6, 23, 0.74);
+  backdrop-filter: blur(4px);
   overscroll-behavior: contain;
   touch-action: none;
 }
@@ -2395,8 +2396,9 @@ html[lang="ckb"] .invoice-form-actions {
 .record-actions-menu-item-label { min-width: 0; overflow-wrap: anywhere; }
 .is-rtl .record-actions-menu-item { text-align: right; }
 
-.modal-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.42); backdrop-filter: blur(4px); }
-.payment-modal { display: grid; gap: 1rem; width: min(430px, 100%); background: var(--popup-light); box-shadow: 0 30px 80px rgba(20, 33, 61, 0.24); }
+.modal-backdrop { position: fixed; z-index: 3500; inset: 0; display: grid; width: 100vw; height: 100dvh; overflow: hidden; place-items: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.42); backdrop-filter: blur(4px); overscroll-behavior: contain; }
+.payment-modal { display: grid; gap: 1rem; width: min(430px, 100%); max-height: calc(100dvh - 2.5rem); overflow-y: auto; background: var(--popup-light); box-shadow: 0 30px 80px rgba(20, 33, 61, 0.24); overscroll-behavior: contain; }
+.date-picker-popover.is-modal-anchored { z-index: 3600; }
 .payment-modal-actions { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 0.25rem; }
 
 .page-alert {

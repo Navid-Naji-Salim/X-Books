@@ -114,7 +114,8 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
   useLayoutEffect(() => {
     if (!isOpen) return;
     const updatePosition = () => {
-      const anchor = rootRef.current?.getBoundingClientRect();
+      const root = rootRef.current;
+      const anchor = root?.getBoundingClientRect();
       const popup = popupRef.current;
       if (!anchor || !popup) return;
       const viewportGap = 8;
@@ -122,9 +123,31 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       const width = Math.min(376, window.innerWidth - viewportGap * 2);
       const left = Math.min(Math.max(anchor.right - width, viewportGap), window.innerWidth - width - viewportGap);
       const below = anchor.bottom + fieldGap;
-      const nextLeft = `${left + window.scrollX}px`;
-      const nextTop = `${below + window.scrollY}px`;
+      const isInModal = Boolean(root?.closest('[role="dialog"][aria-modal="true"]'));
+      let top = below;
+
+      if (isInModal) {
+        const popupHeight = popup.offsetHeight;
+        const above = anchor.top - fieldGap - popupHeight;
+        const fitsBelow = below + popupHeight <= window.innerHeight - viewportGap;
+        const fitsAbove = above >= viewportGap;
+
+        if (!fitsBelow) {
+          if (fitsAbove) {
+            top = above;
+          } else {
+            const maximumTop = Math.max(viewportGap, window.innerHeight - popupHeight - viewportGap);
+            top = Math.min(Math.max(below, viewportGap), maximumTop);
+          }
+        }
+      }
+
+      const nextPosition = isInModal ? "fixed" : "absolute";
+      const nextLeft = `${left + (isInModal ? 0 : window.scrollX)}px`;
+      const nextTop = `${top + (isInModal ? 0 : window.scrollY)}px`;
       const nextWidth = `${width}px`;
+      popup.classList.toggle("is-modal-anchored", isInModal);
+      if (popup.style.position !== nextPosition) popup.style.position = nextPosition;
       if (popup.style.left !== nextLeft) popup.style.left = nextLeft;
       if (popup.style.top !== nextTop) popup.style.top = nextTop;
       if (popup.style.width !== nextWidth) popup.style.width = nextWidth;

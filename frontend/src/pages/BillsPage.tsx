@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { DateField } from "../components/DateField";
+import { ModalLayer } from "../components/ModalLayer";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
@@ -532,7 +533,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
       </section>
 
       {paymentBill ? (
-        <div className="modal-backdrop" role="presentation" onMouseDown={() => !isPaying && setPaymentBill(null)}>
+        <ModalLayer closeDisabled={isPaying} onClose={() => setPaymentBill(null)}>
           <form
             className="panel payment-modal"
             role="dialog"
@@ -569,7 +570,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
               <button className="button" disabled={isPaying} type="submit">{isPaying ? "Saving..." : "Save Payment"}</button>
             </div>
           </form>
-        </div>
+        </ModalLayer>
       ) : null}
     </>
   );
