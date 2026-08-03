@@ -109,9 +109,16 @@ button:disabled {
   padding: 2rem;
 }
 
-.login-card {
+.login-layout {
   display: grid;
   width: min(460px, 100%);
+  justify-items: center;
+  gap: clamp(0.9rem, 2.5vh, 1.25rem);
+}
+
+.login-card {
+  display: grid;
+  width: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 28px;
