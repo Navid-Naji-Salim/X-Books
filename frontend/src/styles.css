@@ -259,6 +259,7 @@ textarea:focus {
   background: rgba(255, 255, 255, 0.7);
   font-weight: 800;
   text-decoration: none;
+  transition: background-color 160ms ease;
 }
 
 .ghost-button:hover:not(:disabled) {
@@ -2523,6 +2524,7 @@ html[lang="ckb"] .invoice-form-actions {
     animation: none;
   }
 
+  .ghost-button,
   .record-actions-menu-trigger { transition: none; }
 }
 
