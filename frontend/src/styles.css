@@ -1292,11 +1292,6 @@ textarea:focus {
   min-height: 2.72rem;
 }
 
-.select-menu summary:not([aria-disabled="true"]):hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-}
-
 .select-menu summary::after {
   content: "";
   width: 0.38rem;
@@ -2197,7 +2192,7 @@ th {
 .invoice-item-cell .field > label,
 .invoice-tax-cell .field > label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 .invoice-amount { font-weight: 900; white-space: nowrap; }
-.invoice-remove-line { display: grid; width: 2rem; height: 2rem; place-items: center; border: 0; border-radius: 10px; color: var(--red); background: transparent; }
+.invoice-remove-line { display: grid; width: 2rem; height: 2rem; place-items: center; border: 0; border-radius: 10px; color: var(--red); background: transparent; transition: background-color 160ms ease; }
 .invoice-remove-line svg { width: 18px; height: 18px; }
 .invoice-remove-line:hover:not(:disabled) { background: rgba(254, 226, 226, 0.72); }
 .invoice-add-row { display: inline-flex; gap: 0.38rem; align-items: center; justify-self: start; }
