@@ -290,8 +290,8 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
         })}
       </div>
       <div className="date-picker-footer">
-        <button type="button" onClick={() => chooseDate(today)} disabled={!isAllowed(formatDate(today), min, max)}>{copy.today}</button>
-        <button type="button" onClick={() => { setDraft(""); onChange(""); close(); inputRef.current?.focus(); }}>{copy.clear}</button>
+        <button className="ghost-button" type="button" onClick={() => chooseDate(today)} disabled={!isAllowed(formatDate(today), min, max)}>{copy.today}</button>
+        <button className="ghost-button" type="button" onClick={() => { setDraft(""); onChange(""); close(); inputRef.current?.focus(); }}>{copy.clear}</button>
       </div>
     </div>,
     document.body,
