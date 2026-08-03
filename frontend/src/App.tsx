@@ -242,13 +242,10 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
   const contentRef = useRef<HTMLElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [hasSidebarToggled, setHasSidebarToggled] = useState(false);
-  const workspaceFrameModifier = pathname === "/"
-    ? "is-home"
-    : pathname.startsWith("/reports")
-      ? "is-report"
-      : pathname === "/sales/invoices" || pathname === "/purchases/bills"
-        ? "is-document"
-        : "is-records";
+  const usesMainBranchWorkspace = pathname === "/" || pathname.startsWith("/reports");
+  const workspaceFrameModifier = pathname === "/sales/invoices" || pathname === "/purchases/bills"
+    ? "is-document"
+    : "is-records";
 
   useLayoutEffect(() => {
     window.scrollTo({ left: 0, top: 0, behavior: "auto" });
@@ -286,9 +283,9 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
         }}
       />
       <main className="content" ref={contentRef}>
-        <div className={`workspace-frame ${workspaceFrameModifier}`}>
-          <Outlet />
-        </div>
+        {usesMainBranchWorkspace
+          ? <Outlet />
+          : <div className={`workspace-frame ${workspaceFrameModifier}`}><Outlet /></div>}
       </main>
     </div>
   );
