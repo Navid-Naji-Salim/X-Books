@@ -252,11 +252,11 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid transparent;
-  border-radius: 9px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
   padding: 0.72rem 0.9rem;
-  color: #075985;
-  background: transparent;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.7);
   font-weight: 800;
   text-decoration: none;
 }
@@ -961,7 +961,10 @@ textarea:focus {
 
 .date-picker-footer .ghost-button {
   border: 0;
+  border-radius: 9px;
   padding: 0.42rem 0.62rem;
+  color: #075985;
+  background: transparent;
   font-size: 0.76rem;
   font-weight: 850;
 }
@@ -2439,7 +2442,7 @@ html[lang="ckb"] .invoice-form-actions {
 .report-document-actions { display: flex; justify-content: space-between; align-items: center; min-height: 3.4rem; border: 1px solid #cbd5e1; border-bottom: 0; border-radius: 8px 8px 0 0; padding: 0.55rem 0.7rem 0.55rem 1rem; color: #475569; background: #f8fafc; font-size: 0.78rem; font-weight: 800; }
 .report-document-actions > div { display: flex; gap: 0.5rem; }
 .report-document-actions .button { border-radius: 10px; padding: 0.55rem 0.75rem; }
-.report-document-actions .ghost-button { padding: 0.55rem 0.75rem; }
+.report-document-actions .ghost-button { border-radius: 10px; padding: 0.55rem 0.75rem; }
 .report-pages { display: grid; gap: 2rem; justify-items: center; }
 .report-pages .report-document { content-visibility: auto; contain-intrinsic-block-size: auto 1123px; }
 .report-document { display: grid; align-content: start; gap: 14px; width: 100%; aspect-ratio: 210 / 297; margin: 0; border: 1px solid #cbd5e1; border-radius: 0 0 4px 4px; padding: 7%; color: #14213d; background: white; box-shadow: 0 18px 42px rgba(30, 41, 59, 0.14); font-family: Arial, sans-serif; }
