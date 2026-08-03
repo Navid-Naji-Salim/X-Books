@@ -979,6 +979,16 @@ textarea:focus {
   margin-inline: auto;
 }
 
+.workspace-frame.is-home {
+  --workspace-half-comfort: 40rem;
+  --workspace-max-inline-size: 92.5rem;
+}
+
+.workspace-frame.is-report {
+  --workspace-half-comfort: 37rem;
+  --workspace-max-inline-size: 88rem;
+}
+
 .app-shell.sidebar-has-toggled.sidebar-collapsed .content {
   animation: content-after-sidebar-collapse var(--sidebar-motion-duration) cubic-bezier(0.4, 0, 0.2, 1);
 }
