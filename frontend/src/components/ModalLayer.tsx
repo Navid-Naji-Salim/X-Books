@@ -46,9 +46,9 @@ const lockDocument = () => {
   if (scrollbarWidth > 0) {
     document.body.style.paddingRight = `calc(${window.getComputedStyle(document.body).paddingRight} + ${scrollbarWidth}px)`;
   }
-  root.style.overflow = "hidden";
+  root.style.overflow = "clip";
   root.style.overscrollBehavior = "none";
-  document.body.style.overflow = "hidden";
+  document.body.style.overflow = "clip";
   document.body.style.overscrollBehavior = "none";
   appRoot?.setAttribute("inert", "");
 };
