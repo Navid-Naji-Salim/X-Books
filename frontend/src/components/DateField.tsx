@@ -125,9 +125,10 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       const below = anchor.bottom + fieldGap;
       const isInModal = Boolean(root?.closest('[role="dialog"][aria-modal="true"]'));
       let top = below;
+      let maximumHeight = "";
 
       if (isInModal) {
-        const popupHeight = popup.offsetHeight;
+        const popupHeight = popup.scrollHeight + popup.offsetHeight - popup.clientHeight;
         const above = anchor.top - fieldGap - popupHeight;
         const fitsBelow = below + popupHeight <= window.innerHeight - viewportGap;
         const fitsAbove = above >= viewportGap;
@@ -136,8 +137,15 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
           if (fitsAbove) {
             top = above;
           } else {
-            const maximumTop = Math.max(viewportGap, window.innerHeight - popupHeight - viewportGap);
-            top = Math.min(Math.max(below, viewportGap), maximumTop);
+            const spaceBelow = Math.max(0, window.innerHeight - viewportGap - below);
+            const spaceAbove = Math.max(0, anchor.top - fieldGap - viewportGap);
+            if (spaceBelow >= spaceAbove) {
+              top = below;
+              maximumHeight = `${spaceBelow}px`;
+            } else {
+              top = viewportGap;
+              maximumHeight = `${spaceAbove}px`;
+            }
           }
         }
       }
@@ -151,6 +159,9 @@ export const DateField = ({ id, label, value, onChange, disabled, readOnly, requ
       if (popup.style.left !== nextLeft) popup.style.left = nextLeft;
       if (popup.style.top !== nextTop) popup.style.top = nextTop;
       if (popup.style.width !== nextWidth) popup.style.width = nextWidth;
+      if (popup.style.maxHeight !== maximumHeight) popup.style.maxHeight = maximumHeight;
+      const nextOverflowY = maximumHeight ? "auto" : "";
+      if (popup.style.overflowY !== nextOverflowY) popup.style.overflowY = nextOverflowY;
     };
     let frame = 0;
     const trackPosition = () => {
