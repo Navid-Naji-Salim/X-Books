@@ -252,13 +252,12 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 9px;
-  padding: 0.42rem 0.62rem;
+  padding: 0.72rem 0.9rem;
   color: #075985;
   background: transparent;
-  font-size: 0.76rem;
-  font-weight: 850;
+  font-weight: 800;
   text-decoration: none;
 }
 
@@ -960,6 +959,13 @@ textarea:focus {
   padding-top: 0.55rem;
 }
 
+.date-picker-footer .ghost-button {
+  border: 0;
+  padding: 0.42rem 0.62rem;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
 @media (max-width: 420px) {
   .date-picker-popover { padding: 0.65rem; }
   .date-picker-day { border-radius: 9px; }
@@ -1030,7 +1036,7 @@ textarea:focus {
 .home-card-head > div > span { color: #334155; font-size: 0.84rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.055em; }
 .home-card-head > div > strong { margin-top: 0.15rem; font-size: clamp(1.7rem, 3vw, 2.25rem); line-height: 1.1; }
 .home-card-head small { color: var(--muted); font-weight: 700; }
-.home-card-head > a.home-aging-action { white-space: nowrap; }
+.home-card-head > a.home-aging-action { min-height: 2.5rem; padding: 0.65rem 0.9rem; font-size: 0.84rem; font-weight: 800; line-height: 1; white-space: nowrap; }
 .home-aging-split { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: rgba(248, 250, 252, 0.8); }
 .home-aging-split > div { display: grid; gap: 0.25rem; padding: 0.85rem 1rem; }
 .home-aging-split > div + div { border-left: 1px solid var(--line); }
@@ -2432,6 +2438,7 @@ html[lang="ckb"] .invoice-form-actions {
 .report-document-actions { display: flex; justify-content: space-between; align-items: center; min-height: 3.4rem; border: 1px solid #cbd5e1; border-bottom: 0; border-radius: 8px 8px 0 0; padding: 0.55rem 0.7rem 0.55rem 1rem; color: #475569; background: #f8fafc; font-size: 0.78rem; font-weight: 800; }
 .report-document-actions > div { display: flex; gap: 0.5rem; }
 .report-document-actions .button { border-radius: 10px; padding: 0.55rem 0.75rem; }
+.report-document-actions .ghost-button { padding: 0.55rem 0.75rem; }
 .report-pages { display: grid; gap: 2rem; justify-items: center; }
 .report-pages .report-document { content-visibility: auto; contain-intrinsic-block-size: auto 1123px; }
 .report-document { display: grid; align-content: start; gap: 14px; width: 100%; aspect-ratio: 210 / 297; margin: 0; border: 1px solid #cbd5e1; border-radius: 0 0 4px 4px; padding: 7%; color: #14213d; background: white; box-shadow: 0 18px 42px rgba(30, 41, 59, 0.14); font-family: Arial, sans-serif; }
