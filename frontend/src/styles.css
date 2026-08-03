@@ -974,7 +974,13 @@ textarea:focus {
 .workspace-frame {
   --workspace-half-comfort: 36rem;
   --workspace-max-inline-size: 82rem;
-  inline-size: min(100%, calc(50% + var(--workspace-half-comfort)), var(--workspace-max-inline-size));
+  --workspace-collapse-growth: 0rem;
+  --workspace-collapse-max-growth: 0rem;
+  inline-size: min(
+    100%,
+    calc(50% + var(--workspace-half-comfort) + var(--workspace-collapse-growth)),
+    calc(var(--workspace-max-inline-size) + var(--workspace-collapse-max-growth))
+  );
   min-inline-size: 0;
   margin-inline: auto;
 }
@@ -987,6 +993,11 @@ textarea:focus {
 .workspace-frame.is-report {
   --workspace-half-comfort: 37rem;
   --workspace-max-inline-size: 88rem;
+}
+
+.app-shell.sidebar-collapsed .workspace-frame {
+  --workspace-collapse-growth: 4rem;
+  --workspace-collapse-max-growth: 6rem;
 }
 
 .app-shell.sidebar-has-toggled.sidebar-collapsed .content {
