@@ -875,8 +875,7 @@ textarea:focus {
 
 .date-picker-nav:hover { color: #075985; background: #e0f2fe; }
 .date-picker-nav:focus-visible,
-.date-picker-day:focus-visible,
-.date-picker-footer button:focus-visible { outline: 2px solid rgba(14, 165, 233, 0.52); outline-offset: 1px; }
+.date-picker-day:focus-visible { outline: 2px solid rgba(14, 165, 233, 0.52); outline-offset: 1px; }
 .date-picker-nav svg { width: 17px; height: 17px; }
 
 .date-picker-period {
@@ -976,11 +975,8 @@ textarea:focus {
 }
 
 .date-picker-footer .ghost-button {
-  border: 0;
   border-radius: 9px;
   padding: 0.42rem 0.62rem;
-  color: #075985;
-  background: transparent;
   font-size: 0.76rem;
   font-weight: 850;
 }
