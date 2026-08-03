@@ -2354,7 +2354,7 @@ html[lang="ckb"] .invoice-form-actions {
 .record-actions-menu-trigger[aria-expanded="true"] {
   border-color: transparent;
   color: #075985;
-  background: rgba(33, 150, 243, 0.1);
+  background: #e0f2fe;
 }
 .record-actions-menu-trigger:focus-visible {
   outline: 2px solid rgba(0, 183, 255, 0.58);
