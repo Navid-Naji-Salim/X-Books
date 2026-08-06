@@ -192,13 +192,11 @@ export const RecordActionsMenu = ({
     const scrollContainer = getNearestScrollableAncestor(trigger);
 
     const updatePosition = () => {
+      if (!trigger.isConnected) {
+        closeMenu({ immediate: true });
+        return;
+      }
       const triggerRect = trigger.getBoundingClientRect();
-      const isVisibleInViewport = hasVisibleIntersection(triggerRect, {
-        bottom: window.innerHeight,
-        left: 0,
-        right: window.innerWidth,
-        top: 0,
-      });
       let isVisibleInScrollContainer = true;
       if (scrollContainer) {
         const scrollContainerRect = scrollContainer.getBoundingClientRect();
@@ -211,7 +209,7 @@ export const RecordActionsMenu = ({
           top: containerTop,
         });
       }
-      if (!isVisibleInViewport || !isVisibleInScrollContainer) {
+      if (!isVisibleInScrollContainer) {
         closeMenu({ immediate: true });
         return;
       }
