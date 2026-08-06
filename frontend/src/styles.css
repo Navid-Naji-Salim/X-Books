@@ -901,16 +901,11 @@ textarea:focus {
   max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-width: thin;
 }
 
 .date-picker-period-options button {
   font-size: 0.83rem;
   line-height: 1.55;
-}
-
-.date-picker-period-options::-webkit-scrollbar {
-  width: 8px;
 }
 
 .date-picker-weekdays,
@@ -1986,7 +1981,6 @@ th {
   overflow-y: hidden;
   overscroll-behavior-x: auto;
   direction: ltr;
-  scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
 .record-table-wrap > table {
@@ -2009,17 +2003,10 @@ th {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
-}
-.record-table-wrap tbody::-webkit-scrollbar {
-  width: 8px;
 }
 .record-table-wrap td[colspan] { grid-column: 1 / -1; }
 .record-table-wrap :is(.record-actions-heading, .record-actions-cell) { width: auto; }
-.record-table-wrap::-webkit-scrollbar {
-  height: 8px;
-}
 .record-table-wrap th { background: rgba(248, 250, 252, 0.98); }
 .record-table-wrap th:first-child { border-top-left-radius: 14px; }
 .record-table-wrap th:last-child { border-top-right-radius: 14px; }
@@ -2266,7 +2253,6 @@ html[lang="ckb"] .invoice-form-actions {
 .saved-invoices-table thead { background: rgba(248, 250, 252, 0.98); }
 .saved-invoices-table th:first-child { border-top-left-radius: 14px; }
 .saved-invoices-table th:last-child { border-top-right-radius: 14px; }
-.saved-invoices-table-wrap .saved-invoices-table tbody { clip-path: inset(1px 0); }
 .saved-invoices-table tbody tr:last-child td { border-bottom: 0; }
 .invoice-status { display: inline-flex; border-radius: 999px; padding: 0.32rem 0.62rem; font-size: 0.75rem; font-weight: 900; }
 .invoice-status.is-unpaid { color: #991b1b; background: #fee2e2; }
