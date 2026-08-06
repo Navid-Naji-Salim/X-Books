@@ -902,7 +902,6 @@ textarea:focus {
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
 }
 
 .date-picker-period-options button {
@@ -912,22 +911,6 @@ textarea:focus {
 
 .date-picker-period-options::-webkit-scrollbar {
   width: 8px;
-}
-
-.date-picker-period-options::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.date-picker-period-options::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: rgba(100, 116, 139, 0.42);
-  background-clip: padding-box;
-}
-
-.date-picker-period-options::-webkit-scrollbar-thumb:hover {
-  background: rgba(71, 85, 105, 0.58);
-  background-clip: padding-box;
 }
 
 .date-picker-weekdays,
@@ -2004,7 +1987,6 @@ th {
   overscroll-behavior-x: auto;
   direction: ltr;
   scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
   -webkit-overflow-scrolling: touch;
 }
 .record-table-wrap > table {
@@ -2025,59 +2007,19 @@ th {
 .record-table-wrap tbody {
   min-height: 0;
   overflow-x: hidden;
-  overflow-y: hidden;
-  scrollbar-width: none;
-}
-.record-table-shell.has-scrollable-rows .record-table-wrap tbody {
   overflow-y: auto;
   overscroll-behavior-y: contain;
+  scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
 .record-table-wrap tbody::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  width: 8px;
 }
 .record-table-wrap td[colspan] { grid-column: 1 / -1; }
 .record-table-wrap :is(.record-actions-heading, .record-actions-cell) { width: auto; }
 .record-table-wrap::-webkit-scrollbar {
   height: 8px;
 }
-.record-table-wrap::-webkit-scrollbar-track {
-  background: transparent;
-}
-.record-table-wrap::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: rgba(100, 116, 139, 0.42);
-  background-clip: padding-box;
-}
-.record-table-wrap::-webkit-scrollbar-thumb:hover {
-  background: rgba(71, 85, 105, 0.58);
-  background-clip: padding-box;
-}
-.record-body-scrollbar-track {
-  position: absolute;
-  z-index: 4;
-  inset-inline-end: 2px;
-  width: 8px;
-  pointer-events: none;
-}
-.record-body-scrollbar-thumb {
-  width: 6px;
-  margin-inline-start: auto;
-  border-radius: 999px;
-  background: rgba(100, 116, 139, 0.46);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.38);
-  cursor: default;
-  pointer-events: auto;
-  touch-action: none;
-}
-.record-body-scrollbar-thumb:hover,
-.record-body-scrollbar-thumb:focus-visible {
-  outline: none;
-  background: rgba(71, 85, 105, 0.66);
-}
-.record-body-scrollbar-thumb:active { cursor: default; }
 .record-table-wrap th { background: rgba(248, 250, 252, 0.98); }
 .record-table-wrap th:first-child { border-top-left-radius: 14px; }
 .record-table-wrap th:last-child { border-top-right-radius: 14px; }
