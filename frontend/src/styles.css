@@ -2003,6 +2003,7 @@ th {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
 }
 .record-table-wrap td[colspan] { grid-column: 1 / -1; }
