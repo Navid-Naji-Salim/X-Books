@@ -9,11 +9,9 @@
     "frontend"
   ],
   "scripts": {
-    "predev": "npm run dev:db",
-    "dev": "npm run dev --workspace backend",
+    "dev": "node scripts/start-dev.mjs",
     "dev:db": "node scripts/start-dev-db.mjs",
-    "predev:backend": "npm run dev:db",
-    "dev:backend": "node scripts/start-backend.mjs",
+    "dev:backend": "node scripts/start-dev.mjs",
     "dev:frontend": "npm run dev --workspace frontend",
     "build": "npm run build --workspace backend && npm run build --workspace frontend",
     "typecheck": "npm run typecheck --workspace backend && npm run typecheck --workspace frontend",

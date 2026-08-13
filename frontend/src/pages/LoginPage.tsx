@@ -51,7 +51,7 @@ export const LoginPage = ({ onLogin }: LoginPageProps) => {
               <input autoComplete="current-password" id="password" name="password" type="password" required />
             </div>
             <button className="button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <span className="button-spinner" aria-label="Logging In" /> : "Log In"}
+              {isSubmitting ? <span className="button-spinner" aria-label="Logging in" /> : "Log in"}
             </button>
             <Link className="ghost-button login-mode-button" to="/signup">Create new account</Link>
             <div className="message">{message}</div>

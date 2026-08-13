@@ -201,11 +201,6 @@ model User {
   passwordHash String
   name         String
   role         String   @default("User")
-  emailVerifiedAt DateTime?
-  verificationCodeHash String?
-  verificationCodeExpiresAt DateTime?
-  verificationCodeSentAt DateTime?
-  verificationAttempts Int @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   company      Company?

@@ -5,7 +5,6 @@ import { AppLoadingScreen } from "./components/AppLoadingScreen";
 import { Sidebar } from "./layout/Sidebar";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
-import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { CompanySetupPage } from "./pages/CompanySetupPage";
 import type { Bill, Contact, Invoice, Item, Summary, User } from "./types";
 
@@ -18,7 +17,7 @@ const ReportsPage = lazy(() => import("./pages/ReportsPage").then((module) => ({
 const VendorsPage = lazy(() => import("./pages/VendorsPage").then((module) => ({ default: module.VendorsPage })));
 const SettingsPage = lazy(() => import("./pages/SettingsPage").then((module) => ({ default: module.SettingsPage })));
 
-const destinationFor = (user: User) => !user.emailVerified ? "/verify-email" : !user.company ? "/setup-company" : "/";
+const destinationFor = (user: User) => !user.company ? "/setup-company" : "/";
 
 type AppData = {
   summary: Summary;
@@ -106,7 +105,7 @@ export const App = () => {
         }
 
         setUser(response.user);
-        if (response.user.emailVerified && response.user.company) {
+        if (response.user.company) {
           await loadData(token).catch(() => setDataError("Some workspace data could not be loaded. Try refreshing in a moment."));
         }
       } catch {
@@ -146,8 +145,7 @@ export const App = () => {
         }
       />
       <Route path="/signup" element={token && user ? <Navigate to={destinationFor(user)} replace /> : <SignupPage onSignup={async (name, email, password) => { const response = await api.register(name, email, password); localStorage.setItem("userToken", response.token); setToken(response.token); setUser(response.user); }} />} />
-      <Route path="/verify-email" element={!token || !user ? <Navigate to="/login" replace /> : user.emailVerified ? <Navigate to={user.company ? "/" : "/setup-company"} replace /> : <VerifyEmailPage email={user.email} onLogout={logout} onResend={async () => (await api.resendVerification(token)).retryAfterSeconds} onVerify={async (code) => { await api.verifyEmail(token, code); setUser((await api.me(token)).user); }} />} />
-      <Route path="/setup-company" element={!token || !user ? <Navigate to="/login" replace /> : !user.emailVerified ? <Navigate to="/verify-email" replace /> : user.company ? <Navigate to="/" replace /> : <CompanySetupPage onLogout={logout} onSetup={async (companyName) => { await api.setupCompany(token, companyName); const nextUser = (await api.me(token)).user; setUser(nextUser); await loadData(token); }} />} />
+      <Route path="/setup-company" element={!token || !user ? <Navigate to="/login" replace /> : user.company ? <Navigate to="/" replace /> : <CompanySetupPage onLogout={logout} onSetup={async (companyName) => { await api.setupCompany(token, companyName); const nextUser = (await api.me(token)).user; setUser(nextUser); await loadData(token); }} />} />
       <Route
         element={
           <ProtectedLayout
@@ -282,7 +280,6 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
   if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
-  if (!user.emailVerified) return <Navigate to="/verify-email" replace />;
   if (!user.company) return <Navigate to="/setup-company" replace />;
 
   const logout = () => {

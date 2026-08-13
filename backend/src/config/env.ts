@@ -22,8 +22,4 @@ export const env = {
   frontendPath: path.join(projectRoot, "frontend"),
   jwtSecret: process.env.JWT_SECRET ?? "change-this-development-secret",
   port: Number(process.env.PORT ?? 3000),
-  emailProvider: process.env.EMAIL_PROVIDER ?? "console",
-  emailFrom: process.env.EMAIL_FROM ?? "X Books <onboarding@example.com>",
-  resendApiKey: process.env.RESEND_API_KEY,
-  otpSecret: process.env.OTP_SECRET ?? process.env.JWT_SECRET ?? "change-this-development-secret",
 };

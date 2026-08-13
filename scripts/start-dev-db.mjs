@@ -1,5 +1,6 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import dotenv from "dotenv";
+import path from "node:path";
 import pg from "pg";
 
 dotenv.config();
@@ -34,17 +35,22 @@ spawnSync(npx, ["prisma", "dev", "stop", "x-books"], {
   shell: useShell,
 });
 
-const started = spawnSync(
-  npx,
-  ["prisma", "dev", "--name", "x-books", "--port", "51223", "--db-port", "51224", "--shadow-db-port", "51225", "--detach"],
-  { cwd: process.cwd(), stdio: "inherit", shell: useShell },
+// Prisma Dev's own --detach mode can report success on Windows even when its
+// background process exits immediately. Keep this standalone database command
+// attached so its process lifetime is explicit and Ctrl+C shuts it down.
+const prismaCli = path.join(process.cwd(), "node_modules", "prisma", "build", "index.js");
+const started = spawn(
+  process.execPath,
+  [prismaCli, "dev", "--name", "x-books", "--port", "51223", "--db-port", "51224", "--shadow-db-port", "51225"],
+  {
+    cwd: process.cwd(),
+    stdio: "inherit",
+  },
 );
-
-if (started.error) {
-  console.error("Unable to start the local database:", started.error.message);
+started.once("error", (error) => {
+  console.error("Unable to start the local database:", error.message);
   process.exit(1);
-}
-
-if (started.status !== 0) {
-  process.exit(started.status ?? 1);
-}
+});
+started.once("exit", (code) => process.exit(code ?? 0));
+process.on("SIGINT", () => started.kill("SIGINT"));
+process.on("SIGTERM", () => started.kill("SIGTERM"));

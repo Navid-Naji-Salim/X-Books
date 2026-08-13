@@ -5,15 +5,6 @@ import { Prisma } from "../../generated/prisma/client.js";
 import { env } from "../config/env.js";
 import { requireUser } from "../middleware/auth.js";
 import { prisma } from "../lib/prisma.js";
-import {
-  createVerificationCode,
-  hashVerificationCode,
-  maximumVerificationAttempts,
-  sendVerificationEmail,
-  verificationCodeLifetimeMs,
-  verificationCodeMatches,
-  verificationResendCooldownMs,
-} from "../services/email-verification.js";
 import { ApiError } from "../utils/api-error.js";
 import { authenticatedUserId } from "../utils/auth-user.js";
 import { parseBody } from "../utils/request.js";
@@ -31,31 +22,14 @@ const publicUser = (user: {
   email: string;
   name: string;
   role: string;
-  emailVerifiedAt: Date | null;
   company?: { id: string; name: string } | null;
 }) => ({
   id: user.id,
   email: user.email,
   name: user.name,
   role: user.role,
-  emailVerified: Boolean(user.emailVerifiedAt),
   company: user.company ?? null,
 });
-
-const issueVerificationCode = async (user: { id: string; email: string }) => {
-  const code = createVerificationCode();
-  const sentAt = new Date();
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      verificationCodeHash: hashVerificationCode(user.id, code),
-      verificationCodeExpiresAt: new Date(sentAt.getTime() + verificationCodeLifetimeMs),
-      verificationCodeSentAt: sentAt,
-      verificationAttempts: 0,
-    },
-  });
-  await sendVerificationEmail(user.email, code);
-};
 
 authRouter.post("/register", async (req, res, next) => {
   try {
@@ -70,14 +44,12 @@ authRouter.post("/register", async (req, res, next) => {
     if (await prisma.user.findUnique({ where: { email }, select: { id: true } })) {
       throw new ApiError(409, "An account with this email already exists.");
     }
-
-    const user = await prisma.user.create({ data: { name, email, passwordHash: await bcrypt.hash(password, 12), role: "User" } });
-    try {
-      await issueVerificationCode(user);
-    } catch (error) {
-      await prisma.user.delete({ where: { id: user.id } }).catch(() => undefined);
-      throw error;
-    }
+    const user = await prisma.user.create({ data: {
+      name,
+      email,
+      passwordHash: await bcrypt.hash(password, 12),
+      role: "User",
+    } });
     res.status(201).json({ token: createToken(user), user: publicUser(user) });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -110,49 +82,9 @@ authRouter.get("/me", requireUser, async (_req, res, next) => {
   } catch (error) { next(error); }
 });
 
-authRouter.post("/verify-email", requireUser, async (req, res, next) => {
-  try {
-    const userId = authenticatedUserId(res);
-    const code = requiredString(parseBody(req), "code");
-    if (!/^\d{6}$/.test(code)) throw new ApiError(400, "Enter the six-digit verification code.");
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new ApiError(401, "User account no longer exists.");
-    if (user.emailVerifiedAt) throw new ApiError(400, "This email is already verified.");
-    if (!user.verificationCodeHash || !user.verificationCodeExpiresAt) throw new ApiError(400, "Request a new verification code.");
-    if (user.verificationCodeExpiresAt <= new Date()) throw new ApiError(400, "This verification code has expired. Request a new code.");
-    if (user.verificationAttempts >= maximumVerificationAttempts) throw new ApiError(429, "Too many incorrect attempts. Request a new code.");
-    if (!verificationCodeMatches(user.id, code, user.verificationCodeHash)) {
-      await prisma.user.update({ where: { id: user.id }, data: { verificationAttempts: { increment: 1 } } });
-      throw new ApiError(400, "The verification code is incorrect.");
-    }
-    const verifiedAt = new Date();
-    const result = await prisma.user.updateMany({
-      where: { id: user.id, emailVerifiedAt: null, verificationCodeHash: user.verificationCodeHash },
-      data: { emailVerifiedAt: verifiedAt, verificationCodeHash: null, verificationCodeExpiresAt: null, verificationCodeSentAt: null, verificationAttempts: 0 },
-    });
-    if (result.count !== 1) throw new ApiError(400, "This verification code has already been used.");
-    res.json({ emailVerified: true });
-  } catch (error) { next(error); }
-});
-
-authRouter.post("/resend-verification", requireUser, async (_req, res, next) => {
-  try {
-    const user = await prisma.user.findUnique({ where: { id: authenticatedUserId(res) } });
-    if (!user) throw new ApiError(401, "User account no longer exists.");
-    if (user.emailVerifiedAt) throw new ApiError(400, "This email is already verified.");
-    const retryAfterMs = user.verificationCodeSentAt
-      ? verificationResendCooldownMs - (Date.now() - user.verificationCodeSentAt.getTime())
-      : 0;
-    if (retryAfterMs > 0) throw new ApiError(429, `Wait ${Math.ceil(retryAfterMs / 1000)} seconds before requesting another code.`);
-    await issueVerificationCode(user);
-    res.json({ sent: true, retryAfterSeconds: verificationResendCooldownMs / 1000 });
-  } catch (error) { next(error); }
-});
-
 authRouter.post("/setup-company", requireUser, async (req, res, next) => {
   try {
     const userId = authenticatedUserId(res);
-    if (!res.locals.emailVerified) throw new ApiError(403, "Verify your email before setting up your company.");
     const name = requiredString(parseBody(req), "companyName");
     if (name.length > 150) throw new ApiError(400, "Company name must be 150 characters or fewer.");
     const company = await prisma.company.create({ data: { userId, name }, select: { id: true, name: true } });
