@@ -19,6 +19,7 @@ type Props = {
   dataError?: string;
   invoices: Invoice[];
   items: Item[];
+  nextInvoiceNumber: string;
   token: string;
   onRefresh: () => Promise<void>;
 };
@@ -53,6 +54,11 @@ const dueDateFor = (invoiceDate: string, terms: string) => {
   return dateInputValue(date);
 };
 
+const followingInvoiceNumber = (invoiceNumber: string) => {
+  const match = /^INV-(\d+)$/.exec(invoiceNumber);
+  return match ? `INV-${String(Number(match[1]) + 1).padStart(6, "0")}` : invoiceNumber;
+};
+
 const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
   const options = availableItems.map((item) => ({ label: item.name, value: item.id }));
   if (line.itemName && !options.some((option) => option.value === line.itemId)) {
@@ -61,14 +67,14 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
   return options;
 };
 
-export const InvoicesPage = ({ customers, dataError, invoices, items, token, onRefresh }: Props) => {
+export const InvoicesPage = ({ customers, dataError, invoices, items, nextInvoiceNumber, token, onRefresh }: Props) => {
   const { language, t } = useLanguage();
   const confirm = useConfirmation();
   const AddIcon = appIcons.actions.add;
   const DeleteIcon = appIcons.actions.delete;
   const today = dateInputValue();
   const [customerId, setCustomerId] = useState("");
-  const [invoiceNumber, setInvoiceNumber] = useState(() => `INV-${String(invoices.length + 1).padStart(6, "0")}`);
+  const [invoiceNumber, setInvoiceNumber] = useState(nextInvoiceNumber);
   const [invoiceDate, setInvoiceDate] = useState(today);
   const [terms, setTerms] = useState("Due on Receipt");
   const [dueDate, setDueDate] = useState(today);
@@ -77,7 +83,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const [lines, setLines] = useState<LineDraft[]>([{ id: 1, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }]);
   const [baseline, setBaseline] = useState(() => invoiceDraftFingerprint({
     customerId: "",
-    invoiceNumber: `INV-${String(invoices.length + 1).padStart(6, "0")}`,
+    invoiceNumber: nextInvoiceNumber,
     invoiceDate: today,
     terms: "Due on Receipt",
     dueDate: today,
@@ -139,7 +145,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
   const updateLine = (id: number, values: Partial<LineDraft>) =>
     setLines((current) => current.map((line) => line.id === id ? { ...line, ...values } : line));
 
-  const resetForm = (nextNumber = `INV-${String(invoices.length + 1).padStart(6, "0")}`) => {
+  const resetForm = (nextNumber = nextInvoiceNumber) => {
     const nextLines = [{ id: nextLineId, itemId: "", itemName: "", quantity: 1, rate: 0, tax: "" }];
     setSelectedInvoiceId(null);
     setCustomerId(""); setInvoiceNumber(nextNumber); setInvoiceDate(today);
@@ -221,10 +227,11 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
             customerId, invoiceNumber, invoiceDate, terms, dueDate, discountPercent, customerNotes,
             lines: lines.filter((line) => line.itemId).map((line) => ({ ...line, taxRate: taxRates[line.tax] ?? 0 })),
           };
+          const wasEditing = Boolean(selectedInvoiceId);
           if (selectedInvoiceId) await api.updateInvoice(token, selectedInvoiceId, payload);
           else await api.createInvoice(token, payload);
           await onRefresh();
-          resetForm(`INV-${String(invoices.length + (selectedInvoiceId ? 1 : 2)).padStart(6, "0")}`);
+          resetForm(wasEditing ? nextInvoiceNumber : followingInvoiceNumber(invoiceNumber));
         } catch (error) {
           setMessage(error instanceof ApiError ? error.message : "Unable to save invoice.");
         }

@@ -22,8 +22,4 @@ export const env = {
   frontendPath: path.join(projectRoot, "frontend"),
   jwtSecret: process.env.JWT_SECRET ?? "change-this-development-secret",
   port: Number(process.env.PORT ?? 3000),
-  userEmail: requiredEnv("USER_EMAIL").toLowerCase(),
-  userName: process.env.USER_NAME ?? "Nawid",
-  userPassword: requiredEnv("USER_PASSWORD"),
-  userRole: process.env.USER_ROLE ?? "User",
 };

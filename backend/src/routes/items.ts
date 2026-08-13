@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import { presentItem } from "../presenters/item-presenter.js";
 import { parseBody } from "../utils/request.js";
 import { ApiError } from "../utils/api-error.js";
+import { authenticatedUserId } from "../utils/auth-user.js";
 import {
   booleanField,
   optionalMoney,
@@ -48,7 +49,9 @@ const optionalChoice = (
 
 itemsRouter.get("/", async (_req, res, next) => {
   try {
+    const userId = authenticatedUserId(res);
     const items = await prisma.item.findMany({
+      where: { userId },
       orderBy: { createdAt: "desc" },
     });
     res.json(items.map(presentItem));
@@ -59,9 +62,11 @@ itemsRouter.get("/", async (_req, res, next) => {
 
 itemsRouter.post("/", async (req, res, next) => {
   try {
+    const userId = authenticatedUserId(res);
     const body = parseBody(req);
     const item = await prisma.item.create({
       data: {
+        userId,
         name: requiredString(body, "name"),
         sku: optionalString(body, "sku"),
         itemType: itemType(body),
@@ -90,9 +95,10 @@ itemsRouter.post("/", async (req, res, next) => {
 
 itemsRouter.patch("/:id", async (req, res, next) => {
   try {
+    const userId = authenticatedUserId(res);
     const body = parseBody(req);
     const item = await prisma.item.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId },
       data: {
         ...(body.name !== undefined ? { name: requiredString(body, "name") } : {}),
         ...(body.sku !== undefined ? { sku: optionalString(body, "sku") } : {}),
@@ -137,7 +143,8 @@ itemsRouter.patch("/:id", async (req, res, next) => {
 
 itemsRouter.delete("/:id", async (req, res, next) => {
   try {
-    await prisma.item.delete({ where: { id: req.params.id } });
+    const userId = authenticatedUserId(res);
+    await prisma.item.delete({ where: { id: req.params.id, userId } });
     res.status(204).send();
   } catch (error) {
     next(error);

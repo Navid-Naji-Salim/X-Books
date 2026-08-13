@@ -3,12 +3,14 @@ import { prisma } from "../lib/prisma.js";
 import { presentContact } from "../presenters/contact-presenter.js";
 import { parseVendorInput } from "../services/vendor-input.js";
 import { parseBody } from "../utils/request.js";
+import { authenticatedUserId } from "../utils/auth-user.js";
 
 export const vendorsRouter = Router();
 
 vendorsRouter.get("/", async (_req, res, next) => {
   try {
-    const vendors = await prisma.vendor.findMany({ orderBy: { createdAt: "desc" } });
+    const userId = authenticatedUserId(res);
+    const vendors = await prisma.vendor.findMany({ where: { userId }, orderBy: { createdAt: "desc" } });
     res.json(vendors.map(presentContact));
   } catch (error) {
     next(error);
@@ -17,9 +19,10 @@ vendorsRouter.get("/", async (_req, res, next) => {
 
 vendorsRouter.post("/", async (req, res, next) => {
   try {
+    const userId = authenticatedUserId(res);
     const body = parseBody(req);
     const vendor = await prisma.vendor.create({
-      data: parseVendorInput(body),
+      data: { ...parseVendorInput(body), userId },
     });
 
     res.status(201).json(presentContact(vendor));
@@ -30,9 +33,10 @@ vendorsRouter.post("/", async (req, res, next) => {
 
 vendorsRouter.patch("/:id", async (req, res, next) => {
   try {
+    const userId = authenticatedUserId(res);
     const body = parseBody(req);
     const vendor = await prisma.vendor.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId },
       data: parseVendorInput(body),
     });
     res.json(presentContact(vendor));
@@ -41,7 +45,8 @@ vendorsRouter.patch("/:id", async (req, res, next) => {
 
 vendorsRouter.delete("/:id", async (req, res, next) => {
   try {
-    await prisma.vendor.delete({ where: { id: req.params.id } });
+    const userId = authenticatedUserId(res);
+    await prisma.vendor.delete({ where: { id: req.params.id, userId } });
     res.status(204).send();
   } catch (error) { next(error); }
 });

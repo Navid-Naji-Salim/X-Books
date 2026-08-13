@@ -4,11 +4,13 @@ import brandLogo from "../assets/x-books-logo.png";
 
 type LoginPageProps = {
   onLogin: (email: string, password: string) => Promise<void>;
+  onRegister: (name: string, email: string, password: string) => Promise<void>;
 };
 
-export const LoginPage = ({ onLogin }: LoginPageProps) => {
+export const LoginPage = ({ onLogin, onRegister }: LoginPageProps) => {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   return (
     <main className="login-shell">
@@ -28,12 +30,15 @@ export const LoginPage = ({ onLogin }: LoginPageProps) => {
 
               const formData = new FormData(event.currentTarget);
               try {
-                await onLogin(
-                  String(formData.get("email") ?? ""),
-                  String(formData.get("password") ?? ""),
-                );
+                const email = String(formData.get("email") ?? "");
+                const password = String(formData.get("password") ?? "");
+                if (isRegistering) {
+                  await onRegister(String(formData.get("name") ?? ""), email, password);
+                } else {
+                  await onLogin(email, password);
+                }
               } catch (error) {
-                setMessage(error instanceof ApiError ? error.message : "Unable to log in.");
+                setMessage(error instanceof ApiError ? error.message : isRegistering ? "Unable to create your account." : "Unable to log in.");
               } finally {
                 setIsSubmitting(false);
               }
@@ -42,16 +47,33 @@ export const LoginPage = ({ onLogin }: LoginPageProps) => {
             <div className="login-heading">
               <h1>X Books</h1>
             </div>
+            {isRegistering ? (
+              <div className="field">
+                <label htmlFor="name">Name</label>
+                <input autoComplete="name" id="name" name="name" type="text" maxLength={100} required />
+              </div>
+            ) : null}
             <div className="field">
               <label htmlFor="email">Email</label>
-              <input autoComplete="username" id="email" name="email" type="email" defaultValue="nawid@example.com" required />
+              <input autoComplete="email" id="email" name="email" type="email" required />
             </div>
             <div className="field">
               <label htmlFor="password">Password</label>
-              <input autoComplete="current-password" id="password" name="password" type="password" required />
+              <input autoComplete={isRegistering ? "new-password" : "current-password"} id="password" name="password" type="password" minLength={isRegistering ? 8 : undefined} required />
             </div>
             <button className="button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <span className="button-spinner" aria-label="Logging In" /> : "Log In"}
+              {isSubmitting ? <span className="button-spinner" aria-label={isRegistering ? "Creating Account" : "Logging In"} /> : isRegistering ? "Create Account" : "Log In"}
+            </button>
+            <button
+              className="ghost-button login-mode-button"
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => {
+                setIsRegistering((current) => !current);
+                setMessage("");
+              }}
+            >
+              {isRegistering ? "Already have an account? Log In" : "New to X Books? Create Account"}
             </button>
             <div className="message">{message}</div>
           </form>

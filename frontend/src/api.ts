@@ -56,12 +56,18 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
+  register: (name: string, email: string, password: string) =>
+    request<LoginResponse>("/api/auth/register", null, {
+      method: "POST",
+      body: JSON.stringify({ name, email, password }),
+    }),
   me: (token: string) => request<MeResponse>("/api/auth/me", token),
   summary: (token: string) => request<Summary>("/api/summary", token),
   items: (token: string) => request<Item[]>("/api/items", token),
   customers: (token: string) => request<Contact[]>("/api/customers", token),
   vendors: (token: string) => request<Contact[]>("/api/vendors", token),
   invoices: (token: string) => request<Invoice[]>("/api/invoices", token),
+  nextInvoiceNumber: (token: string) => request<{ invoiceNumber: string }>("/api/invoices/next-number", token),
   bills: (token: string) => request<Bill[]>("/api/bills", token),
   nextBillNumber: (token: string) => request<{ billNumber: string }>("/api/bills/next-number", token),
   createBill: (token: string, payload: Record<string, unknown>) => request<Bill>("/api/bills", token, { method: "POST", body: JSON.stringify(payload) }),

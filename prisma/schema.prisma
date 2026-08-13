@@ -9,8 +9,10 @@ datasource db {
 
 model Item {
   id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name              String
-  sku               String?  @unique
+  sku               String?
   itemType          String   @default("goods")
   unit              String?
   imageUrl          String?
@@ -31,10 +33,15 @@ model Item {
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@unique([userId, sku])
+  @@index([userId])
 }
 
 model Customer {
   id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   customerType String  @default("business")
   firstName   String?
   lastName    String?
@@ -54,11 +61,15 @@ model Customer {
   invoices    Invoice[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Invoice {
   id              String        @id @default(cuid())
-  invoiceNumber   String        @unique
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceNumber   String
   customerId      String
   customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
   invoiceDate     DateTime
@@ -75,6 +86,9 @@ model Invoice {
   payments        Payment[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  @@unique([userId, invoiceNumber])
+  @@index([userId])
 }
 
 model Payment {
@@ -104,6 +118,8 @@ model InvoiceLine {
 
 model Vendor {
   id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   vendorType  String   @default("business")
   firstName   String?
   lastName    String?
@@ -124,11 +140,15 @@ model Vendor {
   bills       Bill[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Bill {
   id              String        @id @default(cuid())
-  sequence        Int           @unique @default(autoincrement())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sequence        Int
   vendorId        String
   vendor          Vendor        @relation(fields: [vendorId], references: [id], onDelete: Restrict)
   billDate        DateTime
@@ -145,6 +165,9 @@ model Bill {
   payments        BillPayment[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  @@unique([userId, sequence])
+  @@index([userId])
 }
 
 model BillLine {
@@ -176,9 +199,13 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
-  name         String   @default("Nawid")
+  name         String
   role         String   @default("User")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
+  items        Item[]
+  customers    Customer[]
+  vendors      Vendor[]
+  invoices     Invoice[]
+  bills        Bill[]
 }

@@ -156,6 +156,10 @@ h3 {
   padding: 2.2rem;
 }
 
+.login-mode-button {
+  width: 100%;
+}
+
 .login-heading {
   display: grid;
   justify-items: center;

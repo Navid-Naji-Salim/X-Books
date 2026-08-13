@@ -1,10 +1,12 @@
 import bcrypt from "bcryptjs";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
+import { Prisma } from "../../generated/prisma/client.js";
 import { env } from "../config/env.js";
 import { requireUser } from "../middleware/auth.js";
 import { prisma } from "../lib/prisma.js";
 import { ApiError } from "../utils/api-error.js";
+import { authenticatedUserId } from "../utils/auth-user.js";
 import { parseBody } from "../utils/request.js";
 import { requiredString } from "../utils/validation.js";
 
@@ -15,10 +17,45 @@ const createToken = (user: { id: string; email: string; name: string; role: stri
     expiresIn: "8h",
   });
 
+const normalizedEmail = (value: string) => value.trim().toLowerCase();
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+authRouter.post("/register", async (req, res, next) => {
+  try {
+    const body = parseBody(req);
+    const name = requiredString(body, "name");
+    const email = normalizedEmail(requiredString(body, "email"));
+    const password = requiredString(body, "password");
+
+    if (name.length > 100) throw new ApiError(400, "Name must be 100 characters or fewer.");
+    if (!emailPattern.test(email) || email.length > 254) throw new ApiError(400, "Enter a valid email address.");
+    if (password.length < 8) throw new ApiError(400, "Password must be at least 8 characters.");
+    if (password.length > 128) throw new ApiError(400, "Password must be 128 characters or fewer.");
+
+    const existingUser = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+    if (existingUser) throw new ApiError(409, "An account with this email already exists.");
+
+    const user = await prisma.user.create({
+      data: { name, email, passwordHash: await bcrypt.hash(password, 12), role: "User" },
+    });
+
+    res.status(201).json({
+      token: createToken(user),
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      next(new ApiError(409, "An account with this email already exists."));
+      return;
+    }
+    next(error);
+  }
+});
+
 authRouter.post("/login", async (req, res, next) => {
   try {
     const body = parseBody(req);
-    const email = requiredString(body, "email").toLowerCase();
+    const email = normalizedEmail(requiredString(body, "email"));
     const password = requiredString(body, "password");
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -37,12 +74,7 @@ authRouter.post("/login", async (req, res, next) => {
 
 authRouter.get("/me", requireUser, async (req, res, next) => {
   try {
-    const [, token] = req.headers.authorization?.split(" ") ?? [];
-    const payload = jwt.verify(token ?? "", env.jwtSecret) as jwt.JwtPayload;
-    const userId = payload.sub?.toString();
-    if (!userId) {
-      throw new ApiError(401, "Your session is invalid.");
-    }
+    const userId = authenticatedUserId(res);
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

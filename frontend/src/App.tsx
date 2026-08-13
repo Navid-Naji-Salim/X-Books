@@ -20,6 +20,7 @@ type AppData = {
   customers: Contact[];
   vendors: Contact[];
   invoices: Invoice[];
+  nextInvoiceNumber: string;
   bills: Bill[];
   nextBillNumber: string;
 };
@@ -39,6 +40,7 @@ const emptyData: AppData = {
   customers: [],
   vendors: [],
   invoices: [],
+  nextInvoiceNumber: "INV-000001",
   bills: [],
   nextBillNumber: "BILL-0001",
 };
@@ -69,17 +71,18 @@ export const App = () => {
 
   const loadData = async (activeToken: string) => {
     setDataError("");
-    const [summary, items, customers, vendors, invoices, bills, nextBill] = await Promise.all([
+    const [summary, items, customers, vendors, invoices, bills, nextInvoice, nextBill] = await Promise.all([
       api.summary(activeToken),
       api.items(activeToken),
       api.customers(activeToken),
       api.vendors(activeToken),
       api.invoices(activeToken),
       api.bills(activeToken),
+      api.nextInvoiceNumber(activeToken),
       api.nextBillNumber(activeToken),
     ]);
 
-    setData({ summary: normalizedSummary(summary), items, customers, vendors, invoices, bills, nextBillNumber: nextBill.billNumber });
+    setData({ summary: normalizedSummary(summary), items, customers, vendors, invoices, bills, nextInvoiceNumber: nextInvoice.invoiceNumber, nextBillNumber: nextBill.billNumber });
   };
 
   useEffect(() => {
@@ -165,6 +168,7 @@ export const App = () => {
               dataError={dataError}
               invoices={data.invoices}
               items={data.items}
+              nextInvoiceNumber={data.nextInvoiceNumber}
               token={token ?? ""}
               onRefresh={() => (token ? loadData(token) : Promise.resolve())}
             />
@@ -221,6 +225,13 @@ const LoginRoute = ({ user, setBooting, setUser, setToken, token }: LoginRoutePr
     <LoginPage
       onLogin={async (email, password) => {
         const response = await api.login(email, password);
+        localStorage.setItem("userToken", response.token);
+        setBooting(true);
+        setToken(response.token);
+        setUser(response.user);
+      }}
+      onRegister={async (name, email, password) => {
+        const response = await api.register(name, email, password);
         localStorage.setItem("userToken", response.token);
         setBooting(true);
         setToken(response.token);
