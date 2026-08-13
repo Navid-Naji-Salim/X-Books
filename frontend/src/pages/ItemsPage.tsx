@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
+import { useConfirmation } from "../components/ConfirmationDialog";
 import { ImageLightbox } from "../components/ImageLightbox";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
@@ -110,6 +111,7 @@ const readImageFile = (file: File) => new Promise<string>((resolve, reject) => {
 
 export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps) => {
   const { t } = useLanguage();
+  const confirm = useConfirmation();
   const ImageIcon = appIcons.media.image;
   const [draft, setDraft] = useState<ItemDraft>(emptyDraft);
   const [baseline, setBaseline] = useState<ItemDraft>(emptyDraft);
@@ -167,9 +169,9 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
     setOpenDropdown(null);
   };
 
-  const openItem = (item: Item) => {
+  const openItem = async (item: Item) => {
     if (isSaving || deletingId !== null) return;
-    if (!confirmDiscardChanges()) return;
+    if (!await confirmDiscardChanges()) return;
 
     const itemDraft = itemToDraft(item);
     setSelectedItemId(item.id);
@@ -181,14 +183,18 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const closeItem = () => {
+  const closeItem = async () => {
     if (isSaving) return;
-    if (!confirmDiscardChanges()) return;
+    if (!await confirmDiscardChanges()) return;
     resetToNew();
   };
 
   const deleteItem = async (item: Item) => {
-    const confirmed = window.confirm(t(`Delete ${item.name}?`));
+    const confirmed = await confirm({
+      confirmLabel: t("Delete"),
+      message: t("This action cannot be undone."),
+      title: t(`Delete ${item.name}?`),
+    });
     if (!confirmed) {
       return;
     }
@@ -329,8 +335,12 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                           label: "Remove Image",
                           icon: appIcons.actions.remove,
                           tone: "danger",
-                          onSelect: () => {
-                            if (!window.confirm(t("Are you sure you want to remove this image?"))) return;
+                          onSelect: async () => {
+                            if (!await confirm({
+                              confirmLabel: t("Remove Image"),
+                              message: t("This action cannot be undone."),
+                              title: t("Are you sure you want to remove this image?"),
+                            })) return;
                             setIsImagePreviewOpen(false);
                             set("imageUrl", "");
                           },
@@ -437,7 +447,7 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
                               label: "View",
                               icon: appIcons.actions.view,
                               disabled: isSaving || deletingId !== null,
-                              onSelect: () => openItem(item),
+                              onSelect: () => void openItem(item),
                             },
                             {
                               label: deletingId === item.id ? "Deleting" : "Delete",

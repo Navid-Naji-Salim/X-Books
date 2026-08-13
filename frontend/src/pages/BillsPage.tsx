@@ -3,6 +3,7 @@ import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { DateField } from "../components/DateField";
 import { ModalLayer } from "../components/ModalLayer";
+import { useConfirmation } from "../components/ConfirmationDialog";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
@@ -77,6 +78,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
 
 export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, token, onRefresh }: Props) => {
   const { language, t } = useLanguage();
+  const confirm = useConfirmation();
   const AddIcon = appIcons.actions.add;
   const DeleteIcon = appIcons.actions.delete;
   const today = dateInputValue();
@@ -181,8 +183,8 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
     setNextLineId((value) => value + 1);
   };
 
-  const loadBill = (bill: Bill) => {
-    if (!confirmDiscardChanges()) return;
+  const loadBill = async (bill: Bill) => {
+    if (!await confirmDiscardChanges()) return;
     const nextBillDate = bill.billDate.slice(0, 10);
     const nextDueDate = bill.dueDate.slice(0, 10);
     const nextNotes = bill.notes ?? "";
@@ -217,13 +219,17 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const closeBill = () => {
-    if (!confirmDiscardChanges()) return;
+  const closeBill = async () => {
+    if (!await confirmDiscardChanges()) return;
     resetForm();
   };
 
   const deleteBill = async (bill: Bill) => {
-    if (!window.confirm(t(`Delete bill ${bill.billNumber}?`))) return;
+    if (!await confirm({
+      confirmLabel: t("Delete"),
+      message: t("This action cannot be undone."),
+      title: t(`Delete bill ${bill.billNumber}?`),
+    })) return;
     setMessage("");
     setDeletingId(bill.id);
     try {
@@ -495,7 +501,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
                           label: "View",
                           icon: appIcons.actions.view,
                           disabled: deletingId !== null || isSaving,
-                          onSelect: () => loadBill(bill),
+                          onSelect: () => void loadBill(bill),
                         },
                         ...(bill.status !== "Paid" ? [{
                           label: "Pay Bill",

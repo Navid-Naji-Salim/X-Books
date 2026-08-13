@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
+import { useConfirmation } from "../components/ConfirmationDialog";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
@@ -47,6 +48,7 @@ const vendorToDraft = (vendor: Contact): Draft => {
 
 export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) => {
   const { t } = useLanguage();
+  const confirm = useConfirmation();
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [baseline, setBaseline] = useState<Draft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -75,12 +77,12 @@ export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) =>
   const confirmDiscardChanges = useUnsavedChangesGuard(hasUnsavedChanges);
   const set = (field: keyof Draft, value: string) => setDraft((current) => ({ ...current, [field]: value }));
   const reset = () => { setDraft(emptyDraft); setBaseline(emptyDraft); setEditingId(null); setMessage(""); setOpenDropdown(null); };
-  const closeVendor = () => {
-    if (!confirmDiscardChanges()) return;
+  const closeVendor = async () => {
+    if (!await confirmDiscardChanges()) return;
     reset();
   };
-  const openVendor = (vendor: Contact) => {
-    if (!confirmDiscardChanges()) return;
+  const openVendor = async (vendor: Contact) => {
+    if (!await confirmDiscardChanges()) return;
     const vendorDraft = vendorToDraft(vendor);
     setEditingId(vendor.id);
     setDraft(vendorDraft);
@@ -101,7 +103,7 @@ export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) =>
           reset(); await onRefresh();
         } catch (error) { setMessage(error instanceof ApiError ? error.message : "Unable to save vendor."); }
       }}>
-        <div className="item-form-head"><div><h2>{editingId ? "Vendor Details" : "New Vendor"}</h2><p>Contact and Billing Details</p></div><div className="invoice-form-actions">{editingId ? <button className="ghost-button" type="button" onClick={closeVendor}>Close</button> : null}<button className="button form-primary-action" type="submit">{editingId ? "Edit Vendor" : "Save Vendor"}</button></div></div>
+        <div className="item-form-head"><div><h2>{editingId ? "Vendor Details" : "New Vendor"}</h2><p>Contact and Billing Details</p></div><div className="invoice-form-actions">{editingId ? <button className="ghost-button" type="button" onClick={() => void closeVendor()}>Close</button> : null}<button className="button form-primary-action" type="submit">{editingId ? "Edit Vendor" : "Save Vendor"}</button></div></div>
         <div className="item-compact-grid customer-compact-grid">
           <section className="item-basics customer-basics"><h3 className="customer-section-title">Vendor Details</h3><div className="radio-field"><span>Type</span><label className="radio-option"><input checked={draft.vendorType === "business"} type="radio" name="vendorType" value="business" onChange={() => set("vendorType", "business")} /><span className="option-text">Business</span></label><label className="radio-option"><input checked={draft.vendorType === "individual"} type="radio" name="vendorType" value="individual" onChange={() => set("vendorType", "individual")} /><span className="option-text">Individual</span></label></div>{draft.vendorType === "business" ? <Field label="Company Name" name="companyName" placeholder={CONTACT_PLACEHOLDERS.businessName} required value={draft.companyName} onChange={(event) => set("companyName", event.currentTarget.value)} /> : <div className="split"><Field label="First Name" name="firstName" placeholder={CONTACT_PLACEHOLDERS.firstName} required value={draft.firstName} onChange={(event) => set("firstName", event.currentTarget.value)} /><Field label="Last Name" name="lastName" placeholder={CONTACT_PLACEHOLDERS.lastName} required value={draft.lastName} onChange={(event) => set("lastName", event.currentTarget.value)} /></div>}<Field label="Email Address" name="email" placeholder={CONTACT_PLACEHOLDERS.email} type="email" value={draft.email} onChange={(event) => set("email", event.currentTarget.value)} /><Field label="Phone" name="phone" placeholder={CONTACT_PLACEHOLDERS.phone} value={draft.phone} onChange={(event) => set("phone", event.currentTarget.value)} /></section>
           <section className="item-info-section customer-info-section"><h3 className="check-title customer-section-title">Billing Address</h3><div className="item-info-fields"><Field label="Address Line 1" name="addressLine1" placeholder="Street and building" value={draft.addressLine1} onChange={(event) => set("addressLine1", event.currentTarget.value)} /><Field label="Address Line 2" name="addressLine2" placeholder="Suite, floor, or landmark" value={draft.addressLine2} onChange={(event) => set("addressLine2", event.currentTarget.value)} /><Field label="City" name="city" placeholder={CONTACT_PLACEHOLDERS.city} value={draft.city} onChange={(event) => set("city", event.currentTarget.value)} /><Field label="State / Province" name="state" placeholder={CONTACT_PLACEHOLDERS.state} value={draft.state} onChange={(event) => set("state", event.currentTarget.value)} /><Field label="Postal Code" name="postalCode" placeholder={CONTACT_PLACEHOLDERS.postalCode} value={draft.postalCode} onChange={(event) => set("postalCode", event.currentTarget.value)} /><Field label="Country" name="country" placeholder={CONTACT_PLACEHOLDERS.country} value={draft.country} onChange={(event) => set("country", event.currentTarget.value)} /></div></section>
@@ -127,8 +129,8 @@ export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) =>
                     <RecordActionsMenu
                       recordLabel={vendor.displayName}
                       actions={[
-                        { label: "View", icon: appIcons.actions.view, onSelect: () => openVendor(vendor) },
-                        { label: deletingId === vendor.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId === vendor.id, onSelect: async () => { if (!window.confirm(t(`Delete ${vendor.displayName}?`))) return; setDeletingId(vendor.id); setMessage(""); try { await api.deleteVendor(token, vendor.id); if (editingId === vendor.id) reset(); await onRefresh(); } catch (error) { setMessage(error instanceof ApiError ? error.message : "Unable to delete vendor."); } finally { setDeletingId(null); } } },
+                        { label: "View", icon: appIcons.actions.view, onSelect: () => void openVendor(vendor) },
+                        { label: deletingId === vendor.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId === vendor.id, onSelect: async () => { if (!await confirm({ confirmLabel: t("Delete"), message: t("This action cannot be undone."), title: t(`Delete ${vendor.displayName}?`) })) return; setDeletingId(vendor.id); setMessage(""); try { await api.deleteVendor(token, vendor.id); if (editingId === vendor.id) reset(); await onRefresh(); } catch (error) { setMessage(error instanceof ApiError ? error.message : "Unable to delete vendor."); } finally { setDeletingId(null); } } },
                       ]}
                     />
                   </td>

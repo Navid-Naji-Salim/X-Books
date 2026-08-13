@@ -3,6 +3,7 @@ import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { DateField } from "../components/DateField";
 import { ModalLayer } from "../components/ModalLayer";
+import { useConfirmation } from "../components/ConfirmationDialog";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
@@ -62,6 +63,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
 
 export const InvoicesPage = ({ customers, dataError, invoices, items, token, onRefresh }: Props) => {
   const { language, t } = useLanguage();
+  const confirm = useConfirmation();
   const AddIcon = appIcons.actions.add;
   const DeleteIcon = appIcons.actions.delete;
   const today = dateInputValue();
@@ -157,8 +159,8 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     setNextLineId((value) => value + 1);
   };
 
-  const loadInvoice = (invoice: Invoice) => {
-    if (!confirmDiscardChanges()) return;
+  const loadInvoice = async (invoice: Invoice) => {
+    if (!await confirmDiscardChanges()) return;
     const nextInvoiceDate = invoice.invoiceDate.slice(0, 10);
     const nextDueDate = invoice.dueDate.slice(0, 10);
     const nextCustomerNotes = invoice.customerNotes ?? "";
@@ -183,13 +185,17 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const closeInvoice = () => {
-    if (!confirmDiscardChanges()) return;
+  const closeInvoice = async () => {
+    if (!await confirmDiscardChanges()) return;
     resetForm();
   };
 
   const deleteInvoice = async (invoice: Invoice) => {
-    if (!window.confirm(t(`Delete invoice ${invoice.invoiceNumber}?`))) return;
+    if (!await confirm({
+      confirmLabel: t("Delete"),
+      message: t("This action cannot be undone."),
+      title: t(`Delete invoice ${invoice.invoiceNumber}?`),
+    })) return;
     setMessage("");
     setDeletingId(invoice.id);
     try {
@@ -313,7 +319,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
                           label: "View",
                           icon: appIcons.actions.view,
                           disabled: deletingId !== null,
-                          onSelect: () => loadInvoice(invoice),
+                          onSelect: () => void loadInvoice(invoice),
                         },
                         ...(invoice.status !== "Paid" ? [
                           {

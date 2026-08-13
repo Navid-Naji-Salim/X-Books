@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { Field } from "../components/Field";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
+import { useConfirmation } from "../components/ConfirmationDialog";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
 import { RecordTableScroll } from "../components/RecordTableScroll";
@@ -85,6 +86,7 @@ const draftsMatch = (left: CustomerDraft, right: CustomerDraft) =>
 
 export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) => {
   const { t } = useLanguage();
+  const confirm = useConfirmation();
   const [draft, setDraft] = useState<CustomerDraft>(emptyDraft);
   const [baseline, setBaseline] = useState<CustomerDraft>(emptyDraft);
   const [mode, setMode] = useState<CustomerMode>("new");
@@ -133,9 +135,9 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
 
   const scrollToForm = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const openCustomer = (customer: Contact) => {
+  const openCustomer = async (customer: Contact) => {
     if (isSaving || deletingId !== null) return;
-    if (!confirmDiscardChanges()) return;
+    if (!await confirmDiscardChanges()) return;
 
     const customerDraft = customerToDraft(customer);
     setSelectedCustomerId(customer.id);
@@ -148,7 +150,11 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
   };
 
   const deleteCustomer = async (customer: Contact) => {
-    if (!window.confirm(t(`Delete ${customer.displayName}?`))) return;
+    if (!await confirm({
+      confirmLabel: t("Delete"),
+      message: t("This action cannot be undone."),
+      title: t(`Delete ${customer.displayName}?`),
+    })) return;
     setMessage("");
     setDeletingId(customer.id);
     try {
@@ -199,8 +205,8 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
             <div className="invoice-form-actions">
               {mode === "view" ? (
                 <>
-                  <button className="ghost-button" disabled={isSaving} type="button" onClick={() => {
-                    if (!confirmDiscardChanges()) return;
+                  <button className="ghost-button" disabled={isSaving} type="button" onClick={async () => {
+                    if (!await confirmDiscardChanges()) return;
                     resetToNew();
                   }}>Close</button>
                   <button className="button form-primary-action" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Edit Customer"}</button>
@@ -272,7 +278,7 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
                         <RecordActionsMenu
                           recordLabel={contact.displayName}
                           actions={[
-                            { label: "View", icon: appIcons.actions.view, disabled: isSaving || deletingId !== null, onSelect: () => openCustomer(contact) },
+                            { label: "View", icon: appIcons.actions.view, disabled: isSaving || deletingId !== null, onSelect: () => void openCustomer(contact) },
                             { label: deletingId === contact.id ? "Deleting" : "Delete", icon: appIcons.actions.delete, tone: "danger", disabled: deletingId !== null || isSaving, onSelect: () => void deleteCustomer(contact) },
                           ]}
                         />
