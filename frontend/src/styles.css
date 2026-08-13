@@ -1841,6 +1841,15 @@ textarea:focus {
   color: #b91c1c;
 }
 
+.button.danger-button {
+  color: white;
+  background: #dc2626;
+}
+
+.button.danger-button:hover {
+  background: var(--red);
+}
+
 .ghost-button.danger-button:hover:not(:disabled) {
   border-color: rgba(185, 28, 28, 0.28);
   background: rgba(254, 226, 226, 0.72);

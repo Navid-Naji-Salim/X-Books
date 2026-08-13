@@ -82,7 +82,7 @@ export const ConfirmationProvider = ({ children }: { children: ReactNode }) => {
               <button className="ghost-button" ref={cancelRef} type="button" onClick={() => settle(false)}>
                 {pending.cancelLabel ?? t("Cancel")}
               </button>
-              <button className="ghost-button danger-button" type="button" onClick={() => settle(true)}>
+              <button className="button danger-button" type="button" onClick={() => settle(true)}>
                 {pending.confirmLabel}
               </button>
             </div>
