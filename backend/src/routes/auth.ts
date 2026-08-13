@@ -5,6 +5,7 @@ import { Prisma } from "../../generated/prisma/client.js";
 import { env } from "../config/env.js";
 import { requireUser } from "../middleware/auth.js";
 import { prisma } from "../lib/prisma.js";
+import { passwordFromBody, validateNewPassword } from "../services/password-policy.js";
 import { ApiError } from "../utils/api-error.js";
 import { authenticatedUserId } from "../utils/auth-user.js";
 import { parseBody } from "../utils/request.js";
@@ -36,11 +37,10 @@ authRouter.post("/register", async (req, res, next) => {
     const body = parseBody(req);
     const name = requiredString(body, "name");
     const email = normalizedEmail(requiredString(body, "email"));
-    const password = requiredString(body, "password");
+    const password = passwordFromBody(body);
     if (name.length > 100) throw new ApiError(400, "Name must be 100 characters or fewer.");
     if (!emailPattern.test(email) || email.length > 254) throw new ApiError(400, "Enter a valid email address.");
-    if (password.length < 8) throw new ApiError(400, "Password must be at least 8 characters.");
-    if (password.length > 128) throw new ApiError(400, "Password must be 128 characters or fewer.");
+    await validateNewPassword(password);
     if (await prisma.user.findUnique({ where: { email }, select: { id: true } })) {
       throw new ApiError(409, "An account with this email already exists.");
     }
@@ -64,7 +64,7 @@ authRouter.post("/login", async (req, res, next) => {
   try {
     const body = parseBody(req);
     const email = normalizedEmail(requiredString(body, "email"));
-    const password = requiredString(body, "password");
+    const password = passwordFromBody(body);
     const user = await prisma.user.findUnique({ where: { email }, include: { company: { select: { id: true, name: true } } } });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) throw new ApiError(401, "Invalid email or password.");
     res.json({ token: createToken(user), user: publicUser(user) });
@@ -101,7 +101,7 @@ authRouter.post("/setup-company", requireUser, async (req, res, next) => {
 authRouter.delete("/account", requireUser, async (req, res, next) => {
   try {
     const userId = authenticatedUserId(res);
-    const password = requiredString(parseBody(req), "password");
+    const password = passwordFromBody(parseBody(req));
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) throw new ApiError(401, "Password is incorrect.");
     await prisma.user.delete({ where: { id: userId } });
