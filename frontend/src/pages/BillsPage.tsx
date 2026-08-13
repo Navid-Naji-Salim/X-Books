@@ -121,19 +121,12 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
     return bills.filter((bill) => [
       bill.billNumber,
       bill.vendor.displayName,
-      bill.billDate,
-      bill.terms,
-      bill.dueDate,
-      bill.status,
-      bill.notes,
-      bill.subtotal,
-      bill.discountPercent,
-      bill.discountAmount,
-      bill.taxTotal,
-      bill.total,
-      ...bill.lines.flatMap((line) => [line.itemName, line.quantity, line.rate, line.tax, line.amount]),
+      formatLocalizedDate(bill.billDate, language),
+      formatLocalizedDate(bill.dueDate, language),
+      t(bill.status),
+      currency.format(bill.total),
     ].some((value) => String(value ?? "").toLocaleLowerCase().includes(normalized)));
-  }, [bills, query]);
+  }, [bills, language, query, t]);
   const countLabel = query.trim()
     ? `${filteredBills.length} of ${bills.length} bills`
     : `${bills.length} bill${bills.length === 1 ? "" : "s"}`;

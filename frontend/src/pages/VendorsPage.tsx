@@ -56,8 +56,16 @@ export const VendorsPage = ({ contacts, dataError, token, onRefresh }: Props) =>
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const filtered = useMemo(() => {
     const value = query.trim().toLowerCase();
-    return value ? contacts.filter((vendor) => [vendor.displayName, vendor.vendorType, vendor.companyName, vendor.firstName, vendor.lastName, vendor.email, vendor.phone, vendor.addressLine1, vendor.addressLine2, vendor.city, vendor.state, vendor.postalCode, vendor.country, vendor.taxRate, vendor.paymentTerms, vendor.notes].some((entry) => entry?.toLowerCase().includes(value))) : contacts;
-  }, [contacts, query]);
+    return value ? contacts.filter((vendor) => [
+      vendor.displayName,
+      t(vendor.vendorType === "individual" ? "Individual" : "Business"),
+      vendor.email || "-",
+      vendor.phone || t("No phone"),
+      [vendor.city, vendor.country].filter(Boolean).join(", ") || "-",
+      vendor.taxRate ? t(vendor.taxRate) : "-",
+      t(vendor.paymentTerms || "Due on Receipt"),
+    ].some((entry) => entry.toLowerCase().includes(value))) : contacts;
+  }, [contacts, query, t]);
   const countLabel = query.trim()
     ? `${filtered.length} of ${contacts.length} vendors`
     : `${contacts.length} vendor${contacts.length === 1 ? "" : "s"}`;

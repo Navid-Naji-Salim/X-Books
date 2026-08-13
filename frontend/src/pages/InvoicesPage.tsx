@@ -104,19 +104,12 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, token, onR
     return invoices.filter((invoice) => [
       invoice.invoiceNumber,
       invoice.customer.displayName,
-      invoice.invoiceDate,
-      invoice.terms,
-      invoice.dueDate,
-      invoice.status,
-      invoice.customerNotes,
-      invoice.subtotal,
-      invoice.discountPercent,
-      invoice.discountAmount,
-      invoice.taxTotal,
-      invoice.total,
-      ...invoice.lines.flatMap((line) => [line.itemName, line.quantity, line.rate, line.tax, line.amount]),
+      formatLocalizedDate(invoice.invoiceDate, language),
+      formatLocalizedDate(invoice.dueDate, language),
+      t(invoice.status),
+      currency.format(invoice.total),
     ].some((value) => String(value ?? "").toLocaleLowerCase().includes(normalized)));
-  }, [invoices, query]);
+  }, [invoices, language, query, t]);
   const countLabel = query.trim()
     ? `${filteredInvoices.length} of ${invoices.length} invoices`
     : `${invoices.length} invoice${invoices.length === 1 ? "" : "s"}`;

@@ -128,24 +128,14 @@ export const ItemsPage = ({ dataError, items, token, onRefresh }: ItemsPageProps
     if (!normalized) return items;
     return items.filter((item) => [
       item.name,
-      item.sku,
-      item.itemType,
-      item.unit,
-      item.description,
-      item.salesAccount,
-      item.salesTax,
-      item.salesDescription,
-      item.purchaseAccount,
-      item.purchaseTax,
-      item.purchaseDescription,
-      item.salesEnabled ? "sales" : null,
-      item.purchaseEnabled ? "purchase" : null,
-      item.salesPrice,
-      item.unitCost,
-      item.quantity,
-      item.inventoryValue,
+      t(item.unit ?? "No unit"),
+      t(item.itemType),
+      item.salesEnabled ? currency.format(item.salesPrice) : "-",
+      t(item.salesAccount),
+      item.purchaseEnabled ? currency.format(item.unitCost) : "-",
+      t(item.purchaseAccount),
     ].some((value) => String(value ?? "").toLocaleLowerCase().includes(normalized)));
-  }, [items, query]);
+  }, [items, query, t]);
   const countLabel = query.trim()
     ? `${filteredItems.length} of ${items.length} items`
     : `${items.length} item${items.length === 1 ? "" : "s"}`;

@@ -101,26 +101,17 @@ export const CustomersPage = ({ contacts, dataError, token, onRefresh }: Props) 
     return contacts.filter((contact) => {
       const searchableDetails = [
         contact.displayName,
-        contact.customerType,
-        contact.companyName,
-        contact.firstName,
-        contact.lastName,
-        contact.email,
-        contact.phone,
-        contact.addressLine1,
-        contact.addressLine2,
-        contact.city,
-        contact.state,
-        contact.postalCode,
-        contact.country,
-        contact.taxRate,
-        contact.paymentTerms,
-        contact.notes,
+        t(contact.customerType === "individual" ? "Individual" : "Business"),
+        contact.email || "-",
+        contact.phone || t("No phone"),
+        [contact.city, contact.country].filter(Boolean).join(", ") || "-",
+        contact.taxRate ? t(contact.taxRate) : "-",
+        t(contact.paymentTerms || "Due on Receipt"),
       ];
 
       return searchableDetails.some((value) => value?.toLocaleLowerCase().includes(normalized));
     });
-  }, [contacts, query]);
+  }, [contacts, query, t]);
 
   const hasUnsavedChanges = mode === "view"
     ? !draftsMatch(draft, baseline)
