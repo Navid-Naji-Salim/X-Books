@@ -6,14 +6,14 @@ import { presentContact } from "../presenters/contact-presenter.js";
 import { parseCustomerInput } from "../services/customer-input.js";
 import { parseBody } from "../utils/request.js";
 import { ApiError } from "../utils/api-error.js";
-import { authenticatedUserId } from "../utils/auth-user.js";
+import { authenticatedCompanyId } from "../utils/auth-user.js";
 
 export const customersRouter = Router();
 
 customersRouter.get("/", async (_req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
-    const customers = await prisma.customer.findMany({ where: { userId }, orderBy: { createdAt: "desc" } });
+    const companyId = authenticatedCompanyId(res);
+    const customers = await prisma.customer.findMany({ where: { companyId }, orderBy: { createdAt: "desc" } });
     res.json(customers.map(presentContact));
   } catch (error) {
     next(error);
@@ -22,18 +22,18 @@ customersRouter.get("/", async (_req, res, next) => {
 
 customersRouter.post("/", async (req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
+    const companyId = authenticatedCompanyId(res);
     const customerInput = parseCustomerInput(parseBody(req));
     const { customerType, companyName, firstName, lastName, displayName } = customerInput;
     const id = randomUUID();
     const { email, phone, addressLine1, addressLine2, city, state, postalCode, country, taxRate, paymentTerms, notes } = customerInput;
     const [customer] = await prisma.$queryRaw<Customer[]>`
       INSERT INTO "Customer" (
-        "id", "userId", "customerType", "firstName", "lastName", "displayName", "companyName",
+        "id", "companyId", "customerType", "firstName", "lastName", "displayName", "companyName",
         "email", "phone", "addressLine1", "addressLine2", "city", "state",
         "postalCode", "country", "taxRate", "paymentTerms", "notes", "createdAt", "updatedAt"
       ) VALUES (
-        ${id}, ${userId}, ${customerType}, ${firstName}, ${lastName}, ${displayName}, ${companyName},
+        ${id}, ${companyId}, ${customerType}, ${firstName}, ${lastName}, ${displayName}, ${companyName},
         ${email}, ${phone}, ${addressLine1}, ${addressLine2}, ${city}, ${state},
         ${postalCode}, ${country}, ${taxRate}, ${paymentTerms}, ${notes}, NOW(), NOW()
       ) RETURNING *
@@ -49,9 +49,9 @@ customersRouter.post("/", async (req, res, next) => {
 
 customersRouter.patch("/:id", async (req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
+    const companyId = authenticatedCompanyId(res);
     const customer = await prisma.customer.update({
-      where: { id: req.params.id, userId },
+      where: { id: req.params.id, companyId },
       data: parseCustomerInput(parseBody(req)),
     });
     res.json(presentContact(customer));
@@ -62,8 +62,8 @@ customersRouter.patch("/:id", async (req, res, next) => {
 
 customersRouter.delete("/:id", async (req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
-    await prisma.customer.delete({ where: { id: req.params.id, userId } });
+    const companyId = authenticatedCompanyId(res);
+    await prisma.customer.delete({ where: { id: req.params.id, companyId } });
     res.status(204).send();
   } catch (error) {
     next(error);

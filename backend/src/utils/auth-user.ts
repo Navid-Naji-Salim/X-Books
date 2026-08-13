@@ -9,3 +9,11 @@ export const authenticatedUserId = (res: Response) => {
 
   return userId;
 };
+
+export const authenticatedCompanyId = (res: Response) => {
+  const companyId = res.locals.companyId;
+  if (typeof companyId !== "string" || !companyId) {
+    throw new ApiError(403, "Complete company setup before entering X Books.");
+  }
+  return companyId;
+};

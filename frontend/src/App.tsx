@@ -4,6 +4,9 @@ import { api } from "./api";
 import { AppLoadingScreen } from "./components/AppLoadingScreen";
 import { Sidebar } from "./layout/Sidebar";
 import { LoginPage } from "./pages/LoginPage";
+import { SignupPage } from "./pages/SignupPage";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage";
+import { CompanySetupPage } from "./pages/CompanySetupPage";
 import type { Bill, Contact, Invoice, Item, Summary, User } from "./types";
 
 const BillsPage = lazy(() => import("./pages/BillsPage").then((module) => ({ default: module.BillsPage })));
@@ -13,6 +16,9 @@ const ItemsPage = lazy(() => import("./pages/ItemsPage").then((module) => ({ def
 const InvoicesPage = lazy(() => import("./pages/InvoicesPage").then((module) => ({ default: module.InvoicesPage })));
 const ReportsPage = lazy(() => import("./pages/ReportsPage").then((module) => ({ default: module.ReportsPage })));
 const VendorsPage = lazy(() => import("./pages/VendorsPage").then((module) => ({ default: module.VendorsPage })));
+const SettingsPage = lazy(() => import("./pages/SettingsPage").then((module) => ({ default: module.SettingsPage })));
+
+const destinationFor = (user: User) => !user.emailVerified ? "/verify-email" : !user.company ? "/setup-company" : "/";
 
 type AppData = {
   summary: Summary;
@@ -100,9 +106,9 @@ export const App = () => {
         }
 
         setUser(response.user);
-        await loadData(token).catch(() => {
-          setDataError("Some workspace data could not be loaded. Try refreshing in a moment.");
-        });
+        if (response.user.emailVerified && response.user.company) {
+          await loadData(token).catch(() => setDataError("Some workspace data could not be loaded. Try refreshing in a moment."));
+        }
       } catch {
         if (isCurrent) {
           logout();
@@ -139,6 +145,9 @@ export const App = () => {
           />
         }
       />
+      <Route path="/signup" element={token && user ? <Navigate to={destinationFor(user)} replace /> : <SignupPage onSignup={async (name, email, password) => { const response = await api.register(name, email, password); localStorage.setItem("userToken", response.token); setToken(response.token); setUser(response.user); }} />} />
+      <Route path="/verify-email" element={!token || !user ? <Navigate to="/login" replace /> : user.emailVerified ? <Navigate to={user.company ? "/" : "/setup-company"} replace /> : <VerifyEmailPage email={user.email} onLogout={logout} onResend={async () => (await api.resendVerification(token)).retryAfterSeconds} onVerify={async (code) => { await api.verifyEmail(token, code); setUser((await api.me(token)).user); }} />} />
+      <Route path="/setup-company" element={!token || !user ? <Navigate to="/login" replace /> : !user.emailVerified ? <Navigate to="/verify-email" replace /> : user.company ? <Navigate to="/" replace /> : <CompanySetupPage onLogout={logout} onSetup={async (companyName) => { await api.setupCompany(token, companyName); const nextUser = (await api.me(token)).user; setUser(nextUser); await loadData(token); }} />} />
       <Route
         element={
           <ProtectedLayout
@@ -201,6 +210,7 @@ export const App = () => {
           }
         />
         <Route path="reports" element={<ReportsPage token={token ?? ""} />} />
+        <Route path="settings" element={<SettingsPage token={token ?? ""} user={user!} onAccountDeleted={logout} />} />
       </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -218,20 +228,13 @@ type LoginRouteProps = {
 
 const LoginRoute = ({ user, setBooting, setUser, setToken, token }: LoginRouteProps) => {
   if (token && user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={destinationFor(user)} replace />;
   }
 
   return (
     <LoginPage
       onLogin={async (email, password) => {
         const response = await api.login(email, password);
-        localStorage.setItem("userToken", response.token);
-        setBooting(true);
-        setToken(response.token);
-        setUser(response.user);
-      }}
-      onRegister={async (name, email, password) => {
-        const response = await api.register(name, email, password);
         localStorage.setItem("userToken", response.token);
         setBooting(true);
         setToken(response.token);
@@ -279,6 +282,8 @@ const ProtectedLayout = ({ user, onLogout, token }: ProtectedLayoutProps) => {
   if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
+  if (!user.emailVerified) return <Navigate to="/verify-email" replace />;
+  if (!user.company) return <Navigate to="/setup-company" replace />;
 
   const logout = () => {
     onLogout();

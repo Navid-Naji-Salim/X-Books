@@ -4,7 +4,7 @@ import { prisma } from "../lib/prisma.js";
 import { presentInvoice } from "../presenters/invoice-presenter.js";
 import { paidAmount, paymentStatus, remainingAmount, toCents } from "../services/payment-status.js";
 import { ApiError } from "../utils/api-error.js";
-import { authenticatedUserId } from "../utils/auth-user.js";
+import { authenticatedCompanyId } from "../utils/auth-user.js";
 import { parseBody } from "../utils/request.js";
 import { optionalString, requiredString } from "../utils/validation.js";
 
@@ -25,9 +25,9 @@ const dateValue = (body: Record<string, unknown>, field: string) => {
 
 invoicesRouter.get("/", async (_req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
-    await prisma.invoice.updateMany({ where: { userId, status: "Saved" }, data: { status: "Unpaid" } });
-    const invoices = await prisma.invoice.findMany({ where: { userId }, include: customerInclude, orderBy: { createdAt: "desc" } });
+    const companyId = authenticatedCompanyId(res);
+    await prisma.invoice.updateMany({ where: { companyId, status: "Saved" }, data: { status: "Unpaid" } });
+    const invoices = await prisma.invoice.findMany({ where: { companyId }, include: customerInclude, orderBy: { createdAt: "desc" } });
     const lines = await prisma.invoiceLine.findMany({ where: { invoiceId: { in: invoices.map((invoice) => invoice.id) } } });
     res.json(invoices.map((invoice) => presentInvoice({ ...invoice, lines: lines.filter((line) => line.invoiceId === invoice.id) })));
   } catch (error) { next(error); }
@@ -35,8 +35,8 @@ invoicesRouter.get("/", async (_req, res, next) => {
 
 invoicesRouter.get("/next-number", async (_req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
-    const invoices = await prisma.invoice.findMany({ where: { userId }, select: { invoiceNumber: true } });
+    const companyId = authenticatedCompanyId(res);
+    const invoices = await prisma.invoice.findMany({ where: { companyId }, select: { invoiceNumber: true } });
     const highest = invoices.reduce((maximum, invoice) => {
       const match = /^INV-(\d+)$/.exec(invoice.invoiceNumber);
       return match ? Math.max(maximum, Number(match[1])) : maximum;
@@ -47,16 +47,16 @@ invoicesRouter.get("/next-number", async (_req, res, next) => {
 
 invoicesRouter.post("/", async (req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
+    const companyId = authenticatedCompanyId(res);
     const body = parseBody(req);
     const customerId = requiredString(body, "customerId");
-    const customer = await prisma.customer.findFirst({ where: { id: customerId, userId }, select: { id: true } });
+    const customer = await prisma.customer.findFirst({ where: { id: customerId, companyId }, select: { id: true } });
     if (!customer) throw new ApiError(400, "Customer was not found.");
 
     if (!Array.isArray(body.lines) || body.lines.length === 0) throw new ApiError(400, "Add at least one invoice item.");
     const rawLines = body.lines as Array<Record<string, unknown>>;
     const itemIds = rawLines.map((line) => String(line.itemId ?? "")).filter(Boolean);
-    const items = await prisma.item.findMany({ where: { userId, id: { in: itemIds }, salesEnabled: true }, select: { id: true, name: true } });
+    const items = await prisma.item.findMany({ where: { companyId, id: { in: itemIds }, salesEnabled: true }, select: { id: true, name: true } });
     const itemMap = new Map(items.map((item) => [item.id, item]));
 
     const lines = rawLines.map((line) => {
@@ -81,7 +81,7 @@ invoicesRouter.post("/", async (req, res, next) => {
 
     const invoice = await prisma.invoice.create({
       data: {
-        userId, invoiceNumber: requiredString(body, "invoiceNumber"), customerId,
+        companyId, invoiceNumber: requiredString(body, "invoiceNumber"), customerId,
         invoiceDate: dateValue(body, "invoiceDate"), dueDate: dateValue(body, "dueDate"),
         terms: requiredString(body, "terms"), customerNotes: optionalString(body, "customerNotes"),
         status: "Unpaid",
@@ -98,20 +98,20 @@ invoicesRouter.post("/", async (req, res, next) => {
 
 invoicesRouter.patch("/:id", async (req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
-    const existingInvoice = await prisma.invoice.findFirst({ where: { id: req.params.id, userId }, select: { status: true } });
+    const companyId = authenticatedCompanyId(res);
+    const existingInvoice = await prisma.invoice.findFirst({ where: { id: req.params.id, companyId }, select: { status: true } });
     if (!existingInvoice) throw new ApiError(404, "Invoice was not found.");
     if (existingInvoice.status !== "Unpaid") throw new ApiError(400, "Paid and partially paid invoices cannot be edited.");
 
     const body = parseBody(req);
     const customerId = requiredString(body, "customerId");
-    const customer = await prisma.customer.findFirst({ where: { id: customerId, userId }, select: { id: true } });
+    const customer = await prisma.customer.findFirst({ where: { id: customerId, companyId }, select: { id: true } });
     if (!customer) throw new ApiError(400, "Customer was not found.");
     if (!Array.isArray(body.lines) || body.lines.length === 0) throw new ApiError(400, "Add at least one invoice item.");
 
     const rawLines = body.lines as Array<Record<string, unknown>>;
     const itemIds = rawLines.map((line) => String(line.itemId ?? "")).filter(Boolean);
-    const items = await prisma.item.findMany({ where: { userId, id: { in: itemIds }, salesEnabled: true }, select: { id: true, name: true } });
+    const items = await prisma.item.findMany({ where: { companyId, id: { in: itemIds }, salesEnabled: true }, select: { id: true, name: true } });
     const itemMap = new Map(items.map((item) => [item.id, item]));
     const lines = rawLines.map((line) => {
       const itemId = String(line.itemId ?? "");
@@ -133,7 +133,7 @@ invoicesRouter.patch("/:id", async (req, res, next) => {
     const total = subtotal - discountAmount + taxTotal;
 
     const invoice = await prisma.invoice.update({
-      where: { id: req.params.id, userId },
+      where: { id: req.params.id, companyId },
       data: {
         invoiceNumber: requiredString(body, "invoiceNumber"), customerId,
         invoiceDate: dateValue(body, "invoiceDate"), dueDate: dateValue(body, "dueDate"),
@@ -154,13 +154,13 @@ invoicesRouter.patch("/:id", async (req, res, next) => {
 
 invoicesRouter.post("/:id/payment", async (req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
+    const companyId = authenticatedCompanyId(res);
     const body = parseBody(req);
     const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount <= 0) throw new ApiError(400, "Payment amount must be greater than zero.");
 
     const invoice = await prisma.invoice.findFirst({
-      where: { id: req.params.id, userId },
+      where: { id: req.params.id, companyId },
       select: { id: true, status: true, total: true, payments: { select: { amount: true } } },
     });
     if (!invoice) throw new ApiError(404, "Invoice was not found.");
@@ -173,7 +173,7 @@ invoicesRouter.post("/:id/payment", async (req, res, next) => {
 
     await prisma.$transaction([
       prisma.payment.create({ data: { invoiceId: invoice.id, paymentDate: dateValue(body, "paymentDate"), amount: decimal(amount) } }),
-      prisma.invoice.update({ where: { id: invoice.id, userId }, data: { status: nextStatus } }),
+      prisma.invoice.update({ where: { id: invoice.id, companyId }, data: { status: nextStatus } }),
     ]);
     res.status(204).send();
   } catch (error) { next(error); }
@@ -181,13 +181,13 @@ invoicesRouter.post("/:id/payment", async (req, res, next) => {
 
 invoicesRouter.delete("/:id", async (req, res, next) => {
   try {
-    const userId = authenticatedUserId(res);
-    const invoice = await prisma.invoice.findFirst({ where: { id: req.params.id, userId }, select: { id: true } });
+    const companyId = authenticatedCompanyId(res);
+    const invoice = await prisma.invoice.findFirst({ where: { id: req.params.id, companyId }, select: { id: true } });
     if (!invoice) throw new ApiError(404, "Invoice was not found.");
 
     await prisma.$transaction([
       prisma.payment.deleteMany({ where: { invoiceId: invoice.id } }),
-      prisma.invoice.delete({ where: { id: invoice.id, userId } }),
+      prisma.invoice.delete({ where: { id: invoice.id, companyId } }),
     ]);
     res.status(204).send();
   } catch (error) { next(error); }

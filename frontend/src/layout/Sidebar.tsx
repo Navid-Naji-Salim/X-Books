@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { appIcons, icons } from "../icons";
 import { Tooltip } from "../components/Tooltip";
 import { NavFlyout } from "../components/NavFlyout";
@@ -141,6 +141,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           {languageOptions.map((option) => <button className={language === option.value ? "is-selected" : ""} key={option.value} type="button" onClick={() => setLanguage(option.value)}>{t(option.label)}</button>)}
         </div>
       </div>
+      <Link className="profile-settings-link" to="/settings" onClick={closeSettings}>Account settings</Link>
       <button className="logout-button" type="button" onClick={onLogout}>
         {t("Log Out")}
       </button>
