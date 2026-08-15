@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up the X Books PostgreSQL database
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=XBOOKS_DEPLOYMENT_DIRECTORY=/opt/xbooks
+ExecStart=/opt/xbooks/deploy/backup-postgres.sh
+User=root

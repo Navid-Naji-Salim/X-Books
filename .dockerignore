@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.production.example
+node_modules
+backend/dist
+backend/generated
+frontend/dist
+coverage
+logs
+*.log

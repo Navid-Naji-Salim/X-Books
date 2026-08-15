@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the X Books PostgreSQL backup every night
+
+[Timer]
+OnCalendar=*-*-* 02:15:00 UTC
+Persistent=true
+RandomizedDelaySec=10m
+Unit=xbooks-backup.service
+
+[Install]
+WantedBy=timers.target

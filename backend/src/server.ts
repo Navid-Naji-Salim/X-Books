@@ -1,6 +1,6 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
-import { prisma, resetPrismaConnection } from "./lib/prisma.js";
+import { disconnectPrisma, prisma, resetPrismaConnection } from "./lib/prisma.js";
 
 const withStartupTimeout = async <T>(task: Promise<T>, timeoutMs: number) => {
   let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -48,9 +48,40 @@ const startServer = async () => {
   await initializeDatabase();
 
   const app = createApp();
-  app.listen(env.port, () => {
+  const server = app.listen(env.port, () => {
     console.log(`X Books is running on http://localhost:${env.port}`);
   });
+
+  let isShuttingDown = false;
+  const shutDown = (signal: NodeJS.Signals) => {
+    if (isShuttingDown) {
+      return;
+    }
+
+    isShuttingDown = true;
+    console.log(`Received ${signal}; shutting down X Books.`);
+
+    const forcedExit = setTimeout(() => {
+      console.error("Graceful shutdown timed out.");
+      process.exit(1);
+    }, 10_000);
+    forcedExit.unref();
+
+    server.close(async (error) => {
+      await disconnectPrisma();
+      clearTimeout(forcedExit);
+
+      if (error) {
+        console.error("Failed to close the HTTP server cleanly.", error);
+        process.exit(1);
+      }
+
+      process.exit(0);
+    });
+  };
+
+  process.once("SIGTERM", shutDown);
+  process.once("SIGINT", shutDown);
 };
 
 startServer().catch((error: unknown) => {

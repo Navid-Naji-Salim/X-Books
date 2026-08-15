@@ -27,3 +27,8 @@ export const resetPrismaConnection = async () => {
   await pool.end().catch(() => undefined);
   prisma = createPrismaClient();
 };
+
+export const disconnectPrisma = async () => {
+  await prisma.$disconnect().catch(() => undefined);
+  await pool.end().catch(() => undefined);
+};
