@@ -17,6 +17,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      DATABASE_URL: postgresql://xbooks:xbooks@127.0.0.1:5432/xbooks
     steps:
       - name: Check out the pushed commit
         uses: actions/checkout@v4
