@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField } from "../components/FormControls";
 import { DateField } from "../components/DateField";
@@ -6,19 +6,25 @@ import { companyAddressLine, companyContactLine } from "../components/CompanyDoc
 import { formatLocalizedDate, useLanguage } from "../i18n";
 import { currency } from "../lib/format";
 import type { Bill, CompanyProfile, Contact, Invoice } from "../types";
-import { reports, type ReportId } from "../reportDefinitions";
+import { reports, type GeneratedReports, type GeneratedReportSnapshot, type ReportId } from "../reportDefinitions";
 
-type Props = { company: CompanyProfile; token: string };
+type Props = {
+  company: CompanyProfile;
+  generatedReports: GeneratedReports;
+  token: string;
+  onGenerated: (reportId: ReportId, snapshot: GeneratedReportSnapshot) => void;
+};
 
 const Summary = ({ entries }: { entries: Array<[string, string]> }) => <div className="report-summary">{entries.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>;
 
 const inputDate = (date: Date) => { const adjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60_000); return adjusted.toISOString().slice(0, 10); };
-export const ReportsPage = ({ company, token }: Props) => {
+export const ReportsPage = ({ company, generatedReports, token, onGenerated }: Props) => {
   const { language, t } = useLanguage();
   const locale = language === "ku" ? "ckb" : language === "ar" ? "ar-IQ" : "en-GB";
   const reportDate = (value: string | Date) => typeof value === "string" && !value ? "—" : formatLocalizedDate(value, language, "long");
   const generatedTime = (value: Date) => `${reportDate(value)}, ${value.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" })}`;
   const reportPagesRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef(true);
   const today = new Date();
   const [id, setId] = useState<ReportId>("profit-loss");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -26,8 +32,12 @@ export const ReportsPage = ({ company, token }: Props) => {
   const [toDate, setToDate] = useState(() => inputDate(today));
   const [error, setError] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generated, setGenerated] = useState<null | { bills: Bill[]; customers: Contact[]; invoices: Invoice[]; vendors: Contact[]; fromDate: string; toDate: string; generatedAt: Date }>(null);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
   const report = reports.find((entry) => entry.id === id) ?? reports[0];
+  const generated = generatedReports[id] ?? null;
   const { title, description } = report;
   const bills = generated?.bills ?? [];
   const customers = generated?.customers ?? [];
@@ -91,11 +101,22 @@ export const ReportsPage = ({ company, token }: Props) => {
     if (!fromDate || !toDate || fromDate > toDate) { setError("Choose a valid date range."); return; }
     setError(""); setIsGenerating(true);
     try {
-      const [freshInvoices, freshBills, freshCustomers, freshVendors] = await Promise.all([api.invoices(token), api.bills(token), api.customers(token), api.vendors(token)]);
-      const inRange = (value: string) => { const date = value.slice(0, 10); return date >= fromDate && date <= toDate; };
-      setGenerated({ invoices: freshInvoices.filter((invoice) => inRange(invoice.invoiceDate)), bills: freshBills.filter((bill) => inRange(bill.billDate)), customers: freshCustomers, vendors: freshVendors, fromDate, toDate, generatedAt: new Date() });
-    } catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : "Unable to generate the report."); }
-    finally { setIsGenerating(false); }
+      const reportId = id;
+      const snapshotFromDate = fromDate;
+      const snapshotToDate = toDate;
+      const needsInvoices = reportId === "profit-loss" || reportId === "sales" || reportId === "customers";
+      const needsBills = reportId === "profit-loss" || reportId === "purchases" || reportId === "vendors";
+      const [freshInvoices, freshBills, freshCustomers, freshVendors] = await Promise.all([
+        needsInvoices ? api.invoices(token) : Promise.resolve([] as Invoice[]),
+        needsBills ? api.bills(token) : Promise.resolve([] as Bill[]),
+        reportId === "customers" ? api.customers(token) : Promise.resolve([] as Contact[]),
+        reportId === "vendors" ? api.vendors(token) : Promise.resolve([] as Contact[]),
+      ]);
+      const inRange = (value: string) => { const date = value.slice(0, 10); return date >= snapshotFromDate && date <= snapshotToDate; };
+      if (!isMountedRef.current) return;
+      onGenerated(reportId, { invoices: freshInvoices.filter((invoice) => inRange(invoice.invoiceDate)), bills: freshBills.filter((bill) => inRange(bill.billDate)), customers: freshCustomers, vendors: freshVendors, fromDate: snapshotFromDate, toDate: snapshotToDate, generatedAt: new Date() });
+    } catch (requestError) { if (isMountedRef.current) setError(requestError instanceof ApiError ? requestError.message : "Unable to generate the report."); }
+    finally { if (isMountedRef.current) setIsGenerating(false); }
   };
   const exportPdf = async () => {
     if (!generated || !reportPagesRef.current) return;

@@ -1,3 +1,5 @@
+import type { Bill, Contact, Invoice } from "./types";
+
 export const reports = [
   { id: "profit-loss", title: "Profit & Loss", description: "Compare invoiced sales with recorded purchases and review net profit." },
   { id: "sales", title: "Sales Report", description: "Review invoice totals, payment status, customers, and sales activity." },
@@ -7,3 +9,15 @@ export const reports = [
 ] as const;
 
 export type ReportId = typeof reports[number]["id"];
+
+export type GeneratedReportSnapshot = {
+  bills: Bill[];
+  customers: Contact[];
+  invoices: Invoice[];
+  vendors: Contact[];
+  fromDate: string;
+  toDate: string;
+  generatedAt: Date;
+};
+
+export type GeneratedReports = Partial<Record<ReportId, GeneratedReportSnapshot>>;

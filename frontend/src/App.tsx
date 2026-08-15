@@ -6,6 +6,7 @@ import { Sidebar } from "./layout/Sidebar";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { CompanySetupPage } from "./pages/CompanySetupPage";
+import type { GeneratedReports, ReportId, GeneratedReportSnapshot } from "./reportDefinitions";
 import type { Bill, Contact, Invoice, Item, Summary, User } from "./types";
 
 const BillsPage = lazy(() => import("./pages/BillsPage").then((module) => ({ default: module.BillsPage })));
@@ -63,6 +64,7 @@ export const App = () => {
   const [token, setToken] = useState(() => localStorage.getItem("userToken"));
   const [user, setUser] = useState<User | null>(null);
   const [data, setData] = useState<AppData>(emptyData);
+  const [generatedReports, setGeneratedReports] = useState<GeneratedReports>({});
   const [booting, setBooting] = useState(true);
   const [dataError, setDataError] = useState("");
 
@@ -71,6 +73,7 @@ export const App = () => {
     setToken(null);
     setUser(null);
     setData(emptyData);
+    setGeneratedReports({});
     setDataError("");
   };
 
@@ -208,7 +211,7 @@ export const App = () => {
             />
           }
         />
-        <Route path="reports" element={<ReportsPage company={user?.company!} token={token ?? ""} />} />
+        <Route path="reports" element={<ReportsPage company={user?.company!} generatedReports={generatedReports} token={token ?? ""} onGenerated={(reportId: ReportId, snapshot: GeneratedReportSnapshot) => setGeneratedReports((current) => ({ ...current, [reportId]: snapshot }))} />} />
         <Route path="settings" element={<SettingsPage token={token ?? ""} user={user!} onAccountDeleted={logout} onUserUpdated={(nextUser, nextToken) => { setUser(nextUser); if (nextToken) { localStorage.setItem("userToken", nextToken); setToken(nextToken); } }} />} />
       </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
