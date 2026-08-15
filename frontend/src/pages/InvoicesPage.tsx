@@ -4,6 +4,7 @@ import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { DateField } from "../components/DateField";
 import { CompanyDocumentIdentity } from "../components/CompanyDocumentIdentity";
 import { ModalLayer } from "../components/ModalLayer";
+import { QuickCreateModal } from "../components/QuickCreateModal";
 import { useConfirmation } from "../components/ConfirmationDialog";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
@@ -23,10 +24,13 @@ type Props = {
   items: Item[];
   nextInvoiceNumber: string;
   token: string;
+  onCustomerCreated: (customer: Contact) => void;
+  onItemCreated: (item: Item) => void;
   onRefresh: () => Promise<void>;
 };
 
 type LineDraft = { id: number; itemId: string; itemName: string; quantity: number; rate: number; tax: string };
+type QuickCreateTarget = { kind: "customer" } | { kind: "sales-item"; lineId: number };
 type InvoiceDraftValues = {
   customerId: string;
   invoiceNumber: string;
@@ -69,7 +73,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
   return options;
 };
 
-export const InvoicesPage = ({ company, customers, dataError, invoices, items, nextInvoiceNumber, token, onRefresh }: Props) => {
+export const InvoicesPage = ({ company, customers, dataError, invoices, items, nextInvoiceNumber, token, onCustomerCreated, onItemCreated, onRefresh }: Props) => {
   const { language, t } = useLanguage();
   const confirm = useConfirmation();
   const AddIcon = appIcons.actions.add;
@@ -103,6 +107,7 @@ export const InvoicesPage = ({ company, customers, dataError, invoices, items, n
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [quickCreateTarget, setQuickCreateTarget] = useState<QuickCreateTarget | null>(null);
   const selectedInvoice = selectedInvoiceId
     ? invoices.find((invoice) => invoice.id === selectedInvoiceId) ?? null
     : null;
@@ -250,7 +255,7 @@ export const InvoicesPage = ({ company, customers, dataError, invoices, items, n
           <div className="invoice-details-grid">
             <section className="invoice-detail-card">
               <h3>Customer</h3>
-              <DropdownField label="Customer" name="customerId" options={customers.map((customer) => ({ label: customer.displayName, value: customer.id }))} placeholder="Select a customer" required disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} translateOptions={false} value={customerId} onChange={(value) => {
+              <DropdownField action={{ label: "New Customer", onSelect: () => setQuickCreateTarget({ kind: "customer" }) }} label="Customer" name="customerId" options={customers.map((customer) => ({ label: customer.displayName, value: customer.id }))} placeholder="Select a customer" required disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} translateOptions={false} value={customerId} onChange={(value) => {
                 setCustomerId(value);
                 const customer = customers.find((entry) => entry.id === value);
                 const nextTerms = customer?.paymentTerms || "Due on Receipt";
@@ -280,7 +285,7 @@ export const InvoicesPage = ({ company, customers, dataError, invoices, items, n
               <thead><tr><th>Item Details</th><th>Quantity</th><th>Rate</th><th>Tax</th><th>Amount</th><th aria-label="Actions" /></tr></thead>
               <tbody>{lines.map((line) => (
                 <tr key={line.id}>
-                  <td className="invoice-item-cell"><DropdownField floatingOptions label="Item" name={`item-${line.id}`} options={itemOptionsFor(line, sellableItems)} placeholder="Select an item" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} translateOptions={false} value={line.itemId} onChange={(value) => {
+                  <td className="invoice-item-cell"><DropdownField action={{ label: "New Item", onSelect: () => setQuickCreateTarget({ kind: "sales-item", lineId: line.id }) }} floatingOptions label="Item" name={`item-${line.id}`} options={itemOptionsFor(line, sellableItems)} placeholder="Select an item" disabled={isViewingPaidInvoice} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} translateOptions={false} value={line.itemId} onChange={(value) => {
                     const item = sellableItems.find((entry) => entry.id === value);
                     updateLine(line.id, { itemId: value, itemName: item?.name ?? line.itemName, rate: item?.salesPrice ?? 0, tax: item?.salesTax ?? "" });
                   }} /></td>
@@ -360,6 +365,28 @@ export const InvoicesPage = ({ company, customers, dataError, invoices, items, n
           </table>
         </RecordTableScroll>
       </section>
+      {quickCreateTarget ? (
+        <QuickCreateModal
+          kind={quickCreateTarget.kind}
+          token={token}
+          onClose={() => setQuickCreateTarget(null)}
+          onCreated={(record) => {
+            if (quickCreateTarget.kind === "customer") {
+              const customer = record as Contact;
+              onCustomerCreated(customer);
+              setCustomerId(customer.id);
+              const nextTerms = customer.paymentTerms || "Due on Receipt";
+              setTerms(nextTerms);
+              setDueDate(dueDateFor(invoiceDate, nextTerms));
+            } else {
+              const item = record as Item;
+              onItemCreated(item);
+              updateLine(quickCreateTarget.lineId, { itemId: item.id, itemName: item.name, rate: item.salesPrice, tax: item.salesTax ?? "" });
+            }
+            setQuickCreateTarget(null);
+          }}
+        />
+      ) : null}
       {paymentInvoice ? (
         <ModalLayer closeDisabled={isRecordingPayment} onClose={() => setPaymentInvoice(null)}>
           <form className="panel payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title" onMouseDown={(event) => event.stopPropagation()} onSubmit={async (event) => {

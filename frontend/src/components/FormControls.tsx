@@ -6,6 +6,7 @@ export const TAX_OPTIONS = ["Exempt", "Standard Tax", "Reduced Tax", "Out of Sco
 type Option = string | { label: string; value: string };
 
 type DropdownFieldProps = {
+  action?: { label: string; onSelect: () => void };
   label?: string;
   ariaLabel?: string;
   className?: string;
@@ -29,6 +30,7 @@ type DropdownFieldProps = {
 
 export const DropdownField = ({
   label = "Unit", name, options, defaultValue = "", placeholder = "Select an option",
+  action,
   ariaLabel, className = "", labelClassName = "", optionsClassName = "",
   required, disabled, resetVersion, openDropdown, setOpenDropdown,
   value: controlledValue, onChange, floatingOptions = false, includeFormValue = true, translateOptions = true,
@@ -103,6 +105,10 @@ export const DropdownField = ({
         setOpenDropdown(null);
       }}>{optionLabel}</button>;
     })}
+    {action ? <button disabled={disabled} type="button" onClick={() => {
+      setOpenDropdown(null);
+      action.onSelect();
+    }}>{action.label}</button> : null}
   </div> : null;
 
   return (

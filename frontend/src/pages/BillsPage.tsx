@@ -4,6 +4,7 @@ import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { DateField } from "../components/DateField";
 import { CompanyDocumentIdentity } from "../components/CompanyDocumentIdentity";
 import { ModalLayer } from "../components/ModalLayer";
+import { QuickCreateModal } from "../components/QuickCreateModal";
 import { useConfirmation } from "../components/ConfirmationDialog";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
 import { RecordListSearch } from "../components/RecordListSearch";
@@ -23,7 +24,9 @@ type Props = {
   items: Item[];
   nextBillNumber: string;
   token: string;
+  onItemCreated: (item: Item) => void;
   onRefresh: () => Promise<void>;
+  onVendorCreated: (vendor: Contact) => void;
 };
 
 type LineDraft = {
@@ -44,6 +47,8 @@ type BillDraftValues = {
   notes: string;
   lines: readonly LineDraft[];
 };
+
+type QuickCreateTarget = { kind: "vendor" } | { kind: "purchase-item"; lineId: number };
 
 const billDraftFingerprint = (values: BillDraftValues) => JSON.stringify({
   ...values,
@@ -78,7 +83,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
   return options;
 };
 
-export const BillsPage = ({ company, vendors, dataError, bills, items, nextBillNumber, token, onRefresh }: Props) => {
+export const BillsPage = ({ company, vendors, dataError, bills, items, nextBillNumber, token, onItemCreated, onRefresh, onVendorCreated }: Props) => {
   const { language, t } = useLanguage();
   const confirm = useConfirmation();
   const AddIcon = appIcons.actions.add;
@@ -113,6 +118,7 @@ export const BillsPage = ({ company, vendors, dataError, bills, items, nextBillN
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [quickCreateTarget, setQuickCreateTarget] = useState<QuickCreateTarget | null>(null);
 
   const selectedBill = selectedBillId
     ? bills.find((bill) => bill.id === selectedBillId) ?? null
@@ -302,6 +308,7 @@ export const BillsPage = ({ company, vendors, dataError, bills, items, nextBillN
             <section className="invoice-detail-card">
               <h3>Vendor</h3>
               <DropdownField
+                action={{ label: "New Vendor", onSelect: () => setQuickCreateTarget({ kind: "vendor" }) }}
                 disabled={isReadOnly}
                 label="Vendor"
                 name="vendorId"
@@ -389,6 +396,7 @@ export const BillsPage = ({ company, vendors, dataError, bills, items, nextBillN
                   <tr key={line.id}>
                     <td className="invoice-item-cell">
                       <DropdownField
+                        action={{ label: "New Item", onSelect: () => setQuickCreateTarget({ kind: "purchase-item", lineId: line.id }) }}
                         disabled={isReadOnly}
                         floatingOptions
                         label="Item"
@@ -533,6 +541,31 @@ export const BillsPage = ({ company, vendors, dataError, bills, items, nextBillN
           </table>
         </RecordTableScroll>
       </section>
+
+      {quickCreateTarget ? (
+        <QuickCreateModal
+          kind={quickCreateTarget.kind}
+          token={token}
+          onClose={() => setQuickCreateTarget(null)}
+          onCreated={(record) => {
+            if (quickCreateTarget.kind === "vendor") {
+              const vendor = record as Contact;
+              onVendorCreated(vendor);
+              setVendorId(vendor.id);
+              const nextTerms = vendor.paymentTerms || "Due on Receipt";
+              setTerms(nextTerms);
+              setDueDate(dueDateFor(billDate, nextTerms));
+              setLines((current) => current.map((line) => ({ ...line, tax: vendor.taxRate || line.tax })));
+            } else {
+              const item = record as Item;
+              const vendor = vendors.find((entry) => entry.id === vendorId);
+              onItemCreated(item);
+              updateLine(quickCreateTarget.lineId, { itemId: item.id, itemName: item.name, rate: item.unitCost, tax: vendor?.taxRate || item.purchaseTax || "" });
+            }
+            setQuickCreateTarget(null);
+          }}
+        />
+      ) : null}
 
       {paymentBill ? (
         <ModalLayer closeDisabled={isPaying} onClose={() => setPaymentBill(null)}>

@@ -93,6 +93,10 @@ export const App = () => {
     setData({ summary: normalizedSummary(summary), items, customers, vendors, invoices, bills, nextInvoiceNumber: nextInvoice.invoiceNumber, nextBillNumber: nextBill.billNumber });
   };
 
+  const addCustomerOption = (customer: Contact) => setData((current) => ({ ...current, customers: [customer, ...current.customers] }));
+  const addVendorOption = (vendor: Contact) => setData((current) => ({ ...current, vendors: [vendor, ...current.vendors] }));
+  const addItemOption = (item: Item) => setData((current) => ({ ...current, items: [item, ...current.items] }));
+
   useEffect(() => {
     if (!token) {
       setBooting(false);
@@ -181,6 +185,8 @@ export const App = () => {
               items={data.items}
               nextInvoiceNumber={data.nextInvoiceNumber}
               token={token ?? ""}
+              onCustomerCreated={addCustomerOption}
+              onItemCreated={addItemOption}
               onRefresh={() => (token ? loadData(token) : Promise.resolve())}
             />
           }
@@ -198,7 +204,7 @@ export const App = () => {
         />
         <Route
           path="purchases/bills"
-          element={<BillsPage bills={data.bills} company={user?.company!} dataError={dataError} items={data.items} nextBillNumber={data.nextBillNumber} vendors={data.vendors} token={token ?? ""} onRefresh={() => (token ? loadData(token) : Promise.resolve())} />}
+          element={<BillsPage bills={data.bills} company={user?.company!} dataError={dataError} items={data.items} nextBillNumber={data.nextBillNumber} vendors={data.vendors} token={token ?? ""} onItemCreated={addItemOption} onRefresh={() => (token ? loadData(token) : Promise.resolve())} onVendorCreated={addVendorOption} />}
         />
         <Route
           path="purchases/vendors"
