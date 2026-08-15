@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { DateField } from "../components/DateField";
+import { CompanyDocumentIdentity } from "../components/CompanyDocumentIdentity";
 import { ModalLayer } from "../components/ModalLayer";
 import { useConfirmation } from "../components/ConfirmationDialog";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
@@ -12,9 +13,10 @@ import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { appIcons } from "../icons";
 import { currency } from "../lib/format";
 import { formatLocalizedDate, useLanguage } from "../i18n";
-import type { Bill, Contact, Item } from "../types";
+import type { Bill, CompanyProfile, Contact, Item } from "../types";
 
 type Props = {
+  company: CompanyProfile;
   vendors: Contact[];
   dataError?: string;
   bills: Bill[];
@@ -76,7 +78,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
   return options;
 };
 
-export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, token, onRefresh }: Props) => {
+export const BillsPage = ({ company, vendors, dataError, bills, items, nextBillNumber, token, onRefresh }: Props) => {
   const { language, t } = useLanguage();
   const confirm = useConfirmation();
   const AddIcon = appIcons.actions.add;
@@ -295,6 +297,7 @@ export const BillsPage = ({ vendors, dataError, bills, items, nextBillNumber, to
               ) : null}
             </div>
           </div>
+          {selectedBillId ? <CompanyDocumentIdentity company={company} label="Recorded for" /> : null}
           <div className="invoice-details-grid">
             <section className="invoice-detail-card">
               <h3>Vendor</h3>

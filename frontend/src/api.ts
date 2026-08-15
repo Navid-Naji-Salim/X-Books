@@ -61,7 +61,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ name, email, password }),
     }),
-  setupCompany: (token: string, companyName: string) => request<{ company: { id: string; name: string } }>("/api/auth/setup-company", token, { method: "POST", body: JSON.stringify({ companyName }) }),
+  setupCompany: (token: string, companyName: string) => request<{ company: NonNullable<User["company"]> }>("/api/auth/setup-company", token, { method: "POST", body: JSON.stringify({ companyName }) }),
+  updateAccount: (token: string, payload: { name: string; email: string; currentPassword?: string }) =>
+    request<LoginResponse>("/api/auth/account", token, { method: "PATCH", body: JSON.stringify(payload) }),
+  updateCompany: (token: string, payload: Record<string, string>) =>
+    request<{ company: NonNullable<User["company"]> }>("/api/auth/company", token, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteAccount: (token: string, password: string) => request<null>("/api/auth/account", token, { method: "DELETE", body: JSON.stringify({ password }) }),
   me: (token: string) => request<MeResponse>("/api/auth/me", token),
   summary: (token: string) => request<Summary>("/api/summary", token),

@@ -211,6 +211,15 @@ model Company {
   userId       String   @unique
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name         String
+  businessEmail String?
+  phone        String?
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String?
+  taxId        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   items        Item[]

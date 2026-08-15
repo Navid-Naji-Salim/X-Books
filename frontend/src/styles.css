@@ -164,13 +164,16 @@ h3 {
 }
 
 .auth-text-button { border: 0; background: transparent; color: var(--muted); font-weight: 800; }
-.settings-page { display: grid; gap: 1.2rem; }
-.settings-section { display: grid; gap: 1rem; }
-.settings-details { display: grid; gap: 0.8rem; }
-.settings-details > div { display: grid; gap: 0.2rem; }
-.settings-details span { color: var(--muted); font-size: 0.82rem; font-weight: 800; }
-.danger-zone { border-color: rgba(185, 28, 28, 0.22); }
-.danger-zone > .button { justify-self: start; }
+.settings-page { display: grid; gap: 1rem; }
+.settings-surface { display: grid; gap: 0; overflow: hidden; padding: 0; }
+.settings-surface-head { padding: 1.2rem; border-bottom: 1px solid var(--line); }
+.settings-surface-head h1 { font-family: "Newsreader", serif; font-size: clamp(2rem, 4vw, 3rem); line-height: 1; }
+.settings-group { display: grid; gap: 1rem; padding: 1.2rem; }
+.settings-divider { border-top: 1px solid var(--line); }
+.settings-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+.settings-password-field { grid-column: 1 / -1; }
+.settings-danger-zone .item-form-head h2 { color: var(--red); }
+.settings-danger-zone .item-form-head p { max-width: 42rem; font-weight: 600; }
 
 .login-heading {
   display: grid;
@@ -420,15 +423,19 @@ textarea:focus {
 }
 
 .profile-copy {
-  display: flex;
+  display: grid;
   min-width: 0;
   flex: 1;
-  align-items: center;
+  gap: 0.15rem;
 }
 
 .profile-copy strong {
-  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+.profile-copy small { overflow: hidden; color: rgba(255, 255, 255, 0.56); font-size: 0.72rem; text-overflow: ellipsis; white-space: nowrap; }
 
 .sidebar:not(.is-collapsed) .profile-copy,
 .sidebar:not(.is-collapsed) .settings-button {
@@ -2072,6 +2079,11 @@ th {
   gap: 1rem;
 }
 
+.document-company-identity { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.2rem 0.75rem; min-width: 0; padding-block: 0.15rem; }
+.document-company-identity > span { grid-row: 1 / span 3; padding-top: 0.15rem; color: var(--muted); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.document-company-identity > strong { overflow: hidden; font-size: 0.96rem; text-overflow: ellipsis; white-space: nowrap; }
+.document-company-identity > small { overflow: hidden; color: var(--muted); font-size: 0.76rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+
 .invoice-details-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2423,7 +2435,10 @@ html[lang="ckb"] .invoice-form-actions {
 .report-template-row td:last-child i { width: 48%; margin-left: auto; }
 .report-template-message { margin: 1.2rem 0 0; color: #94a3b8; font-size: 0.82rem; text-align: center; }
 .report-document-head { display: grid; gap: 0; padding-bottom: 14px; border-bottom: 1px solid #94a3b8; }
-.report-document-head > span { color: #0369a1; font-size: 21px; font-weight: 700; line-height: 1; }
+.report-document-brand { display: grid; gap: 2px; }
+.report-document-brand > span { color: #0369a1; font-size: 21px; font-weight: 700; line-height: 1; }
+.report-document-brand > strong { margin-top: 4px; color: #14213d; font-size: 15px; line-height: 1.2; }
+.report-document-brand > small { overflow: hidden; color: #475569; font-size: 11px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .report-document-head h1 { margin-top: 5px; font-family: Arial, sans-serif; font-size: 36px; font-weight: 700; line-height: 1.05; }
 .report-document-meta { display: flex; justify-content: space-between; gap: 1rem; margin-top: 9px; color: #334155; font-size: 14px; }
 .report-document table { width: 100%; table-layout: fixed; color: #14213d; font-family: Arial, sans-serif; font-size: 14px; }
@@ -2498,6 +2513,11 @@ html[lang="ckb"] .invoice-form-actions {
     display: grid;
     grid-template-columns: 1fr;
   }
+
+  .settings-form-grid { grid-template-columns: 1fr; }
+  .settings-password-field { grid-column: auto; }
+  .settings-group > .item-form-head { align-items: stretch; flex-direction: column; }
+  .settings-group > .item-form-head > .button { width: 100%; }
 
   .record-list-head { align-items: stretch; }
   .record-list-search { width: 100%; }

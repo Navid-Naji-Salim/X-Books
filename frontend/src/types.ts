@@ -5,7 +5,21 @@ export type User = {
   email: string;
   name: string;
   role: string;
-  company: { id: string; name: string } | null;
+  company: CompanyProfile | null;
+};
+
+export type CompanyProfile = {
+  id: string;
+  name: string;
+  businessEmail: string | null;
+  phone: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  country: string | null;
+  taxId: string | null;
 };
 
 export type Summary = {

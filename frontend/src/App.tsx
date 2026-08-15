@@ -171,6 +171,7 @@ export const App = () => {
           path="sales/invoices"
           element={
             <InvoicesPage
+              company={user?.company!}
               customers={data.customers}
               dataError={dataError}
               invoices={data.invoices}
@@ -194,7 +195,7 @@ export const App = () => {
         />
         <Route
           path="purchases/bills"
-          element={<BillsPage bills={data.bills} dataError={dataError} items={data.items} nextBillNumber={data.nextBillNumber} vendors={data.vendors} token={token ?? ""} onRefresh={() => (token ? loadData(token) : Promise.resolve())} />}
+          element={<BillsPage bills={data.bills} company={user?.company!} dataError={dataError} items={data.items} nextBillNumber={data.nextBillNumber} vendors={data.vendors} token={token ?? ""} onRefresh={() => (token ? loadData(token) : Promise.resolve())} />}
         />
         <Route
           path="purchases/vendors"
@@ -207,8 +208,8 @@ export const App = () => {
             />
           }
         />
-        <Route path="reports" element={<ReportsPage token={token ?? ""} />} />
-        <Route path="settings" element={<SettingsPage token={token ?? ""} user={user!} onAccountDeleted={logout} />} />
+        <Route path="reports" element={<ReportsPage company={user?.company!} token={token ?? ""} />} />
+        <Route path="settings" element={<SettingsPage token={token ?? ""} user={user!} onAccountDeleted={logout} onUserUpdated={(nextUser, nextToken) => { setUser(nextUser); if (nextToken) { localStorage.setItem("userToken", nextToken); setToken(nextToken); } }} />} />
       </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

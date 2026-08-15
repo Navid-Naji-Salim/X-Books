@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, ApiError } from "../api";
 import { DropdownField, TAX_OPTIONS } from "../components/FormControls";
 import { DateField } from "../components/DateField";
+import { CompanyDocumentIdentity } from "../components/CompanyDocumentIdentity";
 import { ModalLayer } from "../components/ModalLayer";
 import { useConfirmation } from "../components/ConfirmationDialog";
 import { RecordActionsMenu } from "../components/RecordActionsMenu";
@@ -12,9 +13,10 @@ import { useUnsavedChangesGuard } from "../components/useUnsavedChangesGuard";
 import { currency } from "../lib/format";
 import { formatLocalizedDate, useLanguage } from "../i18n";
 import { appIcons } from "../icons";
-import type { Contact, Invoice, Item } from "../types";
+import type { CompanyProfile, Contact, Invoice, Item } from "../types";
 
 type Props = {
+  company: CompanyProfile;
   customers: Contact[];
   dataError?: string;
   invoices: Invoice[];
@@ -67,7 +69,7 @@ const itemOptionsFor = (line: LineDraft, availableItems: Item[]) => {
   return options;
 };
 
-export const InvoicesPage = ({ customers, dataError, invoices, items, nextInvoiceNumber, token, onRefresh }: Props) => {
+export const InvoicesPage = ({ company, customers, dataError, invoices, items, nextInvoiceNumber, token, onRefresh }: Props) => {
   const { language, t } = useLanguage();
   const confirm = useConfirmation();
   const AddIcon = appIcons.actions.add;
@@ -244,6 +246,7 @@ export const InvoicesPage = ({ customers, dataError, invoices, items, nextInvoic
               {!isViewingPaidInvoice ? <button className="button form-primary-action" type="submit">{selectedInvoiceId ? "Edit Invoice" : "Save Invoice"}</button> : null}
             </div>
           </div>
+          {selectedInvoiceId ? <CompanyDocumentIdentity company={company} label="Issued by" /> : null}
           <div className="invoice-details-grid">
             <section className="invoice-detail-card">
               <h3>Customer</h3>
