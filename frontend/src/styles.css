@@ -423,19 +423,15 @@ textarea:focus {
 }
 
 .profile-copy {
-  display: grid;
+  display: flex;
   min-width: 0;
   flex: 1;
-  gap: 0.15rem;
+  align-items: center;
 }
 
 .profile-copy strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: block;
 }
-
-.profile-copy small { overflow: hidden; color: rgba(255, 255, 255, 0.56); font-size: 0.72rem; text-overflow: ellipsis; white-space: nowrap; }
 
 .sidebar:not(.is-collapsed) .profile-copy,
 .sidebar:not(.is-collapsed) .settings-button {
@@ -2436,8 +2432,7 @@ html[lang="ckb"] .invoice-form-actions {
 .report-template-message { margin: 1.2rem 0 0; color: #94a3b8; font-size: 0.82rem; text-align: center; }
 .report-document-head { display: grid; gap: 0; padding-bottom: 14px; border-bottom: 1px solid #94a3b8; }
 .report-document-brand { display: grid; gap: 2px; }
-.report-document-brand > span { color: #0369a1; font-size: 21px; font-weight: 700; line-height: 1; }
-.report-document-brand > strong { margin-top: 4px; color: #14213d; font-size: 15px; line-height: 1.2; }
+.report-document-brand > strong { color: #0369a1; font-size: 21px; line-height: 1; }
 .report-document-brand > small { overflow: hidden; color: #475569; font-size: 11px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .report-document-head h1 { margin-top: 5px; font-family: Arial, sans-serif; font-size: 36px; font-weight: 700; line-height: 1.05; }
 .report-document-meta { display: flex; justify-content: space-between; gap: 1rem; margin-top: 9px; color: #334155; font-size: 14px; }

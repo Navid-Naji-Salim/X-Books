@@ -70,7 +70,7 @@ export const SettingsPage = ({ onAccountDeleted, onUserUpdated, token, user }: {
   return (
     <div className="settings-page">
       <section className="panel settings-surface">
-        <header className="settings-surface-head"><h1>Settings</h1></header>
+        <header className="settings-surface-head"><h1>Account Settings</h1></header>
 
         <form className="settings-group" onSubmit={async (event) => {
           event.preventDefault();

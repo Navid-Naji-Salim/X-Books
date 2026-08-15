@@ -142,7 +142,7 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           {languageOptions.map((option) => <button className={language === option.value ? "is-selected" : ""} key={option.value} type="button" onClick={() => setLanguage(option.value)}>{t(option.label)}</button>)}
         </div>
       </div>
-      <button type="button" onClick={() => { closeSettings(); navigate("/settings"); }}>Settings</button>
+      <button type="button" onClick={() => { closeSettings(); navigate("/settings"); }}>{t("Account Settings")}</button>
       <button className="logout-button" type="button" onClick={onLogout}>
         {t("Log Out")}
       </button>
@@ -233,7 +233,6 @@ export const Sidebar = ({ user, isCollapsed, onLogout, onToggleCollapse }: Sideb
           <div className="brand-mark">{user.name.trim().charAt(0).toUpperCase() || "N"}</div>
           <div className="profile-copy">
             <strong translate="no">{user.name}</strong>
-            <small translate="no">{user.company?.name}</small>
           </div>
           <button
             aria-controls="user-settings-menu"
