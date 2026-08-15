@@ -33,7 +33,8 @@ printf '%s\n' \
   'SPACES_REGION=fra1' \
   'AWS_ACCESS_KEY_ID=pending' \
   'AWS_SECRET_ACCESS_KEY=pending' \
-  "BACKUP_ENCRYPTION_KEY=${backup_key}" > "${temporary_file}"
+  "BACKUP_ENCRYPTION_KEY=${backup_key}" \
+  'BACKUP_RETENTION_DAYS=35' > "${temporary_file}"
 
 chmod 0600 "${temporary_file}"
 mv "${temporary_file}" "${environment_file}"
