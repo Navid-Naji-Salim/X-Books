@@ -6,5 +6,5 @@ After=docker.service
 [Service]
 Type=oneshot
 Environment=XBOOKS_DEPLOYMENT_DIRECTORY=/opt/xbooks
-ExecStart=/opt/xbooks/deploy/backup-postgres.sh
+ExecStart=/opt/xbooks/current/deploy/backup-postgres.sh
 User=root

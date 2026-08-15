@@ -1,0 +1,58 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xbooks-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the pushed commit
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Package the exact commit
+        run: git archive --format=tar.gz --output="xbooks-${GITHUB_SHA}.tar.gz" "${GITHUB_SHA}"
+
+      - name: Configure pinned SSH access
+        env:
+          DEPLOY_KEY: ${{ secrets.XBOOKS_DEPLOY_SSH_KEY }}
+        run: |
+          install -d -m 0700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/xbooks-production
+          chmod 0600 ~/.ssh/xbooks-production
+          printf '%s\n' '134.209.230.254 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAPUHGy9lu/5hzGXb4UUjNpOmzojq1XiXZ7gq5xlT/ft' > ~/.ssh/known_hosts
+          chmod 0600 ~/.ssh/known_hosts
+
+      - name: Deploy and verify
+        run: |
+          ssh -i ~/.ssh/xbooks-production root@134.209.230.254 "${GITHUB_SHA}" \
+            < "xbooks-${GITHUB_SHA}.tar.gz"

@@ -1,5 +1,9 @@
 FROM node:22-bookworm-slim AS build
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 ENV DATABASE_URL=postgresql://xbooks:xbooks@database:5432/xbooks
 

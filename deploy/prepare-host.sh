@@ -9,7 +9,10 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get install -y awscli ca-certificates curl docker.io docker-compose-v2 openssl ufw unattended-upgrades
+apt-get install -y software-properties-common
+add-apt-repository -y universe
+apt-get update
+apt-get install -y ca-certificates curl docker.io docker-compose-v2 openssl s3cmd ufw unattended-upgrades
 
 systemctl enable --now docker
 systemctl enable --now unattended-upgrades

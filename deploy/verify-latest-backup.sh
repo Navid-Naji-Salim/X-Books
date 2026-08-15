@@ -3,6 +3,12 @@ set -Eeuo pipefail
 
 deployment_directory="${XBOOKS_DEPLOYMENT_DIRECTORY:-/opt/xbooks}"
 environment_file="${deployment_directory}/.env.production"
+application_directory="${XBOOKS_APPLICATION_DIRECTORY:-${deployment_directory}/current}"
+
+if [[ ! -f "${application_directory}/docker-compose.production.yml" ]]; then
+  application_directory="${deployment_directory}"
+fi
+compose_file="${application_directory}/docker-compose.production.yml"
 restore_database="xbooks_restore_check"
 restore_database_created=false
 
@@ -25,55 +31,67 @@ done
 temporary_directory="$(mktemp -d)"
 encrypted_backup="${temporary_directory}/latest.dump.enc"
 plain_backup="${temporary_directory}/latest.dump"
+spaces_host="${SPACES_ENDPOINT#https://}"
+spaces_host="${spaces_host#http://}"
+spaces_host="${spaces_host%/}"
 
 cleanup() {
   if [[ "${restore_database_created}" == true ]]; then
-    docker compose --env-file .env.production -f docker-compose.production.yml \
+    docker compose --project-name xbooks --project-directory "${application_directory}" \
+      --env-file "${environment_file}" -f "${compose_file}" \
       exec -T database dropdb --if-exists --username "${POSTGRES_USER}" "${restore_database}" >/dev/null
   fi
   rm -rf "${temporary_directory}"
 }
 trap cleanup EXIT
 
-cd "${deployment_directory}"
+latest_object="$(s3cmd \
+  --access_key="${AWS_ACCESS_KEY_ID}" \
+  --secret_key="${AWS_SECRET_ACCESS_KEY}" \
+  --host="${spaces_host}" \
+  --host-bucket="%(bucket)s.${spaces_host}" \
+  --bucket-location="${SPACES_REGION}" \
+  ls "s3://${SPACES_BUCKET}/postgres/" | awk '{print $4}' | sort | tail -n 1)"
 
-latest_key="$(AWS_DEFAULT_REGION="${SPACES_REGION}" aws s3api list-objects-v2 \
-  --bucket "${SPACES_BUCKET}" \
-  --prefix postgres/ \
-  --endpoint-url "${SPACES_ENDPOINT}" \
-  --query 'sort_by(Contents,&LastModified)[-1].Key' \
-  --output text)"
-
-if [[ -z "${latest_key}" || "${latest_key}" == "None" ]]; then
+if [[ -z "${latest_object}" ]]; then
   echo "No PostgreSQL backup exists in the Spaces bucket." >&2
   exit 1
 fi
 
-AWS_DEFAULT_REGION="${SPACES_REGION}" aws s3 cp \
-  "s3://${SPACES_BUCKET}/${latest_key}" \
+s3cmd \
+  --access_key="${AWS_ACCESS_KEY_ID}" \
+  --secret_key="${AWS_SECRET_ACCESS_KEY}" \
+  --host="${spaces_host}" \
+  --host-bucket="%(bucket)s.${spaces_host}" \
+  --bucket-location="${SPACES_REGION}" \
+  get \
+  "${latest_object}" \
   "${encrypted_backup}" \
-  --endpoint-url "${SPACES_ENDPOINT}" \
-  --only-show-errors
+  --no-progress
 
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
   -pass env:BACKUP_ENCRYPTION_KEY \
   -in "${encrypted_backup}" \
   -out "${plain_backup}"
 
-docker compose --env-file .env.production -f docker-compose.production.yml \
+docker compose --project-name xbooks --project-directory "${application_directory}" \
+  --env-file "${environment_file}" -f "${compose_file}" \
   exec -T database dropdb --if-exists --username "${POSTGRES_USER}" "${restore_database}" >/dev/null
-docker compose --env-file .env.production -f docker-compose.production.yml \
+docker compose --project-name xbooks --project-directory "${application_directory}" \
+  --env-file "${environment_file}" -f "${compose_file}" \
   exec -T database createdb --username "${POSTGRES_USER}" "${restore_database}"
 restore_database_created=true
 
-docker compose --env-file .env.production -f docker-compose.production.yml \
+docker compose --project-name xbooks --project-directory "${application_directory}" \
+  --env-file "${environment_file}" -f "${compose_file}" \
   exec -T database pg_restore \
   --exit-on-error \
   --no-owner \
   --username "${POSTGRES_USER}" \
   --dbname "${restore_database}" < "${plain_backup}"
 
-table_count="$(docker compose --env-file .env.production -f docker-compose.production.yml \
+table_count="$(docker compose --project-name xbooks --project-directory "${application_directory}" \
+  --env-file "${environment_file}" -f "${compose_file}" \
   exec -T database psql \
   --username "${POSTGRES_USER}" \
   --dbname "${restore_database}" \
@@ -86,4 +104,4 @@ if [[ "${table_count}" -lt 1 ]]; then
   exit 1
 fi
 
-echo "Verified ${latest_key}: restored ${table_count} public tables into a temporary database."
+echo "Verified ${latest_object}: restored ${table_count} public tables into a temporary database."
