@@ -2,7 +2,12 @@ import { spawn, spawnSync } from "node:child_process";
 import dotenv from "dotenv";
 import path from "node:path";
 import pg from "pg";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 
+if (!existsSync(".env")) {
+  writeFileSync(".env", readFileSync(".env.example", "utf8").replace("replace-with-a-long-random-secret", randomBytes(32).toString("hex")), { flag: "wx" });
+}
 dotenv.config();
 
 const projectRoot = process.cwd();
@@ -11,10 +16,11 @@ const useShell = process.platform === "win32";
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 let databaseProcess;
 let backendProcess;
+let frontendProcess;
 let stopping = false;
 
 const databaseIsHealthy = async () => {
-  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 1500 });
   try {
     await client.connect();
     await client.query("SELECT 1");
@@ -30,6 +36,7 @@ const stop = (exitCode = 0) => {
   if (stopping) return;
   stopping = true;
   backendProcess?.kill();
+  frontendProcess?.kill();
   databaseProcess?.kill();
   process.exit(exitCode);
 };
@@ -70,9 +77,27 @@ if (!(await databaseIsHealthy())) {
 }
 
 console.log("X Books database is ready.");
+for (const args of [["generate"], ["db", "push"]]) {
+  const result = spawnSync(process.execPath, [prismaCli, ...args], {
+    cwd: projectRoot,
+    stdio: "inherit",
+  });
+  if (result.status !== 0) stop(result.status ?? 1);
+}
 backendProcess = spawn("npm", ["run", "dev", "--workspace", "backend"], {
   cwd: projectRoot,
   stdio: "inherit",
   shell: useShell,
 });
 backendProcess.once("exit", (code) => stop(code ?? 0));
+if (!process.argv.includes("--backend-only")) {
+  frontendProcess = spawn(process.execPath, [path.join(projectRoot, "node_modules", "vite", "bin", "vite.js"), "--host", "127.0.0.1", "--strictPort"], {
+    cwd: path.join(projectRoot, "frontend"),
+    stdio: "inherit",
+  });
+  frontendProcess.once("error", (error) => {
+    console.error("Unable to start X Books frontend:", error.message);
+    stop(1);
+  });
+  frontendProcess.once("exit", (code) => stop(code ?? 0));
+}
