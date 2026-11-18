@@ -1,8 +1,8 @@
-import { spawn, spawnSync } from "node:child_process";
+import { fork, spawn, spawnSync } from "node:child_process";
 import dotenv from "dotenv";
 import path from "node:path";
 import pg from "pg";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 
 if (!existsSync(".env")) {
@@ -12,15 +12,26 @@ dotenv.config();
 
 const projectRoot = process.cwd();
 const prismaCli = path.join(projectRoot, "node_modules", "prisma", "build", "index.js");
-const useShell = process.platform === "win32";
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 let databaseProcess;
 let backendProcess;
 let frontendProcess;
 let stopping = false;
+const stopFile = path.join(projectRoot, ".local", "stop-request");
+if (process.argv.includes("--background")) {
+  setInterval(() => {
+    if (existsSync(stopFile)) {
+      unlinkSync(stopFile);
+      stop(0);
+    }
+  }, 500);
+}
 
 const databaseIsHealthy = async () => {
-  const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 1500 });
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 1500, query_timeout: 1500 });
+  // The embedded server may reset probes while it is still starting. pg emits
+  // socket errors separately from the connect/query promise.
+  client.on("error", () => {});
   try {
     await client.connect();
     await client.query("SELECT 1");
@@ -37,23 +48,24 @@ const stop = (exitCode = 0) => {
   stopping = true;
   backendProcess?.kill();
   frontendProcess?.kill();
-  databaseProcess?.kill();
-  process.exit(exitCode);
+  if (databaseProcess?.connected) {
+    databaseProcess.send("stop");
+    const forcedExit = setTimeout(() => { databaseProcess?.kill(); process.exit(exitCode); }, 10_000);
+    databaseProcess.once("exit", () => { clearTimeout(forcedExit); process.exit(exitCode); });
+  } else {
+    databaseProcess?.kill();
+    process.exit(exitCode);
+  }
 };
 
 process.on("SIGINT", () => stop(0));
 process.on("SIGTERM", () => stop(0));
 
 if (!(await databaseIsHealthy())) {
-  spawnSync(process.execPath, [prismaCli, "dev", "stop", "x-books"], {
-    cwd: projectRoot,
-    stdio: "ignore",
-    shell: useShell,
-  });
-  databaseProcess = spawn(
-    process.execPath,
-    [prismaCli, "dev", "--name", "x-books", "--port", "51223", "--db-port", "51224", "--shadow-db-port", "51225"],
-    { cwd: projectRoot, stdio: "inherit" },
+  databaseProcess = fork(
+    path.join(projectRoot, "scripts", "start-dev-db.mjs"),
+    [],
+    { cwd: projectRoot, stdio: ["inherit", "inherit", "inherit", "ipc"] },
   );
   databaseProcess.once("exit", (code) => {
     databaseProcess = undefined;
@@ -66,12 +78,12 @@ if (!(await databaseIsHealthy())) {
     }
   });
 
-  const startupDeadline = Date.now() + 30_000;
+  const startupDeadline = Date.now() + 60_000;
   while (Date.now() < startupDeadline && !(await databaseIsHealthy())) {
     await wait(500);
   }
   if (!(await databaseIsHealthy())) {
-    console.error("Unable to start the local database: PostgreSQL did not become healthy within 30 seconds.");
+    console.error("Unable to start the local database: PostgreSQL did not become healthy within 60 seconds.");
     stop(1);
   }
 }
@@ -82,13 +94,16 @@ for (const args of [["generate"], ["db", "push"]]) {
     cwd: projectRoot,
     stdio: "inherit",
   });
-  if (result.status !== 0) stop(result.status ?? 1);
+  if (result.status !== 0) {
+    stop(result.status ?? 1);
+    await new Promise(() => {});
+  }
 }
-backendProcess = spawn("npm", ["run", "dev", "--workspace", "backend"], {
-  cwd: projectRoot,
+backendProcess = spawn(process.execPath, ["--import", "tsx", "src/server.ts"], {
+  cwd: path.join(projectRoot, "backend"),
   stdio: "inherit",
-  shell: useShell,
 });
+backendProcess.once("error", (error) => { console.error("Unable to start backend:", error); stop(1); });
 backendProcess.once("exit", (code) => stop(code ?? 0));
 if (!process.argv.includes("--backend-only")) {
   frontendProcess = spawn(process.execPath, [path.join(projectRoot, "node_modules", "vite", "bin", "vite.js"), "--host", "127.0.0.1", "--strictPort"], {

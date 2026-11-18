@@ -12,6 +12,8 @@
     "frontend"
   ],
   "scripts": {
+    "start": "node scripts/local-app.mjs start",
+    "stop": "node scripts/local-app.mjs stop",
     "dev": "node scripts/start-dev.mjs",
     "dev:db": "node scripts/start-dev-db.mjs",
     "dev:backend": "node scripts/start-dev.mjs --backend-only",
@@ -26,6 +28,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "prisma": "^7.8.0"
+    "prisma": "^7.8.0",
+    "@prisma/dev": "0.24.3"
   }
 }

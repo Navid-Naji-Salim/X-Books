@@ -16,6 +16,11 @@ const createPrismaClient = () => {
     connectionTimeoutMillis: 5000,
     keepAlive: true,
   });
+  // pg removes failed idle connections from the pool; handling the error keeps
+  // a temporary database disconnect from becoming an uncaught process crash.
+  pool.on("error", (error) => {
+    console.error("An idle database connection failed; the pool will reconnect:", error.message);
+  });
 
   return new PrismaClient({ adapter: new PrismaPg(pool) });
 };
